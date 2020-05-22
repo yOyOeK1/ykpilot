@@ -1,0 +1,54 @@
+#:kivy 1.1.0
+
+<AutopilotSettings>:
+	size_hint: .7,.5
+	auto_dismiss: False
+	BoxLayout:
+		orientation: "vertical"
+		ScrollView:
+			
+			BoxLayout:
+				size_hint_y: None
+				height: app.btH
+				
+				CheckBox:
+					id: cb_AutSetDirRev
+					size: app.btH,app.btH
+					size_hint: None,None
+					on_release: root.on_guiToConfig()
+					
+				Label:
+					text: "invert rudder moves"
+					size: self.texture_size[0],app.btH
+					size_hint: None,None
+					
+				Button:
+					text: "-1"
+					size_hint: None,None
+					size: app.btH,app.btH
+					on_release: app.ap.on_curseAdjustBy(-1)
+					
+				Button:
+					text: "+1"
+					size_hint: None,None
+					size: app.btH,app.btH
+					on_release:	app.ap.on_curseAdjustBy(1)
+			
+				
+		BoxLayout:
+			orientation: "horizontal"
+	
+			Button:
+				id: bt_cancel
+				size_hint_y:None
+				height: app.btH
+				text: "Defaul settings"
+				on_press: root.on_bt_toDefault()
+
+			Button:
+				id: bt_ok
+				size_hint_y:None
+				height: app.btH
+				text: "Save"
+				on_press: root.on_bt_save()
+				

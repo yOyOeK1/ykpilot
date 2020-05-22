@@ -1,0 +1,803 @@
+#:kivy 1.1.0
+
+<SLabel@Label>:
+	height:10
+
+<RootLayout>:
+	Screen:
+		name: "ykpilot"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+		
+			Label:
+				text: "Welcome in ykpilot"
+				
+			Button:
+				text: "push udp msg"
+				on_release: app.on_push_udp_msg()
+			Button:
+				text: "push tcp msg"
+				on_release: app.on_push_tcp_msg()
+				
+			Button:
+				text: "make sensors a live!"
+				on_release: app.on_push_sensorsInit()	
+				
+			CheckBox:
+				id: cb_remotePython
+				on_release: app.on_cb_remotePython(self)
+			Label:
+				text: "run remote python port 2002"
+				
+			CheckBox:
+				id: cb_twistedTcp
+				on_release: app.on_cb_twistedTcp(self)
+			Label:
+				text: "run twisted tcp sender 11223"
+			
+			
+	
+	Screen:
+		name: "Autopilot"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			
+			FloatLayout:
+				size_hint: None,None
+				height: app.btH*1.5
+				
+				Image:
+					source: 'ico_work_256_256.png'
+					size: app.btH,app.btH
+					size_hint: None,None
+					pos: root.width-app.btH, root.height-app.btH
+					on_touch_down: self.collide_point( *args[1].pos ) and app.ap.on_settings()
+				
+			
+				Label:
+					id: lAutInf
+					font_size: app.btH*1.5
+					text: "lAutInf"
+					color: 1,1,1,0.5
+					center_x: self.parent.width/2
+					size_hint: None, None
+					size: self.texture_size
+					pos: 0,root.height-app.btH*1.5
+					
+			BoxLayout:
+				orientation: "horizontal"
+				
+				Label:
+					id: lAutMod
+					text: "lAutMod"
+					size_hint: None, None
+					size: self.texture_size
+					
+				Label:
+					id: lAutHdg
+					bold: True
+					font_size: app.btH*6
+					text: "lAutHdg"
+					
+					
+			
+			ProgressBar:
+				id: pbAutRud
+				value: 45.0
+				max: 90.0
+				height: app.btH
+				size_hint_y: None
+	
+			
+			GridLayout:
+				cols: 4
+				spacing: 5
+				height: app.btH*3
+				
+				
+				Button:
+					text: "Display"
+										
+					
+				Button:
+					text: "-1"
+					on_release: app.ap.on_curseAdjustBy(-1)
+					
+				Button:
+					text: "+1"
+					on_release: app.ap.on_curseAdjustBy(1)
+					
+				Label:
+					text: ""
+					
+					
+				Button:
+					background_color: 146/255, 255/255, 57/255, 1
+					text: "STAND BY"
+					on_release: app.ap.on_standby()
+					
+				Button:
+					text: "-10"
+					on_release: app.ap.on_curseAdjustBy(-10)
+					
+				Button:
+					text: "+10"
+					on_release: app.ap.on_curseAdjustBy(10)
+					
+				Button:
+					background_color: 146/255, 255/255, 57/255, 1
+					text: "AUTO"
+					on_release: app.ap.on_auto()
+			
+	
+	
+	Screen:
+		name: "AutopilotOld"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			
+			Button:
+				text: "On / off"
+				on_release: app.ap.on_onOff(self)
+				
+			Button:
+				text: "+"
+				on_release: app.ap.on_setDir(1)
+			
+			Button:
+				text: " = "
+				on_release: app.ap.on_setDir(0)
+			
+				
+			Button:
+				text: "-"
+				on_release: app.ap.on_setDir(-1)
+			
+		
+			Slider:
+				id: sAutFreq
+				min: 0.0
+				value: 70.0
+				max: 2000.0
+				on_touch_move: app.ap.on_setFreq(self)
+					
+					
+			
+	Screen:
+		name: "Compass"
+		
+		BoxLayout:
+			id: blCompass
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+
+	Screen:
+		name: "Race"
+		
+		FloatLayout:
+			id: flRace
+			Image:
+				source: 'ico_work_256_256.png'
+				size: app.btH,app.btH
+				size_hint: None,None
+				pos: root.width-app.btH, root.height-app.btH
+				on_touch_down: self.collide_point( *args[1].pos ) and app.sRace.on_settings()
+			
+			Label:
+				id: lSraceSog
+				text: "lSRacSog"
+				font_size: root.height*0.33
+				
+			Label:
+				id: lSRacSogAvg
+				text: "lSRacSogAvg"
+				pos: root.width/2-cm(2),-root.height/2+app.lineH
+				
+			
+			Label:
+				id: lSRacSogMax
+				text: "lSRacSogMax"
+				pos: -root.width/2+cm(2),-root.height/2+app.lineH
+				
+			
+
+
+	Screen:
+		name: "Simulator"
+		
+		BoxLayout:
+			id: blSimulator
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			Label:
+				text: ""
+				size_hint_y:None
+				height: app.btH*2
+			
+			Label:
+				id: lSimInf
+				text: "lotttoeuonetuhoe uonetuhonu \n ueonthuo enuorcuhoens \n unoesthuo aenu"
+				size_hint_y:None
+				height: app.lineH
+				
+
+			Label:
+				text: "Ruder:"
+				size_hint_y:None
+				height: app.btH*1			
+			Slider:
+				id: sSimRuder
+				min: -45.0
+				value: 0.0
+				max: 45.0
+				on_touch_move: app.simEng.on_ruderSet(self)
+					
+				
+			GridLayout:
+				cols:4
+				Button:
+					text: "reset"
+					on_release: app.simEng.on_reset()
+				Button:
+					text: "run"
+					on_release: app.simEng.on_run(True)
+				Button:
+					text: "stop"
+					on_release: app.simEng.on_stop()
+				Button:
+					text: "iter"
+					on_release: app.simEng.on_iter()
+					
+					
+			GridLayout:
+				cols:4
+				Button:
+					text: "-10"
+					on_release: app.simEng.targetCog-=10.0
+				Button:
+					text: "+10"
+					on_release: app.simEng.targetCog+=10.0
+					
+					
+			GridLayout:
+				cols:4
+				Button:
+					text: "d1"
+					on_release: app.driver1.run()
+				Button:
+					text: "d2"
+					on_release: app.driver2.run()
+					
+				Button:
+					text: "d3"
+					on_release: app.driver3.run()
+				Button:
+					text: "d4"
+					on_release: app.driver4.run()
+				Button:
+					text: "d5"
+					on_release: app.driver5.run()
+				Button:
+					text: "d6"
+					on_release: app.driver6.run()
+				Button:
+					text: "d7"
+					on_release: app.driver7.run()
+				Button:
+					text: "d8"
+					on_release: app.driver8.run()
+					
+				Button:
+					text: "d9"
+					on_release: app.driver9.run()
+					
+				Label:
+					id: lSimD8QName
+					text: "lSimD8QName"
+					
+				
+				
+				
+			BoxLayout:
+				orientation: "vertical"
+				Slider:
+					min:-1.0
+					value: 0.0
+					max: 5.0
+					#on_touch_move: app.driver2.setPar(0,self)
+				Slider:
+					min:-1.0
+					value: 0.0
+					max: 5.0
+					#on_touch_move: app.driver2.setPar(1,self)
+				Slider:
+					min:-1.0
+					value: 0.0
+					max: 5.0
+					#on_touch_move: app.driver2.setPar(2,self)
+			
+					
+			Label:
+				text: ""
+			
+	Screen:
+		name: "Mic Screen"
+		
+		BoxLayout:
+			orientation: "vertical"
+		
+			BoxLayout:
+				id: blMicScre
+				orientation: "vertical"
+				
+			BoxLayout:
+				orientation: "horizontal"
+				hinit_size_y: None
+				height:app.btH
+				
+				CheckBox:
+					on_release: app.sen.mic.on_record(self)
+					size: app.btH,app.btH
+					size_hint: None,None
+				Label:
+					text: "Record / analize spectrum"
+					size_hint_y: None
+					height: app.lineH
+				
+			
+			
+	Screen:
+		name: "Model Screen"
+		
+		BoxLayout:
+			id: blModelScreen
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			GridLayout:
+				cols: 2
+				
+				Label:
+					text: "Sail angle:"
+				Slider:
+					id: sModSail
+					min:-90.0
+					value: 0.0
+					max: 90.0
+					on_touch_move: app.on_touchSail(self)
+					
+				Label:
+					text: "Boat heel:"
+				Slider:
+					id: sModHeel
+					min:-90.0
+					value: 0.0
+					max: 90.0
+					on_touch_move: app.on_touchHeel(self)
+				
+				Label:
+					text: "Boat pitch:"
+				Slider:
+					id: sModPitch
+					min:-90.0
+					value: 0.0
+					max: 90.0
+					on_touch_move: app.senBoat.setPitch(self.value)
+					
+			
+					
+				Label:
+					text: ""
+				Label:
+					text: "Camera:"
+				
+				Slider:
+					min:-14.0
+					value: 0.0
+					max: 14.0
+					on_touch_move: app.senBoat.setCamera(0,self.value)
+				Label:
+					text: "x:"
+					
+				Slider:
+					min:-14.0
+					value: 0.0
+					max: 14.0
+					on_touch_move: app.senBoat.setCamera(1,self.value)
+				Label:
+					text: "y:"
+							
+				Slider:
+					min:-14.0
+					value: 0.0
+					max: 14.0
+					on_touch_move: app.senBoat.setCamera(2,self.value)
+				Label:
+					text: "z"
+				
+				
+			BoxLayout:
+				id: blModSimGra	
+				orientation: "vertical"
+				
+				
+				
+			GridLayout:
+				cols: 5
+				Label:
+					text: "Heel dir from deg:"
+				Label:
+					id: lModSimHeelSlope
+					text: "lModSimHeelSlope"
+									
+				Label:
+					text:""
+				
+				Label:
+					text:""
+				Label:
+					text:""
+					
+					
+				Label:
+					text:"Boat Heel Hz:"
+				Label:
+					id: lModSimGyroHeelHz
+					text:"lModSimGyroHeelHz"
+					
+				Label:
+					text: ""
+				
+				Label:
+					text: "Heel dir from gyro:"
+					
+				Label:
+					id: lModSimGyroHeel
+					text: "lModSimGyroHeel"
+					
+				
+				
+				Label:
+					text:"Boat Pitch Hz:"
+				Label:
+					id: lModSimGyroPitchHz
+					text:"lModSimGyroPitchHz"
+				
+					
+				Label:
+					text:""
+			
+				Label:
+					text: "Pitch dir from gyro:"
+					
+				Label:
+					id: lModSimGyroPitch
+					text: "lModSimGyroPith"
+					
+					
+					
+				Label:
+					text:""
+				Label:
+					text:""
+					
+				Label:
+					text:""
+			
+				Label:
+					text: "yaw dir from gyro:"
+					
+				Label:
+					id: lModSimGyroYaw
+					text: "lModSimGyroYaw"
+				
+				
+			Button:
+				id: bModSimCal
+				text: "Calibrate zero"
+				size_hint_y: None
+				height: app.btH
+				on_release: app.sen.calibrate()
+				
+			BoxLayout:
+				id: blModSimFFT
+				orientation: "vertical"
+				
+	Screen:
+		name: "Sensors"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			BoxLayout:
+				id: blSen
+				orientation: "vertical"
+				
+				
+				
+				BoxLayout:
+					orientation: "horizontal"
+					height: app.btH
+					size_hint_y: None
+						
+					
+					CheckBox:
+						id: cb_sensorsRemoteTcp
+						on_release: app.on_cb_sensorsRemoteTcp(self)
+						size: app.btH,app.btH
+						size_hint: None,None
+						
+						
+					TextInput:
+						id: ti_sensorsRemoteTcp
+						text: app.sensorsRemoteTcp
+					
+				BoxLayout:
+					orientation: "horizontal"
+					height: app.btH
+					id: bl_sensorsPlaFroFil
+					
+									
+					Button:
+						id: b_sensorsRecToFil
+						text: "record to file"
+						size_hint_y: None
+						height: app.btH
+						on_release: app.sen.on_recordToFile()
+
+				Label: 
+					text: "Sensors list and values"
+					height: app.lineH
+					size_hint_y: None
+					
+					
+					
+				BoxLayout:
+					orientation: "vertical"
+					height: app.lineH*5
+					size_hint_y: None
+				
+					Label:
+						text: "Phone:"
+						height: app.lineH
+						size_hint_y: None
+					GridLayout:
+						cols:5
+						
+						Label:
+							text: "Batter:" 
+						Label:
+							id: lSenBatPer
+							text: "lSenBatPer"
+						
+						Label:
+							text:""
+							
+						Label:
+							text:"Charging:"
+						Label:
+							id: lSenBatCha
+							text: "lSenBatCha"
+						
+						
+						Label:
+							text: "Lumens:" 
+						Label:
+							id: lSenLum
+							text: "lSenLum"
+						
+						Label:
+							text:""
+							
+						Label:
+							text:""
+						Label:
+							text: ""
+							
+						
+						Label:
+							text: "Backlight org:" 
+						Label:
+							id: lSenBacOrg
+							text: "lSenBacOrg"
+						
+						Label:
+							text:""
+							
+						Label:
+							text:"Backlight current:"
+						Label:
+							id: lSenBacCur
+							text: "lSenBacCur"
+						
+						
+					
+					
+					Label:
+						text: "GPS:"
+						height: app.lineH
+						size_hint_y: None
+					GridLayout:
+						cols:3
+						
+						Label:
+							text: "Lat:" 
+						Label:
+							text:""
+						Label:
+							text:"Lon:"
+						
+						Label:
+							id:senLGpsLat
+							text: "senLGpsLat"							
+						Label:
+							text:""							
+						Label:
+							id:senLGpsLon
+							text: "senLGpsLon"	
+							
+						Label:
+							text: "SOG"
+						Label:
+							text: "COG"
+						Label:
+							text: "Accur:"
+							
+						Label:
+							id:senLGpsSog
+							text:"senLGpsSog"
+						Label:
+							id:senLGpsCog
+							text:"senLGpsCog"
+						Label:
+							id:senLGpsAcc
+							text:"senLGpsAcc"
+						
+					
+				
+				BoxLayout:
+					orientation: "vertical"
+					Label:
+						text: "Accelerometer:"	
+										
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							id:senLAccX
+							text: "senLAccX"
+						Label:
+							id:senLAccY
+							text: "senLAccY"
+						Label:
+							id:senLAccZ
+							text: "senLAccZ"
+							
+				BoxLayout:
+					orientation: "vertical"
+					Label:
+						text: "Orientation:"	
+										
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							text: "Pitch:"
+						Label:
+							id:senLPitch
+							text: "senLPitch"
+						Label:
+							text: "Heel:"
+						Label:
+							id:senLHeel
+							text: "senLHeel"
+							
+							
+				BoxLayout:
+					orientation: "vertical"
+					Label:
+						text: "Space orientation:"	
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							id:senLSpaOriX
+							text: "senLSpaOriX"
+						Label:
+							id:senLSpaOriY
+							text: "senLSpaOriY"
+						Label:
+							id:senLSpaOriZ
+							text: "senLSpaOriZ"
+				
+					
+				BoxLayout:
+					orientation: "vertical"
+					Label:
+						text: "Gyro:"	
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							id:senLGyrX
+							text: "senLGyrX"
+						Label:
+							id:senLGyrY
+							text: "senLGyrY"
+						Label:
+							id:senLGyrZ
+							text: "senLGyrZ"
+							
+					Label:
+						text: "Gyro calibrated and flipt:"	
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							id:senLGyrCalX
+							text: "senLGyrCalX"
+						Label:
+							id:senLGyrCalY
+							text: "senLGyrCalY"
+						Label:
+							id:senLGyrCalZ
+							text: "senLGyrCalZ"
+					
+				BoxLayout:
+					orientation: "vertical"
+					Label:
+						text: "Compass calibrated:"	
+					BoxLayout:
+						orientation: "horizontal"
+						
+						Label:
+							id:senLComCalX
+							text: "senLComCalX"
+						Label:
+							id:senLComCalY
+							text: "senLComCalY"
+						Label:
+							id:senLComCalZ
+							text: "senLComCalZ"
+			
+				BoxLayout:
+					orientation: "vertical"
+					
+					Label:
+						text: "Results:"
+					
+					GridLayout:
+						cols: 2	
+					
+						Label:
+							text: "Phone orientation:"
+						Label:
+							id: senLUpAxis
+							text: "senLUpAxis"
+										
+						Label:
+							text: "Compass direction:"
+						Label:
+							id: senLComDir
+							text: "senLComDir"
+					
+		
+		
