@@ -22,6 +22,7 @@ class AutopilotSettings(Popup):
 		
 		self.gui.ap.on_updateSettings()
 		self.dismiss()
+		self.gui.on_configSave()
 		
 	def on_guiToConfig(self):
 		print("on_guiToConfig")
@@ -34,5 +35,6 @@ class AutopilotSettings(Popup):
 		print( "on_bt_save" )
 		self.on_guiToConfig()
 		self.dismiss()
+		self.gui.on_configSave()
 		
 		

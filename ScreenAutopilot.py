@@ -1,4 +1,5 @@
 from kivy.clock import Clock
+from kivy.uix.spinner import Spinner
 #from kivy.core.audio import SoundLoader
 
 #import pyaudio
@@ -9,7 +10,9 @@ import math
 from audiostream import get_output
 from audiostream.sources.wave import SineSource
 from AutopilotSettings import AutopilotSettings
-
+from driver9 import *
+from threading import _start_new_thread
+from simple_pid import PID
 
 class ScreenAutopilot:
 	
@@ -24,15 +27,81 @@ class ScreenAutopilot:
 		self.burstRunning = False
 		self.on_updateSettings()
 		
+		self.driverQRL = None
+		
 		self.cMin = 0.0
 		self.cPlus = 0.0
-		self.clickSize = 0.2
+		self.clickSize = 0.15
+		
+		self.Kp = 0.025
+		self.Ki = 0.01
+		self.Kd = 0.1
+		self.pid = PID( self.Kp, self.Ki, self.Kd, setpoint=0,auto_mode=True )
+		self.pid.proportional_on_measurement = True
+		
+		self.driverType = self.gui.config['apDriver']
+		self.sDriTyp = Spinner(
+			values = ['driver9', 'PID'],
+			text = self.driverType,
+			)
+		self.gui.rl.ids.blAutDri.add_widget(self.sDriTyp)
+		self.sDriTyp.bind(text=self.on_driverChange)
+		
 		_thread.start_new(self.sinWatchDog,())
+		
+	def on_driverChange(self, obj, text):
+		self.driverType = text
+		self.gui.config['apDriver'] = text
+		
 		
 	def initSine(self):
 		self.str = get_output( channels=2, rate=22050, buffersize=128)
 		self.sin = SineSource(self.str,self.freq[1])
 		
+	def apAction(self,v):
+		#print("apAction",v)
+		if v == -1:
+			self.on_pressMin()
+		elif v == 1:
+			self.on_pressPlus()
+		
+	def apIter(self):
+		
+		if self.driverQRL == None:
+			self.setupDriver()
+		
+		while self.status == 'on':
+			boat = self.gui.sen.boat
+			boat['sog'] = 11.0
+			boat['cog'] = boat['hdg']
+			if boat['cog'] >= 180.00:
+				boat['cog'] = boat['cog'] - 360.0
+			boat['cogError'] = (self.targetHdg-boat['hdg'])%360.0
+			if boat['cogError'] >= 180.0:
+				boat['cogError'] = boat['cogError']-360.0
+			
+			#print(boat)
+			
+			action = 0
+			if self.driverType == 'driver9':
+				ds = self.driverQRL.get_discrete_state( boat )
+				aa = max(self.driverQRL.q_table[ds])
+				action = self.driverQRL.q_table[ds].index(aa)-1
+			elif self.driverType == 'PID':
+				c = self.pid( boat['cogError'] )
+				print('pid cogError',boat['cogError']," c",c)
+				pidError = 0.75
+				if c < -pidError:# and boat['ruderPos'] > -20.00:
+					action = -1
+				elif c > pidError:# and boat['ruderPos'] < 20.00:
+					action = 1 
+					
+			#print("driver",self.driverType,' action ',action)
+				
+			self.apAction(action)
+				
+			time.sleep(1.0/15.0)
+			
 		
 	def sinWatchDog(self):
 		sinRunning = 0
@@ -42,6 +111,7 @@ class ScreenAutopilot:
 		self.initSine()
 		
 		while True:
+			
 			if 0:
 				print('min', round(self.cMin,1), 
 					" plus", round(self.cPlus,1),
@@ -51,6 +121,18 @@ class ScreenAutopilot:
 					' is_alive', is_alive,
 					' sinCo', sinRunning					
 					)
+			
+			if is_alive == False:
+				if self.burstRunning or self.status == 'on':					
+					try:
+						self.sin.start()
+					except:
+						self.initSine()
+						self.sin.start()
+					sinRunning+=1
+					is_alive = True		
+							
+
 			
 			if self.cMin > 0.0 and self.cPlus > 0.0:
 				if self.cPlus >= self.cMin:
@@ -74,11 +156,6 @@ class ScreenAutopilot:
 				if self.sin.frequency != self.freq[1]:
 					self.sin.frequency = self.freq[1]
 				
-			if is_alive == False:
-				if self.burstRunning or self.status == 'on':					
-					self.sin.start()
-					sinRunning+=1
-					is_alive = True					
 						
 			
 				
@@ -88,7 +165,6 @@ class ScreenAutopilot:
 				if self.cMin <= 0.0 and self.cPlus <= 0.0:
 					self.sin.stop()
 					sinRunning-=1
-					self.initSine()
 					is_alive = False
 					self.burstRunning = False
 					self.cMin = 0.0
@@ -96,12 +172,18 @@ class ScreenAutopilot:
 					
 			if self.status == 'off' and is_alive and self.burstRunning == False:
 				self.sin.stop()
-				self.sin = None
 				sinRunning-=1
-				self.initSine()
 				is_alive = False
 				self.cMin = 0.0
 				self.cPlus = 0.0
+	
+	def setupDriver(self):
+		print("---------- setup driver ----------")
+		self.driverQRL = qrlAtomizer("atomizer")
+		self.driverQRL.epsilon = 0.0
+		self.driverQRL.reset()
+		self.driverQRL.startEpisode()		
+		print("---------- setup driver ----------DONE")	
 			
 	def update(self,fromWho, vals):
 		if fromWho == "comCal":
@@ -159,6 +241,8 @@ class ScreenAutopilot:
 		
 		self.status = "on"
 		self.updateGui()
+		
+		_thread.start_new(self.apIter,())
 		
 	def on_standby(self):
 		if self.status == "off":

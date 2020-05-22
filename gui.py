@@ -125,14 +125,14 @@ class gui(App):
 		self.rl = RootLayout()
 		self.sRace.setupGui()
 		self.rl.ids.blCompass.add_widget( self.sCompass )
-		self.ap = ScreenAutopilot(self)
 		
 		
 		self.cDefVals = {
 			'screenCurrent': 'Sensors', 
 			'totalUptime' : 0,
 			'totalMiles': 0.0,
-			'apDirectionReverse': 0
+			'apDirectionReverse': 0,
+			'apDriver': 'driver9'
 			}
 		
 		for k in self.cDefVals.keys():
@@ -142,6 +142,7 @@ class gui(App):
 				print("config default - > no value [",k,"] setting [",self.cDefVals[k],"]")
 				self.config[k] = self.cDefVals[k]
 		
+		self.ap = ScreenAutopilot(self)
 		
 		if kivy.platform == 'android':
 			self.platform = 'android'
@@ -334,6 +335,7 @@ class gui(App):
 		toreturn = self.sen.buidPlayer(toreturn)
 		#play from file
 
+		#self.ap.setupDriver()
 		self.sen.run()
 		self.screenChange(self.config['screenCurrent'])
 		#Window.set_title("ykpilot")
@@ -382,18 +384,23 @@ class gui(App):
 		except:
 			pass
 			
-		self.config['screenCurrent'] = self.rl.current
-		self.config['totalUptime']+= self.th.getTimestamp()-self.timeAppStart
-		
-		print("save config res", 
-			DataSR_save(self.config, 'ykpilot.conf')
-			)
+		self.on_configSave()
 		
 		return True
 	
 	def on_resume(self):
 		print( "------- on resume")
 		self.sen.gps_start(1000, 0)
+	
+	
+	def on_configSave(self):
+		self.config['screenCurrent'] = self.rl.current
+		self.config['totalUptime']+= self.th.getTimestamp()-self.timeAppStart
+		
+		print("save config res", 
+			DataSR_save(self.config, 'ykpilot.conf')
+			)
+	
 	
 	# Screen: "Welcome"
 	
@@ -424,7 +431,7 @@ class gui(App):
 		
 		print("sensors running :)")
 	
-	# acctionbar
+	# actionbar
 	def screenChange(self, screenName):
 		if type(screenName) == str:
 			sn = screenName

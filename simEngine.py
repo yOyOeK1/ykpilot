@@ -46,8 +46,8 @@ class simEngine:
 			' ': None
 		}
 		self.boat['velocity'] = self.boat['sog']*self.ktsToMetersPerSec
-		self.targetCog = -180.00+(random.random()*360.0)  
-		self.boat['sog'] = 11.00
+		self.targetCog = 10.0#-180.00+(random.random()*360.0)  
+		self.boat['sog'] = 3.00
 		#self.boat['sog'] += (random.random()*5.0)-5.0
 		self.runTime = 0.0
 		self.xte = 0.0

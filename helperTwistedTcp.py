@@ -78,6 +78,8 @@ class MyClient( protocol.Protocol ):
 					self.factory.app.sen.comCal.setVal( j['data'] )
 				elif j["type"] == "spacorientation":
 					self.factory.app.sen.spacialOrientation.setVal( j['data'] )
+				elif j["type"] == 'gyroFlipt':
+					self.factory.app.sen.gyroFlipt.setVal( j['data'])
 			
 	
 class MyClientFactory( protocol.ClientFactory ):

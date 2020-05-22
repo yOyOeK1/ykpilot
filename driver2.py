@@ -21,9 +21,10 @@ class driver2:
 		self.lc = 0
 		self.work = True
 		self.render = render
-		self.Kp = 0.05
-		self.Ki = 0.01
-		self.Kd = 0.1
+		d = 0.5
+		self.Kp = 0.05*d
+		self.Ki = 0.02*d
+		self.Kd = 0.2*d
 		self.p = PID( self.Kp, self.Ki, self.Kd, setpoint=0,auto_mode=True )
 		self.p.proportional_on_measurement = True
 		#self.p.set_auto_mode(True, last_output=8.0)
@@ -50,9 +51,10 @@ class driver2:
 		#print("control %s for cogError %s"%(control, b['cogError']))
 		
 		if True:
-			if -control < 0.5 and b['ruderPos'] > -20.00:
+			pidError = 0.75
+			if -control < pidError:# and b['ruderPos'] > -20.00:
 				action = -1
-			elif -control > 0.5 and b['ruderPos'] < 20.00:
+			elif -control > pidError:# and b['ruderPos'] < 20.00:
 				action = 1 
 		else:
 			gRot = 0.5

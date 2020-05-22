@@ -325,6 +325,10 @@ class gpsData:
 class xyzData:
 	historyMem = 1010
 	
+	uSEvery = 5.0
+	
+	guiUpdateEvery = 1.0
+	
 	guiArrowsAccel = False
 	guiGraphAngle = False
 	guiGraphCompas = False
@@ -346,6 +350,11 @@ class xyzData:
 			'y':[],
 			'z':[]
 			}
+		
+		self.uSTLast = self.th.getTimestamp(True)
+		self.uSCount = 0
+		self.guiUTLast = self.uSTLast
+		
 		
 		self.x = 0.0
 		self.y = 0.0
@@ -389,6 +398,13 @@ class xyzData:
 	
 	def setVal(self, val):
 		#print("%s got setValue"%self.type)
+		timeNowInMillis = self.th.getTimestamp(True)
+		self.uSCount+= 1
+		if (timeNowInMillis - self.uSTLast ) > (self.uSEvery*1000000):
+			self.uSTLast = timeNowInMillis
+			print("UPS[",self.type,'] ',round(self.uSCount/(self.uSEvery),1))
+			self.uSCount = 0
+		
 		
 		self.iter+=1
 		if self.type == "orientation" and len(self.axis['y']) > 50:
@@ -518,10 +534,16 @@ class xyzData:
 					
 				#print( "- %s %s %s \n"%(self.axis['x'][-1], self.axis['y'][-1], self.axis['z'][-1] ))
 				
-			self.gui.sen.wHeelBoat.update(self.axis['y'][-1])
+			#self.gui.sen.wHeelBoat.update(self.axis['y'][-1])
 				
 		# gui update
-		if len(self.guiObjs) == 3 :
+		updateGui = False
+		if (timeNowInMillis - self.guiUTLast ) > (self.guiUpdateEvery*1000000):
+			updateGui = True
+			self.guiUTLast = timeNowInMillis
+			
+		
+		if updateGui and len(self.guiObjs) == 3 :
 			for i,o in enumerate(self.guiObjs):
 				o.text = "%s"%round(val[i],5)
 		
@@ -539,8 +561,9 @@ class xyzData:
 			self.history[-1] = [pitch,heel,0]
 			self.axis['x'][-1] = pitch
 			self.axis['y'][-1] = heel
-			self.gui.rl.ids.senLPitch.text = str( pitch )
-			self.gui.rl.ids.senLHeel.text = str( heel )
+			if updateGui:
+				self.gui.rl.ids.senLPitch.text = str( pitch )
+				self.gui.rl.ids.senLHeel.text = str( heel )
 			try:
 				self.gui.senBoat.setHeel(self.x)
 				self.gui.senBoat.setPitch(self.y)
@@ -559,10 +582,11 @@ class xyzData:
 			#print(fgh)
 			
 			if len(self.history)> 25:
-				if sum(self.axis['x'][-10:-1])/9.0 > sum(self.axis['x'])/len(self.axis['x']):
-					self.gui.rl.ids.lModSimHeelSlope.text = "S"
-				else:
-					self.gui.rl.ids.lModSimHeelSlope.text = "P"
+				if updateGui:
+					if sum(self.axis['x'][-10:-1])/9.0 > sum(self.axis['x'])/len(self.axis['x']):
+						self.gui.rl.ids.lModSimHeelSlope.text = "S"
+					else:
+						self.gui.rl.ids.lModSimHeelSlope.text = "P"
 			
 
 		self.updateTime = self.th.getTimestamp(True)
@@ -576,7 +600,8 @@ class xyzData:
 
 			self.axis['x'][-1] = self.hdg
 			self.gui.senBoat.setRoseta( self.hdg )
-			self.gui.rl.ids.senLComDir.text = str(round(self.hdg,1))
+			if updateGui:
+				self.gui.rl.ids.senLComDir.text = str(round(self.hdg,1))
 			
 			if self.guiGraphCompas:
 				self.gui.pc.points = self.gui.sen.sinHistoryArrayToGraph(
@@ -607,6 +632,9 @@ class xyzData:
 			})
 		self.gui.sf.sendToAll( jMsg )
 			
+		if self.type == 'comCal':
+			self.gui.sen.on_boatUpdate()
+
 
 class sensors:
 	
@@ -627,6 +655,7 @@ class sensors:
 	
 	def __init__(self,gui):
 		self.gui = gui
+		self.boat = {}
 
 		self.th = TimeHelper()
 		self.fa = FileActions()
@@ -649,7 +678,7 @@ class sensors:
 		bl.add_widget(sPlaFroFil)
 		
 		print("new Spinner with updated list DONE")
-		self.wHeelBoat = waveCicleHolder(gui,'boat_heel')
+		#self.wHeelBoat = waveCicleHolder(gui,'boat_heel')
 		
 		
 		self.calibrateStep = 0
@@ -1090,6 +1119,17 @@ class sensors:
 		print("gps_stop")
 		gps.stop()
 	
+	def on_boatUpdate(self):
+		self.boat = {
+			'cogError': 0.0,
+			'hdg': self.comCal.hdg,
+			'cog': self.gpsD.cog,
+			'sog': self.gpsD.sog,
+			'lat': self.gpsD.lat,
+			'lon': self.gpsD.lon,
+			'gRot': self.gyroFlipt.axis['z'][-1]
+			}
+	
 	def interval(self,u):
 		debPrints = False
 		if debPrints: print("sensors.interval...")
@@ -1154,6 +1194,6 @@ class sensors:
 	def run(self):
 		#pass
 		#self.mic.runIt()
-		iterTime = 0.1 if self.gui.platform == 'android' else 0.8 
+		iterTime = 1.0/15.0 if self.gui.platform == 'android' else 0.8 
 		self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
 		
