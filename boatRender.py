@@ -58,7 +58,16 @@ class Renderer(Widget):
 			self.setup_scene()
 			PopMatrix()
 			self.cb = Callback(self.reset_gl_context)
-		Clock.schedule_interval(self.update_glsl, 1 / 60.)
+		
+	def on_displayNow(self):	
+		self.scheduler = Clock.schedule_interval(self.update_glsl, 1 / 60.)
+		self.openScreenAnimation()
+		
+	def on_noMoreDisplayd(self):
+		try:
+			Clock.unschedule(self.scheduler)
+		except:
+			print("no running scheduler for boatRender")
 
 	def setGui(self,gui):
 		self.gui = gui
