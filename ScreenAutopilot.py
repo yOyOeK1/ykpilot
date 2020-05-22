@@ -21,20 +21,25 @@ class ScreenAutopilot:
 		self.status = "off"
 		self.targetHdg = 0
 		self.tilerPos = 0.0
-		self.str = get_output( channels=2, rate=22050, buffersize=128)
 		self.burstRunning = False
 		self.on_updateSettings()
 		
 		self.cMin = 0.0
 		self.cPlus = 0.0
-		self.clickSize = 0.4
+		self.clickSize = 0.2
 		_thread.start_new(self.sinWatchDog,())
 		
-	def sinWatchDog(self):
-		sleepTime = 0.05
-		actionSumtract = sleepTime*5.0
-		is_alive = False
+	def initSine(self):
+		self.str = get_output( channels=2, rate=22050, buffersize=128)
 		self.sin = SineSource(self.str,self.freq[1])
+		
+		
+	def sinWatchDog(self):
+		sinRunning = 0
+		sleepTime = 0.05
+		actionSumtract = sleepTime*2.0
+		is_alive = False
+		self.initSine()
 		
 		while True:
 			if 0:
@@ -43,7 +48,8 @@ class ScreenAutopilot:
 					" burst", self.burstRunning,
 					" apStat", self.status,
 					" sinfreq", self.sin.frequency,
-					' is_alive', is_alive					
+					' is_alive', is_alive,
+					' sinCo', sinRunning					
 					)
 			
 			if self.cMin > 0.0 and self.cPlus > 0.0:
@@ -71,6 +77,7 @@ class ScreenAutopilot:
 			if is_alive == False:
 				if self.burstRunning or self.status == 'on':					
 					self.sin.start()
+					sinRunning+=1
 					is_alive = True					
 						
 			
@@ -80,7 +87,8 @@ class ScreenAutopilot:
 			if self.status == 'off' and self.burstRunning:
 				if self.cMin <= 0.0 and self.cPlus <= 0.0:
 					self.sin.stop()
-					self.sin = SineSource(self.str,self.freq[1])
+					sinRunning-=1
+					self.initSine()
 					is_alive = False
 					self.burstRunning = False
 					self.cMin = 0.0
@@ -88,7 +96,9 @@ class ScreenAutopilot:
 					
 			if self.status == 'off' and is_alive and self.burstRunning == False:
 				self.sin.stop()
-				self.sin = SineSource(self.str,self.freq[1])
+				self.sin = None
+				sinRunning-=1
+				self.initSine()
 				is_alive = False
 				self.cMin = 0.0
 				self.cPlus = 0.0

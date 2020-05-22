@@ -1,6 +1,5 @@
 import kivy
 from kivy.app import App
-
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager
@@ -87,7 +86,6 @@ class RootLayout(ScreenManager):
 
 class gui(App):
 	
-	currentPage = "welcome"
 	testHDG = 10
 	remotePythonPid = None
 	
@@ -144,18 +142,18 @@ class gui(App):
 				print("config default - > no value [",k,"] setting [",self.cDefVals[k],"]")
 				self.config[k] = self.cDefVals[k]
 		
-		current = self.config['screenCurrent']
-
 		
 		if kivy.platform == 'android':
 			self.platform = 'android'
 			ip = '192.168.43.208'
 			senderPort = 11223
 			makeRender = True
+			"""
 			from android import AndroidService
 			service = AndroidService("ykpilot background","running ....")
 			service.start("service started")
 			self.service = service
+			"""
 			self.workingFolderAdress = '/storage/emulated/0/ykpilot/'
 
 		else:
@@ -337,7 +335,7 @@ class gui(App):
 		#play from file
 
 		self.sen.run()
-		self.screenChange(current)
+		self.screenChange(self.config['screenCurrent'])
 		#Window.set_title("ykpilot")
 
 		#return self.rl 
@@ -435,11 +433,16 @@ class gui(App):
 				sn = screenName.text
 			except:
 				sn = screenName.title
+				
+				
+		if self.rl.current == "Model Screen":
+			self.senBoat.on_noMoreDisplayd()
+				
 		self.rl.current = sn
 		
 		print("screenChange to [%s]"%sn)
 		if sn == "Model Screen":
-			self.senBoat.openScreenAnimation()
+			self.senBoat.on_displayNow()
 		if sn == "Autopilot":
 			self.ap.updateGui()
 

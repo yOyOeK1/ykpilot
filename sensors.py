@@ -3,7 +3,6 @@ import kivy
 import math
 import ast
 import traceback
-from kivy.base import runTouchApp
 from kivy.clock import Clock, mainthread
 from kivy.vector import Vector
 from kivy.uix.spinner import Spinner
@@ -1155,6 +1154,6 @@ class sensors:
 	def run(self):
 		#pass
 		#self.mic.runIt()
-
-		self.intervalEvent = Clock.schedule_interval( self.interval, 0.1 )
+		iterTime = 0.1 if self.gui.platform == 'android' else 0.8 
+		self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
 		
