@@ -10,9 +10,9 @@ rm /tmp/$app/backup.sh
 rm /tmp/$app/buildApk.sh
 rm /tmp/$app/*.ini
 rm /tmp/$app/*.db
+rm -rf /tmp/$app/.git
 rm /tmp/$app/wRadar_*.gif
 rm /tmp/$app/*.*~
-rm -rf /tmp/$app/.git
 rm -r /tmp/$app/__pycache__
 rm /tmp/$app/ykpilot.config
 rm -r /tmp/$app/.settings
