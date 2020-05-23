@@ -47,7 +47,7 @@ class Renderer(Widget):
 		ml = modelsLoader("boat2")
 		self.o = ml.getObjects()
 		
-		scenRos = ObjFile(resource_find("3d_roseta.obj"))
+		scenRos = ObjFile(resource_find("./3dModels/3d_roseta.obj"))
 		self.o['roseta'] = scenRos.objects[ list(scenRos.objects.keys())[0] ]
 		print("roseta[%s]"%self.o['roseta'])
 		

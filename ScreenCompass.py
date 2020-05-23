@@ -144,8 +144,8 @@ class ScreenCompass(Widget):
 		
 		if fromWho == 'gps':
 			self.setCog( int(vals['bearing']) )
-		elif fromWho == 'comCal':
-			self.setHdg( int(vals) )
+		elif fromWho == 'comCalAccelGyro':
+			self.setHdg( int(vals[2]) )
 		else:
 			print("ScreenCompass.update" ,fromWho, vals)
 			

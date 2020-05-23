@@ -194,7 +194,7 @@ def MTL(filename):
 	mtl = None
 	#print("MTL %s"%filename)
 	
-	for line in open(filename, "r"):
+	for line in open('./3dModels/'+filename, "r"):
 		if line.startswith('#'):
 			continue
 		values = line.split()

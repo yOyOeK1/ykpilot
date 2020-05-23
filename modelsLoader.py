@@ -8,8 +8,8 @@ class modelsLoader:
 	
 	def __init__(self,modelsGroupName):
 		self.name = modelsGroupName
-		self.files = self.name+"_3dex_files.list"
-		self.objNames = self.name+"_3dex_objNames.list"
+		self.files = './3dModels/'+self.name+"_3dex_files.list"
+		self.objNames = './3dModels/'+self.name+"_3dex_objNames.list"
 		
 	def getObjects(self):
 		tr = {}
@@ -26,7 +26,7 @@ class modelsLoader:
 			if lf == "":
 				break
 			
-			filesList.append(lf+'.obj')
+			filesList.append('./3dModels/'+lf+'.obj')
 			objList.append(on)
 			
 		
