@@ -356,6 +356,8 @@ class xyzData:
 		self.guiUTLast = self.uSTLast
 		
 		
+		self.lastTimeIter = 0
+		
 		self.x = 0.0
 		self.y = 0.0
 		self.z = 0.0
@@ -399,10 +401,12 @@ class xyzData:
 	def setVal(self, val):
 		#print("%s got setValue"%self.type)
 		timeNowInMillis = self.th.getTimestamp(True)
+		
+		
 		self.uSCount+= 1
 		if (timeNowInMillis - self.uSTLast ) > (self.uSEvery*1000000):
 			self.uSTLast = timeNowInMillis
-			print("UPS[",self.type,'] ',round(self.uSCount/(self.uSEvery),1))
+			print("UPS	[",self.type,'] ',round(self.uSCount/(self.uSEvery),1))
 			self.uSCount = 0
 		
 		
@@ -532,6 +536,19 @@ class xyzData:
 						self.axis['z'][-90:], 90
 						)
 					
+			t = self.lastTimeIter-self.th.getTimestamp(True)
+			m = math.degrees(self.axis['z'][-1])
+			mov = m*(t/1000000.0)
+			try:
+				#print("accelGyro",mov)
+				vts = (self.gui.sen.comCalAccelGyro.z-mov)*0.97+(self.gui.sen.comCal.hdg*0.03)
+				self.gui.sen.comCalAccelGyro.setVal([
+					0.0,0.0,
+					vts
+					])
+				#print("gyro to hdg ",self.axis['z'][-1],"time",t,"mov",mov)
+			except:
+				print("corecting hdg by gyro error")	
 				#print( "- %s %s %s \n"%(self.axis['x'][-1], self.axis['y'][-1], self.axis['z'][-1] ))
 				
 			#self.gui.sen.wHeelBoat.update(self.axis['y'][-1])
@@ -614,8 +631,8 @@ class xyzData:
 			nmea = "$YKXDR,A,%s,,PTCH,A,%s,,ROLL,"%(-pitch, heel)
 			self.gui.sf.sendToAll( nmea )
 			
-		elif self.type == "comCal":
-			nmea = "$YKHDG,%s,W,0,E" % round(self.hdg,1)
+		elif self.type == "comCalAccelGyro":
+			nmea = "$YKHDG,%s,W,0,E" % round(self.z,1)
 			self.gui.sf.sendToAll(nmea)
 			
 		# callbacks
@@ -635,6 +652,7 @@ class xyzData:
 		if self.type == 'comCal':
 			self.gui.sen.on_boatUpdate()
 
+		self.lastTimeIter = timeNowInMillis
 
 class sensors:
 	
@@ -724,6 +742,7 @@ class sensors:
 			self.gui.rl.ids.senLComCalY,
 			self.gui.rl.ids.senLComCalZ
 			])
+		self.comCalAccelGyro = xyzData(gui, "comCalAccelGyro")
 	
 		
 		if kivy.platform == 'android':
