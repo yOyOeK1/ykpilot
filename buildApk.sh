@@ -26,5 +26,5 @@ echo "clean done -------------------"
 echo "-----------------------------"
 echo "call"
 ver=`date +%y%m%d`
-p4a_build.sh $ver $app /tmp/$app /home/yoyo/Apps/ykpilot/ico_sailboat_256_256.png
+p4a_build.sh $ver $app /tmp/$app /home/yoyo/Apps/ykpilot/icons/ico_sailboat_256_256.png
 adb install  "/home/yoyo/.local/share/python-for-android/dists/API26_r21_3__armeabi-v7a/bin/$app-0."$ver"-debug.apk"
