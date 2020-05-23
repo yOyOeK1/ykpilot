@@ -19,8 +19,8 @@ class simRender(Widget):
 		self.scene = ObjFile([
 #			resource_find("3d_roseta.obj"),
 #			resource_find("3d_phone_textured.obj")
-			resource_find("3d_board.obj"),
-			resource_find("boat.obj")
+			resource_find("./3dModels/3d_board.obj"),
+			resource_find("./3dModels/boat.obj")
 			])
 		self.scene.objects['board0'] = self.scene.objects['board_Cube']
 		self.scene.objects['board1'] = self.scene.objects['board_Cube']
