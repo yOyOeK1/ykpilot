@@ -181,7 +181,7 @@ class gui(App):
 		self.sen = sensors(self)
 		self.sen.gpsD.addCallBack( self.sRace )
 		self.sen.gpsD.addCallBack( self.sCompass )
-		self.sen.comCal.addCallBack( self.sCompass )
+		self.sen.comCalAccelGyro.addCallBack( self.sCompass )
 		self.sen.comCal.addCallBack( self.ap )
 		#self.sen.run()
 
@@ -276,22 +276,22 @@ class gui(App):
 			a.add_widget(av)
 			ap = ActionPrevious( 
 				title="ykpilot", with_previous=False,
-				app_icon = "ico_sailboat_256_256.png"
+				app_icon = "icons/ico_sailboat_256_256.png"
 				)
 			ap.bind(on_release=self.screenChange)
 			av.add_widget(ap)
 
 			ao = ActionOverflow()
 			ab = ActionButton(text="Sensors",
-				icon = "ico_find_256_256.png")
+				icon = "icons/ico_find_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			ab = ActionButton(text="Model Screen",
-				icon = "ico_sailboat_256_256.png")
+				icon = "icons/ico_sailboat_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			ab = ActionButton(text="Simulator",
-				icon = "ico_sum_256_256.png")
+				icon = "icons/ico_sum_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 
@@ -299,7 +299,7 @@ class gui(App):
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			ab = ActionButton(text="Race",
-				icon = "ico_time_256_256.png")
+				icon = "icons/ico_time_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			ab = ActionButton(text="Autopilot")
