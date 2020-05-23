@@ -2,7 +2,7 @@ import bpy
 import os
 import bmesh
 
-desFolder = "./"
+desFolder = "./3dModels/"
 prefix = ''
 
 fileWPath = bpy.context.blend_data.filepath
@@ -57,8 +57,8 @@ for o in s.objects:
         print("mesh ready to export...")
   
         bpy.ops.export_scene.obj( filepath=desFolder+targetName+".obj", use_selection=True )
-        ff.write(targetName+"\n")
-        fo.write(oName+"\n")    
+        ff.write(desFolder+targetName+"\n")
+        fo.write(desFolder+oName+"\n")    
     
         
         print("error with obj[%s]"%oName)    
