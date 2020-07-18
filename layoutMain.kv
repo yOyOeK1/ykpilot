@@ -39,6 +39,27 @@
 				text: "run twisted tcp sender 11223"
 			
 			
+	Screen:
+		name: "Virtual Buttons"
+		
+		BoxLayout:
+			orientation: "vertical"
+			
+			
+			BoxLayout:
+				orientation: "vertical"
+				Image:
+					id: iVirButCam
+					size: 300,300
+	
+	
+	Screen:
+		name: "Weather"
+		
+		BoxLayout:
+			id: blWea
+			orientation: "vertical"
+	
 	
 	Screen:
 		name: "Autopilot"
@@ -54,7 +75,7 @@
 				height: app.btH
 				
 				Image:
-					source: 'ico_work_256_256.png'
+					source: 'icons/ico_work_256_256.png'
 					size: app.btH,app.btH
 					size_hint: None,None
 					pos: root.width-app.btH, root.height-app.btH
@@ -190,14 +211,14 @@
 		FloatLayout:
 			id: flRace
 			Image:
-				source: 'ico_work_256_256.png'
+				source: 'icons/ico_work_256_256.png'
 				size: app.btH,app.btH
 				size_hint: None,None
 				pos: root.width-app.btH, root.height-app.btH
 				on_touch_down: self.collide_point( *args[1].pos ) and app.sRace.on_settings()
 			
 			Label:
-				id: lSraceSog
+				id: lSRacSog
 				text: "lSRacSog"
 				font_size: root.height*0.33
 				
@@ -214,7 +235,7 @@
 				
 			
 
-
+	
 	Screen:
 		name: "Simulator"
 		
@@ -305,10 +326,14 @@
 				Button:
 					text: "d9"
 					on_release: app.driver9.run()
-					
+				
 				Label:
 					id: lSimD8QName
 					text: "lSimD8QName"
+				
+				Button:
+					text: "d9 - drive it"
+					on_release: app.driver9.on_driveIt()
 					
 				
 				
@@ -655,9 +680,9 @@
 							text: "senLGpsLon"	
 							
 						Label:
-							text: "SOG"
+							text: "GPS / cal. [SOG]"
 						Label:
-							text: "COG"
+							text: "GPS / cal. [COG]"
 						Label:
 							text: "Accur:"
 							

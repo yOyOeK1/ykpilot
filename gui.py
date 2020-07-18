@@ -24,6 +24,10 @@ from shadersDefinition import *
 from TimeHelper import *
 from FileActions import *
 from ScreenAutopilot import *
+try:
+	from ScreenVirtualButtons import ScreenVirtualButtons
+except:
+	pass
 
 install_twisted_reactor()
 
@@ -70,7 +74,9 @@ if kivy.platform == 'android':
 		else:
 			pyactivity = 'org.kivy.android.PythonActivity'
 		Context = autoclass(pyactivity)	
-		Context.mActivity.getWindow().addFlags( Params.PARTIAL_WAKE_LOCK )
+		Context.mActivity.getWindow().addFlags( 
+			#Params.PARTIAL_WAKE_LOCK 
+			)
 		print( "OK will not go sleep !")	
 
 
@@ -80,8 +86,12 @@ else:
 	#pass
 
 class RootLayout(ScreenManager):
+	
 	def passGuiApp(self,gui):
 		self.gui = gui
+
+
+	
 
 
 class gui(App):
@@ -108,16 +118,18 @@ class gui(App):
 		
 		self.colorTheme = "day"
 	
-		
 	def build(self):			
 		Builder.load_file('layoutMain.kv')
 
+		Window.bind(on_key_down=self.on_key_up)
+		
 		self.th = TimeHelper()
 		self.timeAppStart = self.th.getTimestamp()
 
 		self.config = DataSR_restore('ykpilot.conf')
 		if self.config == None:
 			self.config = {}
+		
 		
 		self.sRace = ScreenRace(self)
 		self.sCompass = ScreenCompass()
@@ -156,6 +168,7 @@ class gui(App):
 			self.service = service
 			"""
 			self.workingFolderAdress = '/storage/emulated/0/ykpilot/'
+			self.virtualButtons = False
 
 		else:
 			self.platform = 'pc'
@@ -164,6 +177,10 @@ class gui(App):
 			makeRender = True
 			Clock.schedule_once(self.connectToSensorsRemoteTcp, 2 )
 			self.workingFolderAdress = './ykpilot/'
+			self.virtualButtons = True
+
+		if self.virtualButtons:
+			self.vBut = ScreenVirtualButtons(self)
 
 		wfa = self.workingFolderAdress.split("/")
 		dirName = wfa[-2]
@@ -181,6 +198,7 @@ class gui(App):
 		self.sen = sensors(self)
 		self.sen.gpsD.addCallBack( self.sRace )
 		self.sen.gpsD.addCallBack( self.sCompass )
+		self.sen.comCal.addCallBack( self.sen )
 		self.sen.comCalAccelGyro.addCallBack( self.sCompass )
 		self.sen.comCal.addCallBack( self.ap )
 		#self.sen.run()
@@ -240,6 +258,9 @@ class gui(App):
 			self.rl.ids.blModelScreen.add_widget( self.senBoat )
 
 
+
+		
+
 		if True:
 			self.simRen = simRender()
 			self.simEng = simEngine(self,self.simRen)
@@ -294,6 +315,13 @@ class gui(App):
 				icon = "icons/ico_sum_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
+			
+			if self.virtualButtons:
+				ab = ActionButton(text="Virtual Buttons",
+					icon = "icons/ico_in_256_256.png")
+				ab.bind(on_release=self.screenChange)
+				av.add_widget(ab)
+
 
 			ab = ActionButton(text="Compass")
 			ab.bind(on_release=self.screenChange)
@@ -444,12 +472,17 @@ class gui(App):
 				
 		if self.rl.current == "Model Screen":
 			self.senBoat.on_noMoreDisplayd()
+		if self.virtualButtons and self.rl.current == "Virtual Buttons":
+			self.vBut.on_noMoreDisplayd()
+			
 				
 		self.rl.current = sn
 		
 		print("screenChange to [%s]"%sn)
-		if sn == "Model Screen":
+		if sn == "Model Screen" :
 			self.senBoat.on_displayNow()
+		if self.virtualButtons and sn == "Virtual Buttons":
+			self.vBut.on_displayNow()
 		if sn == "Autopilot":
 			self.ap.updateGui()
 
@@ -468,6 +501,24 @@ class gui(App):
 			self.colorTheme = "day"
 		print("screenNightDay!",self.colorTheme)
 		
+	
+	def on_touch_down(self, touch):
+		print('down',touch.x, touch.y)
+		if 0:#collide_point:
+			return True
+		return False
+
+	def on_touch_up(self, touch):
+		print('up',touch.x, touch.y)
+		if 0:#collide_point:
+			return True
+		return False
+
+	
+	def on_key_up(self, *args):
+		print("on_key_up",list(args))
+		if self.rl.current == 'Simulator':
+			self.simEng.on_key_up(list(args))
 	
 	# screen: "Model Screen"
 	def on_touchSail(self, slider):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import kivy
 from gui import *
 import DataSaveRestore

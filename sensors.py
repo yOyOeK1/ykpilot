@@ -235,6 +235,10 @@ class gpsData:
 	status = "---"
 	lat = 0.0
 	lon = 0.0
+	avgSog = 0.0
+	maxSog = 0.0
+	gpsSog = 0.0
+	gpsCog = 0.0
 	cog = 0
 	sog = 0
 	accur = -1
@@ -244,6 +248,7 @@ class gpsData:
 	avgPos = [None,None]
 	oldData = {}
 	callBacksForUpdate = []
+	llOld = [None, None]
 	
 	def __init__(self,gui,debGuiObjts={}):
 		self.gui = gui
@@ -269,14 +274,18 @@ class gpsData:
 		doIt = True
 		
 		tSinceLast = (self.th.getTimestamp(True)-self.updateTime)/1000000.0
+		
 		if tSinceLast < 0.5:
 			doIt = False
 		else:
 			#print("-----------------")
 			#print("time since last",tSinceLast)
+			
 			pavg = LatLon( self.avgPos[0], self.avgPos[1] )
 			pNew = LatLon( val['lat'], val['lon'])
 			dis = pavg.distanceTo(pNew)
+			self.sog = (dis/tSinceLast)
+			self.cog = pavg.bearingTo(pNew)
 			spe = (( dis/1000.00 )/tSinceLast)*60.0*60.0
 			#print("distance is ",dis)
 			if spe > 100.00:
@@ -291,10 +300,20 @@ class gpsData:
 			self.guiObjs['lat'].text = "%s"%self.lat
 			self.lon = val['lon']		
 			self.guiObjs['lon'].text = "%s"%self.lon
-			self.sog = val['speed']
-			self.guiObjs['sog'].text = "%s"%round(self.sog,2)
-			self.cog = val['bearing']
-			self.guiObjs['cog'].text = "%s"%round(self.cog,1)
+			
+			self.gpssog = val['speed']
+			self.guiObjs['sog'].text = "%s / %s"%(round(self.gpssog,2), round(self.sog,2))
+			self.guiObjs['lSRacSog'].text = "%s" % round(self.sog,1)
+			if self.maxSog < self.sog:
+				self.maxSog = self.sog
+			self.guiObjs['lSRacSogMax'].text = "max: %s" % round(self.maxSog,2)
+			self.avgSog = (self.avgSog*0.98)+(self.sog*0.02)
+			self.guiObjs['lSRacSogAvg'].text = "avg: %s" % round(self.avgSog,2)
+			
+			
+			self.gpscog = val['bearing']
+			self.guiObjs['cog'].text = "%s / %s"%(round(self.gpscog,1), round(self.cog,1))
+			
 			self.accur = val['accuracy']		
 			self.guiObjs['accur'].text = "%s"%round(self.accur,0)
 			
@@ -321,6 +340,7 @@ class gpsData:
 				"data": val
 				})
 			self.gui.sf.sendToAll( jMsg )
+		
 		
 class xyzData:
 	historyMem = 1010
@@ -540,8 +560,17 @@ class xyzData:
 			m = math.degrees(self.axis['z'][-1])
 			mov = m*(t/1000000.0)
 			try:
-				#print("accelGyro",mov)
-				vts = (self.gui.sen.comCalAccelGyro.z-mov)*0.97+(self.gui.sen.comCal.hdg*0.03)
+				hdg = self.gui.sen.comCal.hdg%360.00
+				if hdg > 180.00:
+					hdg = hdg - 360.0
+				z = self.gui.sen.comCalAccelGyro.z
+				
+				if (hdg - z) < -180.0:
+					hdg+=360.00
+				elif (hdg - z) > 180.0:
+					hdg-=360.00
+				vts = (z-mov)*0.95+(hdg*0.05)
+				#print("accelGyro ",round(mov,2)," vts ",round(vts,2)," hdg ",round(hdg,2))
 				self.gui.sen.comCalAccelGyro.setVal([
 					0.0,0.0,
 					vts
@@ -649,9 +678,6 @@ class xyzData:
 			})
 		self.gui.sf.sendToAll( jMsg )
 			
-		if self.type == 'comCal':
-			self.gui.sen.on_boatUpdate()
-
 		self.lastTimeIter = timeNowInMillis
 
 class sensors:
@@ -712,6 +738,9 @@ class sensors:
 			'lat': self.gui.rl.ids.senLGpsLat,
 			'lon': self.gui.rl.ids.senLGpsLon,
 			'sog': self.gui.rl.ids.senLGpsSog,
+			'lSRacSog': self.gui.rl.ids.lSRacSog,
+			'lSRacSogMax': self.gui.rl.ids.lSRacSogMax,
+			'lSRacSogAvg': self.gui.rl.ids.lSRacSogAvg,
 			'cog': self.gui.rl.ids.senLGpsCog,
 			'accur': self.gui.rl.ids.senLGpsAcc
 			})
@@ -1138,7 +1167,7 @@ class sensors:
 		print("gps_stop")
 		gps.stop()
 	
-	def on_boatUpdate(self):
+	def update(self,fromWho, vals):
 		self.boat = {
 			'cogError': 0.0,
 			'hdg': self.comCal.hdg,

@@ -1,5 +1,11 @@
+from kivy.core.image import Image
+from kivy.graphics import BindTexture
+
 
 class MeshData(object):
+	
+	
+	
 	def __init__(self, **kwargs):
 		self.name = kwargs.get("name")
 		self.vertex_format = [
@@ -14,7 +20,7 @@ class MeshData(object):
 		self.ambient_color = (1.0, 1.0, 1.0)
 		self.specular_color = (1.0, 1.0, 1.0)
 		self.specular_coefficent = 16.0
-		self.transparency = 1.0
+		self.transparency = 0.0
 		
 		
 	def set_materials(self, mtl_dict):
@@ -33,6 +39,20 @@ class MeshData(object):
 		if not transparency: 
 			transparency = 1.0 - float(mtl_dict.get('Tr', 0)[0])
 		self.transparency = float(transparency)
+		
+		
+		t = mtl_dict.get('map_Kd')
+		if t:
+			self.textureFile = str(t[0]).replace('/home/yoyo/Apps/ykpilot/', './')
+				
+			#im = Image( self.textureFile )
+			#self.texture = im.texture
+			#self.textureImg = im
+			#self.map = self.texture
+			#self.texture.wrap = 'repeat'
+		 
+		else:
+			self.textureFile = -1
 		
 
 	def calculate_normals(self):

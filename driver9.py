@@ -8,6 +8,8 @@ import random
 import DataSaveRestore
 from dis import dis
 from DataSaveRestore import DataSR_restore
+from TimeHelper import *
+#from qml import action
 try:
 	from matplotlib import pyplot as plt
 except:
@@ -66,6 +68,9 @@ class qrlAtomizer(qrlHelper):
 				if self.cross180 == False:
 					return 0.0#( 1.0/(self.chkHowManyContinuesWorkInAction()+1) ) / (len(self.actionHistory)+1)
 
+		if m.fabs(data['cogError']) > 175.00:
+			return -2.0
+
 		return -1.0
 
 	def get_discrete_state(self,data):
@@ -99,12 +104,13 @@ class qrlAtomizer(qrlHelper):
 class driver9:
 	fps = 30.0
 	work = False
-	episodeLen = fps*17.00
+	episodeLen = fps*25.00
 	EPISODES = 500000
 	SHOW_EVERY = 10000
 		
 	def __init__(self, simEng):
 		self.sim = simEng
+		self.th = TimeHelper()
 	
 	def run(self,render = True):		
 		self.render = render
@@ -113,6 +119,28 @@ class driver9:
 		self.timeOfWork = 0.0
 		self.ep_rewards = []
 		_thread.start_new(self.startIt,())
+		
+	def driveIt(self,a=1):
+		boat = self.sim.boat
+		boat['sog'] = 3.0
+		ds = self.driverQRL.get_discrete_state( boat )
+		aa = max(self.driverQRL.q_table[ds])
+		action = self.driverQRL.q_table[ds].index(aa)-1
+		self.sim.iter(action)
+		self.sim.renderFrame()
+		Clock.schedule_once(self.driveIt, 1.0/30.0)
+				
+		
+	def on_driveIt(self):
+		print("driver9.on_driveIt")
+		self.driverQRL = qrlAtomizer("atomizer")
+		self.driverQRL.epsilon = 0.0
+		self.driverQRL.reset()
+		self.driverQRL.startEpisode()
+		self.sim.reset()
+		self.sim.iter(0)
+		self.driveIt()
+		
 		
 	def startIt(self):
 		self.qa = qrlAtomizer("atomizer")
@@ -124,7 +152,9 @@ class driver9:
 					nm = episode*(self.episodeLen/self.fps)/60.0/60.0*self.sim.boat['sog']
 					print("episode: %s \texpiriance: %s [nm]"%(episode,round(nm,2)))
 					print("res:%s",self.ep_rewards[-1])
+
 				self.itersLeft = self.episodeLen
+				
 				self.sim.reset()
 				self.mainLoop()
 			
@@ -194,6 +224,7 @@ class driver9:
 		self.sim.iter(0)
 		self.sim.iter(0)
 		finishSesionOk = True
+		killByCrossing = 0
 		while self.itersLeft > 0:
 			b = s.boat
 			
@@ -203,30 +234,6 @@ class driver9:
 				self.timeOfOff = 0.0
 				self.timeOfLastMove = 0.0
 				
-				dirOld = None
-				if len(self.mh)>(2.0*self.fps):
-					self.mh.pop(0)
-					self.discreteHistory.pop()
-				if len(self.mh)>4:
-					for d in self.mh:					
-						if dirOld == None:
-							dirOld = dir
-						if d != dirOld:
-							self.directionChangeCount+=1
-							self.timeOfLastMove = 0.0
-						if d != 0:
-							self.timeOfWork+=1.0/self.fps
-						if d == 0:
-							self.timeOfOff+=1.0 / self.fps
-							
-						self.timeOfLastMove+=1.0/self.fps
-						
-						dirOld = d
-						
-				if not iterNo % ( 2.0*self.fps ):
-					timeOfOff+= self.timeOfOff
-					timeOfWork+= self.timeOfWork
-					directionChangeCount+= self.directionChangeCount
 			except:
 				pass
 			
@@ -252,7 +259,13 @@ class driver9:
 					'corss180:',self.q.cross180
 					)
 			
-			
+			try:
+				if self.q.cross180 == True:
+					self.itersLeft = 10
+					killByCrossing+=1
+					#print("kill by crossing 180")
+			except:
+				pass
 			
 			
 			if qOld == "atomizer" and reward != -1.0:
@@ -297,7 +310,8 @@ class driver9:
 			'q': self.qa.epsilon,
 			'qAcu': sum(self.qa.episodeHistory[-100:]),
 			'qMem': len(self.qa.q_table),
-			'freeFallTime': freeFallTime
+			'freeFallTime': freeFallTime,
+			'killByCloss': killByCrossing
 			})
 		#print( rewardMem[-10:])
 		return finishSesionOk

@@ -41,7 +41,7 @@ class ScreenAutopilot:
 		
 		self.driverType = self.gui.config['apDriver']
 		self.sDriTyp = Spinner(
-			values = ['driver9', 'PID'],
+			values = ['driver9 3kts', 'driver9 11kts', 'PID'],
 			text = self.driverType,
 			)
 		self.gui.rl.ids.blAutDri.add_widget(self.sDriTyp)
@@ -83,10 +83,16 @@ class ScreenAutopilot:
 			#print(boat)
 			
 			action = 0
-			if self.driverType == 'driver9':
+			if self.driverType == 'driver9 11kts':
+				boat['sog'] = 11.0
 				ds = self.driverQRL.get_discrete_state( boat )
 				aa = max(self.driverQRL.q_table[ds])
 				action = self.driverQRL.q_table[ds].index(aa)-1
+			if self.driverType == 'driver9 3kts':
+				boat['sog'] = 3.0
+				ds = self.driverQRL.get_discrete_state( boat )
+				aa = max(self.driverQRL.q_table[ds])
+				action = self.driverQRL.q_table[ds].index(aa)-1			
 			elif self.driverType == 'PID':
 				c = self.pid( boat['cogError'] )
 				print('pid cogError',boat['cogError']," c",c)
