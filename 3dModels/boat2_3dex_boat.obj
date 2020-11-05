@@ -1,6 +1,6 @@
 # Blender v2.79 (sub 0) OBJ File: 'boat2.blend'
 # www.blender.org
-mtllib boat2_3dex_boat.mtl
+mtllib /home/yoyo/Apps/ykpilot/3dModels/boat2_3dex_boat.mtl
 o boat_Cylinder.001
 v -0.000000 -0.228918 -1.485679
 v -0.000000 10.791065 -1.485679

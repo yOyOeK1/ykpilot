@@ -83,7 +83,7 @@ class simEngine:
 	
 	def reset(self):
 		self.waves = [
-			#waveObj(self.fps, 0,1.5,10),
+			waveObj(self.fps, 45,0.5,12),
 			#waveObj(self.fps, 270,5,30),
 			#waveObj(self.fps, 45,0.7,9),
 			waveObj(self.fps, 0,1,10)
@@ -129,7 +129,7 @@ class simEngine:
 		ruderStart  = 0.0001
 		self.boat['ruderPos'] = (-ruderStart/2.0) + random.random()*ruderStart
 		  
-		self.boat['sog'] = 2.01
+		self.boat['sog'] = 0.2
 		#self.boat['sog'] += (random.random()*5.0)-5.0
 		self.runTime = 0.0
 		self.xte = 0.0
@@ -283,12 +283,17 @@ class simEngine:
 		
 	def on_key_up(self, args):
 		print("simEngine.on_key_up",args)
-		k = args[3]
-		if k == 'a':
-			self.boat['sog']+= 0.1
-		elif k == ';':
-			self.boat['sog']-= 0.1
-		if args[2] == 80: 
-			self.boat['ruderPos']-=0.1
-		elif args[2] == 79:
-			self.boat['ruderPos']+=0.1
+		try:
+			k = args[3]
+			if k == 'a':
+				self.boat['sog']+= 0.1
+			elif k == ';':
+				self.boat['sog']-= 0.1
+			if args[2] == 80: 
+				self.boat['ruderPos']-=0.1
+			elif args[2] == 79:
+				self.boat['ruderPos']+=0.1
+		except:
+			print("EE - on_key_up",len(args))	
+			
+		

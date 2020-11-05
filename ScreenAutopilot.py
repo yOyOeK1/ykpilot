@@ -13,6 +13,10 @@ from AutopilotSettings import AutopilotSettings
 from driver9 import *
 from threading import _start_new_thread
 from simple_pid import PID
+from apWifiCommunication import apWifiCommunication
+
+
+
 
 class ScreenAutopilot:
 	
@@ -114,8 +118,12 @@ class ScreenAutopilot:
 		sleepTime = 0.05
 		actionSumtract = sleepTime*2.0
 		is_alive = False
-		self.initSine()
 		
+		print("apCommunicationMode",self.apCommunicationMode)
+		
+		if self.apCommunicationMode == 'audio jack':
+			self.initSine()
+			
 		while True:
 			
 			if 0:
@@ -128,7 +136,7 @@ class ScreenAutopilot:
 					' sinCo', sinRunning					
 					)
 			
-			if is_alive == False:
+			if is_alive == False and self.apCommunicationMode == 'audio jack':
 				if self.burstRunning or self.status == 'on':					
 					try:
 						self.sin.start()
@@ -149,18 +157,32 @@ class ScreenAutopilot:
 					self.cPlus = 0
 				
 			if self.cMin > 0.0:
-				if self.sin.frequency != self.freq[0]:
-					self.sin.frequency = self.freq[0]
+				if self.apCommunicationMode == 'audio jack':
+					if self.sin.frequency != self.freq[0]:
+						self.sin.frequency = self.freq[0]
+				elif self.apCommunicationMode == 'wifi udp':
+					self.udp.send(self.apWifiCmdL)
+				elif self.apCommunicationMode == 'wifi tcp':
+					self.tcp.send(self.apWifiCmdL)
+					
 				self.cMin-= actionSumtract
 				
 			elif self.cPlus > 0.0: 
-				if self.sin.frequency != self.freq[2]:
-					self.sin.frequency = self.freq[2]
+				if self.apCommunicationMode == 'audio jack':
+					if self.sin.frequency != self.freq[2]:
+						self.sin.frequency = self.freq[2]
+				elif self.apCommunicationMode == 'wifi udp':
+					self.udp.send(self.apWifiCmdR)
+				elif self.apCommunicationMode == 'wifi tcp':
+					self.tcp.send(self.apWifiCmdR)
 				self.cPlus-= actionSumtract
 				
 			if self.cMin <= 0.0 and self.cPlus <= 0.0 and self.status == 'on':
-				if self.sin.frequency != self.freq[1]:
-					self.sin.frequency = self.freq[1]
+				if self.apCommunicationMode == 'audio jack':
+					if self.sin.frequency != self.freq[1]:
+						self.sin.frequency = self.freq[1]
+					elif self.apCommunicationMode == 'wifi tcp':
+						self.tcp.send(self.apWifiCmdPing)
 				
 						
 			
@@ -169,7 +191,8 @@ class ScreenAutopilot:
 			
 			if self.status == 'off' and self.burstRunning:
 				if self.cMin <= 0.0 and self.cPlus <= 0.0:
-					self.sin.stop()
+					if self.apCommunicationMode == 'audio jack':
+						self.sin.stop()
 					sinRunning-=1
 					is_alive = False
 					self.burstRunning = False
@@ -177,12 +200,13 @@ class ScreenAutopilot:
 					self.cPlus = 0.0
 					
 			if self.status == 'off' and is_alive and self.burstRunning == False:
-				self.sin.stop()
+				if self.apCommunicationMode == 'audio jack':
+					self.sin.stop()
 				sinRunning-=1
 				is_alive = False
 				self.cMin = 0.0
 				self.cPlus = 0.0
-	
+
 	def setupDriver(self):
 		print("---------- setup driver ----------")
 		self.driverQRL = qrlAtomizer("atomizer")
@@ -207,10 +231,30 @@ class ScreenAutopilot:
 		if self.gui.config['apDirectionReverse'] == 0:
 			self.freq[0] = float(self.freqOrg[0])
 			self.freq[2] = float(self.freqOrg[2])
+			self.apWifiCmdL = 'L'
+			self.apWifiCmdR = 'R'
 			
 		else:
 			self.freq[0] = float(self.freqOrg[2])
 			self.freq[2] = float(self.freqOrg[0])
+			self.apWifiCmdL = 'R'
+			self.apWifiCmdR = 'L'
+		
+		self.apWifiCmdPing = "P"
+			
+		self.apCommunicationMode = self.gui.config['apCommunicationMode']
+		if self.apCommunicationMode == "wifi udp":
+			self.udp = apWifiCommunication()
+			self.udp.connect(
+				self.gui.config['apWifiIp'], 
+				18889
+				)
+		elif self.apCommunicationMode == "wifi tcp":
+			self.tcp = self.gui.tcp4ap
+			if self.tcp.workStatus == False:
+				self.tcp.work()
+				
+				
 		
 	def on_settings(self):
 		print("ap.on_settings")

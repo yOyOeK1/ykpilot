@@ -16,6 +16,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.core.image import Image
+from kivy.graphics import BindTexture
 from kivy.uix.widget import Widget
 from kivy.resources import resource_find
 from kivy.graphics.transformation import Matrix
@@ -25,7 +26,13 @@ from objloader import ObjFile
 from modelsLoader import modelsLoader
 import math as m
 
+from kivy.properties import ListProperty, ObjectProperty, NumericProperty
+
+
 class Renderer(Widget):
+
+	mesh_texture = ObjectProperty(None)
+
 	r = 0.0
 	aniSteps = 0.86
 	aniApli = 1.0
@@ -41,15 +48,17 @@ class Renderer(Widget):
 	objRot = {}
 	
 	
+	
+	
 	def __init__(self, **kwargs):
 		self.canvas = RenderContext(compute_normal_mat=True)
 		self.canvas.shader.source = resource_find('simple.glsl')
 		ml = modelsLoader("boat2")
 		self.o = ml.getObjects()
-		
 		scenRos = ObjFile(resource_find("./3dModels/3d_roseta.obj"))
 		self.o['roseta'] = scenRos.objects[ list(scenRos.objects.keys())[0] ]
 		print("roseta[%s]"%self.o['roseta'])
+		
 		
 		super(Renderer, self).__init__(**kwargs)
 		with self.canvas:
@@ -71,6 +80,7 @@ class Renderer(Widget):
 
 	def setGui(self,gui):
 		self.gui = gui
+		
 
 	def openScreenAnimation(self):
 		print("openScreenAnimation")
@@ -116,10 +126,6 @@ class Renderer(Widget):
 	
 	def setArrowsAccel(self, axis=[]):
 		#print("\n\nsetArrowsAccel",axis)
-		
-		
-			
-		
 		for i,a in enumerate("XYZ"):
 			axis_ = axis[i]
 			#print(" -- > ",i,a)
@@ -168,6 +174,7 @@ class Renderer(Widget):
 			if self.gui:
 				if self.gui.rl.current != "Model Screen":
 					return None
+		#print("Model Screen")
 		
 		
 		asp = 200.00 / float(200.00)
@@ -217,20 +224,24 @@ class Renderer(Widget):
 			m.mrot[0].angle = 0.0
 			m.mrot[1].angle = 0.0
 			m.mrot[2].angle = 0.0
-			#print(m)
 			texture = None
-		
-		
-			if texture:
-				print("- mesh with texture ")
+			
+			if 0:#m.textureFile != -1:
+				
+				print("- mesh with texture ",m.textureFile)
+				print("	1",self.mesh_texture)
+				self.mesh_texture = Image.load('/tmp/g.jpg').texture
+				self.mesh_texture.wrap = 'repeat'
+				print(" 2",self.mesh_texture)
 				mm = Mesh(
 					vertices=m.vertices,
 					indices=m.indices,
 					fmt=m.vertex_format,
-					texture=texture,
 					mode='triangles',
+					texture = self.mesh_texture
 					)
 			else:
+				print("- mesh without texture")
 				Mesh(
 					vertices=m.vertices,
 					indices=m.indices,
@@ -263,6 +274,7 @@ class Renderer(Widget):
 			
 			
 			PushMatrix()
+			UpdateNormalMatrix()
 			o['sailGenoa'] = o['sailGenoa_onPower']
 			#Rotate(24,-1,0,0)
 			Translate(0,0,-7)

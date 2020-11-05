@@ -214,20 +214,22 @@ def MTL(filename):
 	mtl = None
 	#print("MTL %s"%filename)
 	
-	for line in open('./3dModels/'+filename, "r"):
-		if line.startswith('#'):
-			continue
-		values = line.split()
-		if not values:
-			continue
-		if values[0] == 'newmtl':
-			mtl = contents[values[1]] = {}
-		elif mtl is None:
-			raise ValueError("mtl file doesn't start with newmtl stmt")
+	try:
+		for line in open('./3dModels/'+filename, "r"):
+			if line.startswith('#'):
+				continue
+			values = line.split()
+			if not values:
+				continue
+			if values[0] == 'newmtl':
+				mtl = contents[values[1]] = {}
+			elif mtl is None:
+				raise ValueError("mtl file doesn't start with newmtl stmt")
+			
+			mtl[values[0]] = values[1:]
 		
-		mtl[values[0]] = values[1:]
-		
-		
+	except:
+		pass
 	#print("mtl args")
 	#print( mtl.keys() )
 	return contents

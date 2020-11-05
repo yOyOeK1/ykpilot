@@ -3,19 +3,14 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager
-
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.actionbar import ActionBar, ActionPrevious, ActionView,\
 	ActionOverflow, ActionButton
 from kivy.properties import NumericProperty
 from kivy.core.window import Window
-
-
 from kivy_garden.graph import Graph, MeshLinePlot
-
 from kivy.support import install_twisted_reactor
 from kivy.uix.floatlayout import FloatLayout
 
@@ -24,6 +19,14 @@ from shadersDefinition import *
 from TimeHelper import *
 from FileActions import *
 from ScreenAutopilot import *
+from kivy.core.image import Image
+try:
+	from ScreenAutopilot import *
+except:
+	print("EE - no audiostream so no ScreenAutopilot")
+#from d3DriveIt import d3tex2
+
+#from ScreenVirtualButtons import ScreenVirtualButtons
 try:
 	from ScreenVirtualButtons import ScreenVirtualButtons
 except:
@@ -36,6 +39,9 @@ from twisted.internet import protocol
 
 import _thread
 
+
+from twistedTcpClient import *
+
 from sensors import *
 from helperUdp import *
 from remotePython import remotePython
@@ -47,6 +53,9 @@ from simEngine import *
 from DataSaveRestore import *
 from ScreenRace import *
 from ScreenCompass import *
+from ScreenNMEAMultiplexer import *
+from ScreenWidgets import *
+#from Screen3dtextures import *
 
 from driver1 import *
 from driver2 import *
@@ -76,6 +85,7 @@ if kivy.platform == 'android':
 		Context = autoclass(pyactivity)	
 		Context.mActivity.getWindow().addFlags( 
 			#Params.PARTIAL_WAKE_LOCK 
+			Params.FLAG_KEEP_SCREEN_ON
 			)
 		print( "OK will not go sleep !")	
 
@@ -103,9 +113,14 @@ class gui(App):
 	
 	btH = kivy.metrics.cm(1)
 	lineH = kivy.metrics.cm(0.7)
+	lDynamicLable = ObjectProperty(1)
 	
-	
-	
+	wifiTcpStatusOpts = {
+		'on': "icons/ico_armG_256_256.png",
+		'off': "icons/ico_armR_256_256.png"
+		}
+	wifiTcpStatus = StringProperty("icons/ico_manZle_256_256.png")
+		
 	def __init__(self, *a, **kw):
 		super(gui, self).__init__(*a, **kw)
 		
@@ -113,15 +128,48 @@ class gui(App):
 			self.sensorsRemoteTcp = "host:port" 
 		else:
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
-			self.sensorsRemoteTcp = "192.168.43.208:11223"
-		
+			#self.sensorsRemoteTcp = "192.168.43.208:11223"
+			self.sensorsRemoteTcp = "192.168.49.199:11223"
 		
 		self.colorTheme = "day"
 	
-	def build(self):			
+	def doLocalIp(self):
+		print("- do local ips")
+		import subprocess
+		
+		
+		r = subprocess.Popen(['ip','address'], stdout=subprocess.PIPE)
+		so,se = r.communicate()
+		self.ips = []
+		l = so.split()
+		print("	got elements",len(l))
+		for ii,i in enumerate(l):
+			i = str(i)[2:-1]
+			#print("i:[",i,']')
+			if len(i)>2:
+				if i[-1] == ":":
+					print("	interface: ",i)
+				
+				if str(l[ii-1])[2:-1] == 'inet':
+					ip = i
+					ip = ip.split("/")
+					ip = ip[0]
+					print("		ip:",ip)
+					if ip == "127.0.0.1":
+						print("	skip it's local")
+					else:
+						self.ips.append(ip)
+		
+		self.rl.ids.l_phoLocIps.text = "Local ip's: {}".format(", ".join(self.ips))
+	
+		#sys.exit(0)
+	
+	def build(self):	
+		
 		Builder.load_file('layoutMain.kv')
 
-		Window.bind(on_key_down=self.on_key_up)
+		Window.bind(on_key_down=self.on_key_down)
+		Window.bind(on_key_up=self.on_key_up)
 		
 		self.th = TimeHelper()
 		self.timeAppStart = self.th.getTimestamp()
@@ -131,12 +179,19 @@ class gui(App):
 			self.config = {}
 		
 		
+		self.rl = RootLayout()
+		
+		self.doLocalIp()
+		
 		self.sRace = ScreenRace(self)
 		self.sCompass = ScreenCompass()
 		self.sCompass.setGui(self)
-		self.rl = RootLayout()
-		self.sRace.setupGui()
 		self.rl.ids.blCompass.add_widget( self.sCompass )
+		#self.s3dtextures = Screen3dtextures()
+		#self.s3dtextures.setGui(self)
+		#self.rl.ids.bl3dtextures.add_widget( self.s3dtextures.l )
+		self.sRace.setupGui()
+		
 		
 		
 		self.cDefVals = {
@@ -144,7 +199,9 @@ class gui(App):
 			'totalUptime' : 0,
 			'totalMiles': 0.0,
 			'apDirectionReverse': 0,
-			'apDriver': 'driver9'
+			'apDriver': 'driver9',
+			'apCommunicationMode': "audio jack",
+			'apWifiIp': '192.168.4.1'
 			}
 		
 		for k in self.cDefVals.keys():
@@ -154,26 +211,39 @@ class gui(App):
 				print("config default - > no value [",k,"] setting [",self.cDefVals[k],"]")
 				self.config[k] = self.cDefVals[k]
 		
+		
+		self.tcp4ap = ttc(self)
 		self.ap = ScreenAutopilot(self)
 		
 		if kivy.platform == 'android':
 			self.platform = 'android'
-			ip = '192.168.43.208'
-			senderPort = 11223
+			ipSens = '192.168.43.208'
+			if len(self.ips)>0:
+				ipSens = self.ips[0]			
+			ip = ipSens
+			self.senderIp = ip
+			self.senderPort = 11223
 			makeRender = True
-			"""
+			print("- setting up a sensor server at ",ipSens,":",self.senderPort)
+			
+			# android service
 			from android import AndroidService
 			service = AndroidService("ykpilot background","running ....")
 			service.start("service started")
 			self.service = service
-			"""
+			# android service
+
 			self.workingFolderAdress = '/storage/emulated/0/ykpilot/'
 			self.virtualButtons = False
 
 		else:
 			self.platform = 'pc'
-			ip = '192.168.43.55'
-			senderPort = 11225
+			ipSens = '192.168.49.199'
+			if len(self.ips)>0:
+				ipSens = self.ips[0]			
+			ip = ipSens
+			self.senderIp = ip
+			self.senderPort = 11225
 			makeRender = True
 			Clock.schedule_once(self.connectToSensorsRemoteTcp, 2 )
 			self.workingFolderAdress = './ykpilot/'
@@ -199,9 +269,15 @@ class gui(App):
 		self.sen.gpsD.addCallBack( self.sRace )
 		self.sen.gpsD.addCallBack( self.sCompass )
 		self.sen.comCal.addCallBack( self.sen )
+		self.sen.comCal.addCallBack( self.sCompass )
 		self.sen.comCalAccelGyro.addCallBack( self.sCompass )
 		self.sen.comCal.addCallBack( self.ap )
 		#self.sen.run()
+
+		
+		self.sNMEAMul = ScreenNMEAMultiplexer()
+		self.sNMEAMul.setGui(self)
+		
 
 
 		self.graph = Graph(xlabel='time', ylabel="angle", x_ticks_minor=1,
@@ -251,6 +327,12 @@ class gui(App):
 		self.graphMic.add_plot(self.pMic2)
 		self.rl.ids.blMicScre.add_widget(self.graphMic)
 
+		
+		#self.d3tex2 = d3tex2()
+		#self.d3tex2.setGui(self)
+		#self.rl.ids.bl3dtextures2.add_widget( self.d3tex2 )
+
+		#makeRender = False
 		if makeRender:
 			#self.rl.current= "Sensors"
 			self.senBoat = Renderer()
@@ -283,9 +365,9 @@ class gui(App):
 
 
 
-		print("Sender Server is on port[%s]"%senderPort)
+		print("Sender Server is on port[%s]"%self.senderPort)
 		self.sf = MyServerFactory(self)
-		reactor.listenTCP(senderPort, self.sf )
+		reactor.listenTCP(self.senderPort, self.sf )
 		
 		
 		
@@ -326,13 +408,27 @@ class gui(App):
 			ab = ActionButton(text="Compass")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
+			
+			"""
+			ab = ActionButton(text="3dtextures")
+			ab.bind(on_release=self.screenChange)
+			av.add_widget(ab)
+			
+			ab = ActionButton(text="3dtextures2")
+			ab.bind(on_release=self.screenChange)
+			av.add_widget(ab)
+			"""
+			
 			ab = ActionButton(text="Race",
 				icon = "icons/ico_time_256_256.png")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
+			
 			ab = ActionButton(text="Autopilot")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
+
+			
 
 
 			ab = ActionButton(text="Mic Screen")
@@ -349,6 +445,16 @@ class gui(App):
 			ab.bind(on_release=self.screenDay)
 			av.add_widget(ab)
 			"""
+			
+			ab = ActionButton(text="Widgets")
+			ab.bind(on_release=self.screenChange)
+			av.add_widget(ab)
+			
+			ab = ActionButton(text="NMEA multiplexer")
+			ab.bind(on_release=self.screenChange)
+			av.add_widget(ab)
+
+			
 			av.add_widget(ao)
 			
 			self.mw.add_widget(a)
@@ -363,12 +469,24 @@ class gui(App):
 		toreturn = self.sen.buidPlayer(toreturn)
 		#play from file
 
+		
+
+
 		#self.ap.setupDriver()
 		self.sen.run()
 		self.screenChange(self.config['screenCurrent'])
 		#Window.set_title("ykpilot")
 
 		#return self.rl 
+
+		self.sWidgets = ScreenWidgets()
+		self.sWidgets.setGui(self)
+		#Clock.schedule_once(self.sWidgets.setUpGui(self), 0.5)
+		
+		self.sWidgets.setUpGui()
+
+		
+		Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 		return toreturn 
 
 
@@ -485,6 +603,8 @@ class gui(App):
 			self.vBut.on_displayNow()
 		if sn == "Autopilot":
 			self.ap.updateGui()
+		if self.rl.current == "3dtextures2":
+			self.d3tex2.on_displayNow()
 
 		
 	def screenNight(self, a):
@@ -515,10 +635,21 @@ class gui(App):
 		return False
 
 	
+	def on_key_down(self, *args):
+		print("on_key_down",list(args))
+		if self.rl.current == '3dtextures':
+			self.s3dtextures.on_key_down(list(args))
+		
+	
+	
 	def on_key_up(self, *args):
 		print("on_key_up",list(args))
 		if self.rl.current == 'Simulator':
 			self.simEng.on_key_up(list(args))
+		elif self.rl.current == '3dtextures':
+			self.s3dtextures.on_key_up(list(args))
+		
+	
 	
 	# screen: "Model Screen"
 	def on_touchSail(self, slider):

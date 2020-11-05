@@ -8,10 +8,16 @@ class ScreenRace:
 	sogMemory = 30 # seconds
 	sogHistory = []
 	
-	def __init__(self, gui):
-		self.gui = gui
+	def __init__(self, gui = None):
+		if gui == None:
+			print("ScreenRace __init__ with gui == None - need to set it up!")
+		else:	
+			self.gui = gui
+		
 		self.th = TimeHelper()
 		
+	def setGui(self, gui):
+		self.gui = gui
 	
 	def setupGui(self):
 		self.sogG = Graph(

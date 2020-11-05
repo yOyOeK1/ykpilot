@@ -6,6 +6,33 @@
 	BoxLayout:
 		orientation: "vertical"
 		
+		
+		BoxLayout:
+			size_hint_y: None
+			height: app.btH
+			orientation: "horizontal"
+			
+			Label:
+				text: "Way of communication:"
+				
+			Spinner:
+				id: sp_apConnectionMode
+				text: ""
+				values: ('audio jack', 'wifi udp', 'wifi tcp')
+				
+		BoxLayout:
+			size_hint_y: None
+			height: app.btH
+			orientation: "horizontal"
+			
+			Label:
+				text: "If wifi then ip:"
+			TextInput:
+				id: ti_apWifiIp
+				
+			
+		
+		
 		BoxLayout:
 			size_hint_y: None
 			height: app.btH
@@ -56,4 +83,9 @@
 				height: app.btH
 				text: "Save"
 				on_press: root.on_bt_save()
+				
+		
+				
+			
+			
 				

@@ -3,17 +3,40 @@ from kivy.uix.widget import Widget
 from kivy.core.text import Label
 from kivy.graphics.opengl import *
 from kivy.graphics import *
+from kivy.properties import ObjectProperty
+from kivy.core.window import Window
 
 class ScreenCompass(Widget):
+	
 	
 	def __init__(self, **kwargs):
 		super(ScreenCompass, self).__init__(**kwargs)
 		
+		self.pos = [0.0,0.0]
+		self.orgSize = [145.0*2.0, 145.0*2.0]
+		self.size = [self.orgSize[0],self.orgSize[1]]
+		self.scale = 1.0
+		self.rotation = 0.0 
 		self.drawIt()
+		
+	def getSize(self):
+		return self.orgSize
+		
+	def setPos(self, pos):
+		print("comapass pos",self.pos," size",self.size)
+		self.pos = pos
+		
+	def setScale(self, scale):
+		self.scale = scale
+		
+	def setRot(self, rot):
+		self.rotation = rot
 		
 	def setGui(self, gui):
 		self.gui = gui
 		
+	def getWidget(self):
+		return self
 		
 	def setColor(self,t):
 		if t == "w":
@@ -35,14 +58,14 @@ class ScreenCompass(Widget):
 		Line( points=points )
 			
 	def drawIt(self):
-		
-		
-		
+				
 		with self.canvas:
 			self.setColor('w')
 			
+			PushMatrix()
 			self.centPos = Translate(0,0,0)
 			self.comScale = Scale(1,1,1)
+			self.comRot = Rotate(0,0,0,1)
 			
 			# HDG
 			PushMatrix()
@@ -126,10 +149,15 @@ class ScreenCompass(Widget):
 					size = (6, 10)
 					)
 			
-			self.bind( 
-				pos = self.updateIt, 
-				size = self.updateIt
-				)
+			self.bind( pos = self.updateIt )
+			#self.bind( size = self.updateOfSize )
+			#self.bind( scale = self.scale )
+			#self.bind( rotation = self.rotation )
+			
+			PopMatrix()
+	
+	def updateOfSize(self,a='',b=''):
+		print("compass.update of size",self.size,"\na",a,"\nb",b)
 			
 	def setHdg(self, v):
 		self.r.angle = v
@@ -139,28 +167,59 @@ class ScreenCompass(Widget):
 			
 			
 	def update(self, fromWho, vals):
-		if self.gui.rl.current != "Compass":
+		if self.gui.rl.current in [ "Compass", 'Widgets']:
+			pass
+		else:
 			return 0
+		ms = self.gui.th.getTimestamp(True)
+		
+		if ( self.gui.sen.comCalAccelGyro.lastTimeIter + 5000000.0 ) < ms:
+			#print("comCalAccel not comming old")
+			if fromWho == "comCal":
+				#print("screenCompass.update got comCal[",vals,"]")
+				self.setHdg( int(vals) )
+		
 		
 		if fromWho == 'gps':
 			self.setCog( int(vals['bearing']) )
 		elif fromWho == 'comCalAccelGyro':
 			self.setHdg( int(vals[2]) )
-		else:
-			print("ScreenCompass.update" ,fromWho, vals)
 			
 	def updateIt(self, *args):
-		if self.gui.rl.current != "Compass":
+		print("compass.updateIt")
+		try:
+			aoeuobc = self.gui
+		except:
 			return 0
-		print("ScreenCompass - > update_rect")
-		print(" size parest ", self.parent.size)
+		
+		if self.gui.rl.current in ["Compass","Widgets"]:
+			pass
+		else:
+			return 0
+		
+		#self.size[0],self.size[1] = self.orgSize[0],self.orgSize[1]
+		
+		if 1:
+			print("ScreenCompass - > update_rect")
+			print(" size parest ", self.parent.size)
+			print("	self.orgSize",self.orgSize)
+			print(" self size ",self.size)
+			print("	self pos ",self.pos)
 		#self.rec.pos = self.pos
 		#self.rec.size = self.size
-		self.centPos.x = self.size[0]/2.0
-		self.centPos.y = self.size[1]/2.0
-		s = (self.size[0]/2.0)/140.0
-		self.comScale.x = s
-		self.comScale.y = s
-		self.comScale.z = s
+		if self.gui.rl.current == 'Compass':
+			ws = Window.size
+			self.centPos.x = ws[0]*.5
+			self.centPos.y = ws[1]*.5-self.gui.btH
+			s = (ws[0]/2.0)/140.0
+			self.comScale.x = s
+			self.comScale.y = s
+			self.comScale.z = s
+		elif self.gui.rl.current == 'Widgets':
+			self.centPos.x = self.pos[0]
+			self.centPos.y = self.pos[1]
+			self.comScale.x = self.scale
+			self.comScale.y = self.scale
+			self.comRot.angle = self.rotation
 		#self.drawIt()
 	

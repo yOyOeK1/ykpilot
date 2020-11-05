@@ -28,7 +28,7 @@ class simRender(Widget):
 		self.useWavas = True
 		
 		if self.useWavas:
-			self.waveSize = [10,25,2.5]
+			self.waveSize = [15,20,2.5]
 			self.wave = []
 			for c in range(0,self.waveSize[0]*self.waveSize[1],1):
 				self.wave.append(self.scene.objects['Cube'])
@@ -69,6 +69,8 @@ class simRender(Widget):
 		return sv*self.aniSteps+ev*(1.00-self.aniSteps)
 
 	def update_glsl(self, *largs):
+		
+		#print("simRender")
 		asp = 200.00 / float(200.00)
 		proj = Matrix().view_clip(
 			-asp,asp,-1, 1, 1, 100, 1)

@@ -1,0 +1,70 @@
+#:kivy 1.0
+
+<MyWidgets>:
+	BoxLayout:
+		id: blWids
+        size: root.size
+        orientation: 'vertical'
+
+<MyScatterWidgetOnScatter>:
+    canvas:
+        Color:
+            rgba: 0.1, .1, .1,.2
+        Rectangle:
+            size: self.size
+
+    canvas.after:
+        Color:
+            rgba: 0.1, .1, .1,.2
+            
+        Rectangle:
+            pos: self.pos
+            size: self.bbox[1]
+
+<MyScatterForLater>:
+	canvas:
+        Color:
+            rgb: 0, 1, 0
+        Line:
+            points: [self.x, self.top, self.right, self.top]
+        Line:
+            points: [self.x, self.y, self.x, self.top]
+        Line:
+            points: [self.center_x, self.y, self.center_x, self.top]
+        Line:
+            points: [self.x, self.center_y, self.right, self.center_y]
+
+        Line:
+            points: [self.center[0], self.center[1], self.right, self.top]
+	
+	
+	
+	
+    BoxLayout:
+        size: root.size
+        orientation: 'vertical'
+        FloatLayout:
+        	id: bl_sca
+        	canvas.before:
+        		Translate:
+        			xy: 200 ,200
+        		
+        Label:
+            text: 'Position\n' + str(root.pos)
+            text_size: (root.width, None)
+        Label:
+            text: 'Size\n' + str(root.size)
+            text_size: (root.width, None)
+        Label:
+            text: 'Center\n' + str(root.center)
+            text_size: (root.width, None)
+        Label:
+            text: 'Bounding Box\n' + str(root.bbox)
+            text_size: (root.width, None)
+        Label:
+            text: 'Top\n' + str(root.top)
+            text_size: (root.width, None)
+        Label:
+            text: 'Right\n' + str(root.right)
+            text_size: (root.width, None)
+ 

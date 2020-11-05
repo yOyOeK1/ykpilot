@@ -284,9 +284,9 @@ class gpsData:
 			pavg = LatLon( self.avgPos[0], self.avgPos[1] )
 			pNew = LatLon( val['lat'], val['lon'])
 			dis = pavg.distanceTo(pNew)
-			self.sog = (dis/tSinceLast)
-			self.cog = pavg.bearingTo(pNew)
 			spe = (( dis/1000.00 )/tSinceLast)*60.0*60.0
+			self.sog = (spe*0.539957) # to nm
+			self.cog = pavg.bearingTo(pNew)
 			#print("distance is ",dis)
 			if spe > 100.00:
 				doIt = False
@@ -307,7 +307,8 @@ class gpsData:
 			if self.maxSog < self.sog:
 				self.maxSog = self.sog
 			self.guiObjs['lSRacSogMax'].text = "max: %s" % round(self.maxSog,2)
-			self.avgSog = (self.avgSog*0.98)+(self.sog*0.02)
+			self.avgSog = (self.avgSog*0.998)+(self.sog*0.002)
+			val['avgSog'] = self.avgSog
 			self.guiObjs['lSRacSogAvg'].text = "avg: %s" % round(self.avgSog,2)
 			
 			
@@ -664,10 +665,20 @@ class xyzData:
 			nmea = "$YKHDG,%s,W,0,E" % round(self.z,1)
 			self.gui.sf.sendToAll(nmea)
 			
+		elif self.type == 'comCal':
+			ms = self.updateTime		
+			if ( self.gui.sen.comCalAccelGyro.lastTimeIter + 5000000.0 ) < ms:
+				nmea = "$YKHDG,%s,W,0,E" % round(self.hdg,1)
+				self.gui.sf.sendToAll(nmea)
+			
 		# callbacks
 		for o in self.callBacksForUpdate:
 			if self.type == 'comCal':
 				o.update(self.type, self.hdg)
+			elif self.type == 'orientation':
+				#print("sen.orientation",val)
+				val2 = [val[0],val[1],val[2],pitch,heel]
+				o.update(self.type, val2)
 			else:
 				o.update(self.type, val)
 		
@@ -1168,6 +1179,7 @@ class sensors:
 		gps.stop()
 	
 	def update(self,fromWho, vals):
+		#print("sensors.update fromWho[{}]".format(fromWho))
 		self.boat = {
 			'cogError': 0.0,
 			'hdg': self.comCal.hdg,
@@ -1175,7 +1187,7 @@ class sensors:
 			'sog': self.gpsD.sog,
 			'lat': self.gpsD.lat,
 			'lon': self.gpsD.lon,
-			'gRot': self.gyroFlipt.axis['z'][-1]
+			'gRot': self.gyroFlipt.axis['z'][-1] if len(self.gyroFlipt.axis['z'])>0 else 0.0
 			}
 	
 	def interval(self,u):

@@ -3,7 +3,59 @@
 <SLabel@Label>:
 	height:10
 
+<MSLabel@Label>:
+	height:app.lineH
+	size_hint: None, None
+	size: self.texture_size
+	
+	
+<Widget_nn>:
+	Label:
+		id: lwn
+		text: "abc"
+	
+<MSTitLabel@Label>:
+	height:app.lineH
+	font_size: app.lineH
+	bold: "bold"
+	size_hint: None, None
+	size: self.texture_size
+	canvas.before:
+		Color:
+			rgba: (.2, .2, .2, 1.0)
+		Rectangle:
+			pos: self.pos
+			size: (self.parent.size[0],self.size[1])
+	
+	
+<MSBoldLabel@Label>:
+	height:app.lineH
+	font_size: app.lineH*0.5
+	bold: "bold"
+	size_hint: None, None
+	size: self.texture_size
+					
+
 <RootLayout>:
+	Screen:
+		name: "Widgets"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			FloatLayout:
+				orientation: "vertical"
+				id: bl_wid
+				canvas.before:
+					Color:
+						rgba: 0,1,0,0.2
+					Rectangle:
+						pos: self.pos
+						size: self.size
+				
+
 	Screen:
 		name: "ykpilot"
 		
@@ -80,6 +132,15 @@
 					size_hint: None,None
 					pos: root.width-app.btH, root.height-app.btH
 					on_touch_down: self.collide_point( *args[1].pos ) and app.ap.on_settings()
+				
+				Image:
+					id: iAutWifiStatus
+					source: app.wifiTcpStatus
+					size: app.btH,app.btH
+					size_hint: None,None
+					pos: root.width-(app.btH*2.0), root.height-app.btH
+					on_touch_down: self.collide_point( *args[1].pos ) and app.ap.on_settings()
+				
 				
 			
 				Label:
@@ -203,6 +264,26 @@
 			orientation: "vertical"
 			padding: 5
 			spacing: 5
+	
+	Screen:
+		name: "3dtextures"
+		
+		BoxLayout:
+			id: bl3dtextures
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			
+	Screen:
+		name: "3dtextures2"
+		
+		BoxLayout:
+			id: bl3dtextures2
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
 			
 
 	Screen:
@@ -220,7 +301,9 @@
 			Label:
 				id: lSRacSog
 				text: "lSRacSog"
-				font_size: root.height*0.33
+				bold: True
+				font_size: app.btH*3
+					
 				
 			Label:
 				id: lSRacSogAvg
@@ -544,6 +627,22 @@
 				id: blModSimFFT
 				orientation: "vertical"
 				
+				
+	Screen:
+		name: "NMEA multiplexer"
+		
+		BoxLayout:
+			orientation: "vertical"
+			padding: 5
+			spacing: 5
+			
+			Label:
+				text: "l_nmeMulIp"
+				id: l_nmeMulIp
+				
+			
+			
+	
 	Screen:
 		name: "Sensors"
 		
@@ -588,22 +687,30 @@
 						height: app.btH
 						on_release: app.sen.on_recordToFile()
 
-				Label: 
+				MSTitLabel: 
 					text: "Sensors list and values"
 					height: app.lineH
 					size_hint_y: None
 					
 					
+				MSBoldLabel:
+					text: "Local ip's: ???"
+					id: l_phoLocIps
+					height: app.lineH
+					size_hint_y: None
 					
 				BoxLayout:
 					orientation: "vertical"
 					height: app.lineH*5
 					size_hint_y: None
-				
-					Label:
+					
+					MSBoldLabel:
 						text: "Phone:"
 						height: app.lineH
 						size_hint_y: None
+					
+							
+						
 					GridLayout:
 						cols:5
 						
@@ -656,7 +763,7 @@
 						
 					
 					
-					Label:
+					MSBoldLabel:
 						text: "GPS:"
 						height: app.lineH
 						size_hint_y: None
@@ -700,7 +807,7 @@
 				
 				BoxLayout:
 					orientation: "vertical"
-					Label:
+					MSBoldLabel:
 						text: "Accelerometer:"	
 										
 					BoxLayout:
@@ -718,7 +825,7 @@
 							
 				BoxLayout:
 					orientation: "vertical"
-					Label:
+					MSBoldLabel:
 						text: "Orientation:"	
 										
 					BoxLayout:
@@ -738,7 +845,7 @@
 							
 				BoxLayout:
 					orientation: "vertical"
-					Label:
+					MSBoldLabel:
 						text: "Space orientation:"	
 					BoxLayout:
 						orientation: "horizontal"
@@ -756,7 +863,7 @@
 					
 				BoxLayout:
 					orientation: "vertical"
-					Label:
+					MSBoldLabel:
 						text: "Gyro:"	
 					BoxLayout:
 						orientation: "horizontal"
@@ -771,7 +878,7 @@
 							id:senLGyrZ
 							text: "senLGyrZ"
 							
-					Label:
+					MSBoldLabel:
 						text: "Gyro calibrated and flipt:"	
 					BoxLayout:
 						orientation: "horizontal"
@@ -788,7 +895,7 @@
 					
 				BoxLayout:
 					orientation: "vertical"
-					Label:
+					MSBoldLabel:
 						text: "Compass calibrated:"	
 					BoxLayout:
 						orientation: "horizontal"
@@ -806,7 +913,7 @@
 				BoxLayout:
 					orientation: "vertical"
 					
-					Label:
+					MSBoldLabel:
 						text: "Results:"
 					
 					GridLayout:
