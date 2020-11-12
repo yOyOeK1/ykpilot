@@ -5,6 +5,7 @@ from kivy.graphics.opengl import *
 from kivy.graphics import *
 from kivy.properties import ObjectProperty
 from kivy.core.window import Window
+from kivy.animation import Animation
 
 class ScreenCompass(Widget):
 	
@@ -12,12 +13,17 @@ class ScreenCompass(Widget):
 	def __init__(self, **kwargs):
 		super(ScreenCompass, self).__init__(**kwargs)
 		
+		self.screen = 0
 		self.pos = [0.0,0.0]
 		self.orgSize = [145.0*2.0, 145.0*2.0]
 		self.size = [self.orgSize[0],self.orgSize[1]]
 		self.scale = 1.0
 		self.rotation = 0.0 
+		self.updateItC = 0	
 		self.drawIt()
+		
+	def settingsNeedIt(self):
+		return False
 		
 	def getSize(self):
 		return self.orgSize
@@ -34,7 +40,45 @@ class ScreenCompass(Widget):
 		
 	def setGui(self, gui):
 		self.gui = gui
+		#self.drawIt()
+
+	def setHdg(self, v):
+		if self.gui.animation:			
+			if v > 180.0:
+				v = -360.0+v
+			Animation.cancel_all(self.r,'angle')
+			
+			a = self.r.angle
+			if (v - a) < -180.0 or (v - a) > 180.0 :
+				self.r.angle*=-1.0 
+			
+			anim = Animation(angle=v, t='out_quad' )
+			anim.start( self.r )
 		
+		else:
+			self.r.angle = v
+		
+	def setCog(self, v):
+		if self.gui.animation:
+			if v > 180.0:
+				v = -360.0+v
+			
+			
+			Animation.cancel_all(self.rCog,'angle')
+			
+			a = self.rCog.angle
+			if (v - a) < -180.0 or (v - a) > 180.0 :
+				self.rCog.angle*=-1.0 
+			
+			anim = Animation(angle=v)
+			anim.start(self.rCog)
+		else:
+			self.rCog.angle = v
+			
+			
+		
+	def updateItFromScreenChange(self,a='',b=''):
+		print("updateItFromScreenChange")
 	def getWidget(self):
 		return self
 		
@@ -159,15 +203,8 @@ class ScreenCompass(Widget):
 	def updateOfSize(self,a='',b=''):
 		print("compass.update of size",self.size,"\na",a,"\nb",b)
 			
-	def setHdg(self, v):
-		self.r.angle = v
-		
-	def setCog(self, v):
-		self.rCog.angle = v
-			
-			
 	def update(self, fromWho, vals):
-		if self.gui.rl.current in [ "Compass", 'Widgets']:
+		if self.gui.rl.current[:7] in [ "Compass", 'Widgets']:
 			pass
 		else:
 			return 0
@@ -184,7 +221,7 @@ class ScreenCompass(Widget):
 			self.setCog( int(vals['bearing']) )
 		elif fromWho == 'comCalAccelGyro':
 			self.setHdg( int(vals[2]) )
-			
+		
 	def updateIt(self, *args):
 		print("compass.updateIt")
 		try:
@@ -192,7 +229,7 @@ class ScreenCompass(Widget):
 		except:
 			return 0
 		
-		if self.gui.rl.current in ["Compass","Widgets"]:
+		if self.gui.rl.current[:7] in ["Compass","Widgets"]:
 			pass
 		else:
 			return 0
@@ -215,11 +252,13 @@ class ScreenCompass(Widget):
 			self.comScale.x = s
 			self.comScale.y = s
 			self.comScale.z = s
-		elif self.gui.rl.current == 'Widgets':
+		elif self.gui.rl.current[:7] == 'Widgets':
 			self.centPos.x = self.pos[0]
 			self.centPos.y = self.pos[1]
 			self.comScale.x = self.scale
 			self.comScale.y = self.scale
 			self.comRot.angle = self.rotation
 		#self.drawIt()
+		
+		self.updateItC+=1
 	

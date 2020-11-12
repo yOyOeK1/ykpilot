@@ -44,6 +44,9 @@ class phoneSensors:
 	def __init__(self,gui):
 		self.gui = gui
 		self.th = TimeHelper()
+		self.title = 'phone sensors'
+		self.callBacksForUpdate = []
+		
 		
 		self.battery = {
 			"ok": None,
@@ -63,6 +66,14 @@ class phoneSensors:
 		self.iterCount = 0
 		self.updateEvery = 5
 		
+	def getValuesOptions(self):
+		return {'dict':['lightLumens', 'batteryCharging', 'batteryPercentage', 'bgLight']}
+		
+	def getTitle(self):
+		return self.title
+	
+	def addCallBack(self, obj):
+		self.callBacksForUpdate.append( obj ) 
 		
 	def initSensors(self):
 		try:
@@ -101,26 +112,37 @@ class phoneSensors:
 			print("backlight NO")
 			self.backlight['ok'] = False
 			
-			
+		
 	def iter(self):
+		tcb = {}
 		if not self.iterCount % self.updateEvery:		
 			if self.light['ok']:
 				self.light['val'] = light.illumination
+				tcb['lightLumens'] = self.light['val'] 
 				self.gui.rl.ids.lSenLum.text = str(self.light['val'])
 				
 			if self.battery['ok']:
 				self.battery['charging'] = battery.status['isCharging']
+				tcb['batteryCharging'] = self.battery['charging']
 				self.battery['percent'] = battery.status['percentage']
+				tcb['batteryPercentage'] = battery.status['percentage']
 				
 				self.gui.rl.ids.lSenBatCha.text = str(self.battery['charging'])
 				self.gui.rl.ids.lSenBatPer.text = str(self.battery['percent'])
 				
 			if self.backlight['ok']:
 				self.backlight['current'] = brightness.current_level()
+				tcb['bgLight'] = brightness.current_level()
 				self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
 				self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
 			
 		self.iterCount+= 1
+		
+		
+		# callbacks
+		for o in self.callBacksForUpdate:
+			o.update(self.title, tcb)
+			
 		
 		
 			
@@ -254,6 +276,16 @@ class gpsData:
 		self.gui = gui
 		self.guiObjs = debGuiObjts
 		self.th = TimeHelper()
+		self.title = "gps"
+	
+	def getTitle(self):
+		return self.title
+	
+	def getValuesOptions(self):
+		tr = { 'disc' :
+			['lat','lon','speed','bearing','accuracy','avgSog']
+			}
+		return tr
 	
 	def getVals(self):
 		return [ self.lat, self.lon, self.cog, self.sog ]
@@ -293,8 +325,6 @@ class gpsData:
 				print( "gps data Dump to fast ! ",
 					"Speed is ",spe," km/h"
 					)
-			
-		 
 		if doIt:
 			self.lat = val['lat']
 			self.guiObjs['lat'].text = "%s"%self.lat
@@ -366,6 +396,8 @@ class xyzData:
 		self.iter = 0
 		self.guiObjs = debGuiObjcts
 		self.history = []
+		self.lastVal = None
+		self.propagateVal = True
 		self.axis = {
 			'x':[],
 			'y':[],
@@ -408,6 +440,28 @@ class xyzData:
 
 		else:
 			print(" no config fille")
+	
+	def getTitle(self):
+		return self.type
+	
+	def getValuesOptions(self):
+		if self.type in [ 'gyro', 'gyroFlipt', 'accel', 'accelFlipt', 'spacorientation' ]:
+			return { 'list' :
+				['x', 'y', 'z']
+				}
+		elif self.type in [ 'comCal', 'comCalAccelGyro']:
+			return { 'list':
+				['hdg']
+				}
+		elif self.type == 'orientation':
+			return { 'list':
+				['x','y','z','pitch','heel']
+				}
+		else:
+			print("EE - sensor not define !!!")
+			
+		return None
+	
 	
 	def addCallBack(self, obj):
 		self.callBacksForUpdate.append( obj ) 
@@ -557,7 +611,7 @@ class xyzData:
 						self.axis['z'][-90:], 90
 						)
 					
-			t = self.lastTimeIter-self.th.getTimestamp(True)
+			t = self.lastTimeIter-timeNowInMillis
 			m = math.degrees(self.axis['z'][-1])
 			mov = m*(t/1000000.0)
 			try:
@@ -636,7 +690,7 @@ class xyzData:
 						self.gui.rl.ids.lModSimHeelSlope.text = "P"
 			
 
-		self.updateTime = self.th.getTimestamp(True)
+		self.updateTime = timeNowInMillis
 						
 						 	
 		if self.type == "comCal":
@@ -671,23 +725,39 @@ class xyzData:
 				nmea = "$YKHDG,%s,W,0,E" % round(self.hdg,1)
 				self.gui.sf.sendToAll(nmea)
 			
-		# callbacks
-		for o in self.callBacksForUpdate:
-			if self.type == 'comCal':
-				o.update(self.type, self.hdg)
-			elif self.type == 'orientation':
-				#print("sen.orientation",val)
-				val2 = [val[0],val[1],val[2],pitch,heel]
-				o.update(self.type, val2)
-			else:
-				o.update(self.type, val)
 		
-		# json			
-		jMsg = str({
-			"type": self.type,
-			"data": val
-			})
-		self.gui.sf.sendToAll( jMsg )
+		
+		if self.type == 'comCal':
+			valToPropagate = self.hdg
+		elif self.type == 'orientation':
+			valToPropagate = [val[0],val[1],val[2],pitch,heel]
+		else:
+			valToPropagate = val
+		
+		
+		if self.lastVal == None or self.lastVal != valToPropagate:
+			self.propagateVal = True
+			#print("+")
+		else:
+			self.propagateVal = False
+			#print(".")
+		
+		
+		if self.propagateVal:
+			# callbacks
+			for o in self.callBacksForUpdate:
+				o.update(self.type, valToPropagate)
+			
+			self.lastVal = valToPropagate
+			
+			# json			
+			jMsg = str({
+				"type": self.type,
+				"data": val
+				})
+			self.gui.sf.sendToAll( jMsg )
+			
+			
 			
 		self.lastTimeIter = timeNowInMillis
 
@@ -711,6 +781,8 @@ class sensors:
 	def __init__(self,gui):
 		self.gui = gui
 		self.boat = {}
+
+		self.sensorsList = []
 
 		self.th = TimeHelper()
 		self.fa = FileActions()
@@ -743,7 +815,10 @@ class sensors:
 		self.mic = micData(gui)
 		#self.mic.runIt()
 		self.phone = phoneSensors(gui)
+		self.sensorsList.append( self.phone )
 		self.phone.initSensors()
+		
+		
 		
 		self.gpsD = gpsData(gui, {
 			'lat': self.gui.rl.ids.senLGpsLat,
@@ -755,35 +830,51 @@ class sensors:
 			'cog': self.gui.rl.ids.senLGpsCog,
 			'accur': self.gui.rl.ids.senLGpsAcc
 			})
+		self.sensorsList.append( self.gpsD )
+		
 		self.gyro = xyzData(gui, "gyro", [
 			self.gui.rl.ids.senLGyrX,
 			self.gui.rl.ids.senLGyrY,
 			self.gui.rl.ids.senLGyrZ
 			])
+		self.sensorsList.append( self.gyro )
+		
 		self.gyroFlipt = xyzData(gui, "gyroFlipt",[
 			self.gui.rl.ids.senLGyrCalX,
 			self.gui.rl.ids.senLGyrCalY,
 			self.gui.rl.ids.senLGyrCalZ
 			])
+		self.sensorsList.append( self.gyroFlipt )
+		
 		self.accel = xyzData(gui, "accel", [
 			self.gui.rl.ids.senLAccX,
 			self.gui.rl.ids.senLAccY,
 			self.gui.rl.ids.senLAccZ
 			])
+		self.sensorsList.append( self.accel )
+		
 		self.spacialOrientation = xyzData(gui, "spacorientation", [
 			self.gui.rl.ids.senLSpaOriX,
 			self.gui.rl.ids.senLSpaOriY,
 			self.gui.rl.ids.senLSpaOriZ
 			])
+		self.sensorsList.append( self.spacialOrientation )
+		
 		self.accelFlipt = xyzData(gui, "accelFlipt")
+		self.sensorsList.append( self.accelFlipt )
+		
 		self.orientation = xyzData(gui, "orientation")
+		self.sensorsList.append( self.orientation )
+		
 		self.comCal = xyzData(gui, "comCal", [
 			self.gui.rl.ids.senLComCalX,
 			self.gui.rl.ids.senLComCalY,
 			self.gui.rl.ids.senLComCalZ
 			])
+		self.sensorsList.append( self.comCal )
+		
 		self.comCalAccelGyro = xyzData(gui, "comCalAccelGyro")
-	
+		self.sensorsList.append( self.comCalAccelGyro )
 		
 		if kivy.platform == 'android':
 			#self.request_android_permissions2()

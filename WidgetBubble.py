@@ -5,6 +5,7 @@ from kivy.graphics.opengl import *
 from kivy.graphics import *
 from kivy.properties import ObjectProperty
 from kivy.core.image import Image as KImage
+from kivy.animation import Animation, AnimationTransition
 
 
 class WidgetBubble(Widget):
@@ -21,11 +22,24 @@ class WidgetBubble(Widget):
 		self.iLevelBg = KImage("icons/ico_level_bg_512_512.png")
 		self.iLevelBubble = KImage("icons/ico_level_bubble_256_256.png")
 		self.drawIt()
+		self.myValue = None
+		self.stat = {
+            'skip': 0,
+            'update': 0
+            }
 		
 		
 	def setLevel(self,level):
 		#print("setLevel",level)
-		self.bubRot.angle = -level
+		if self.gui.animation:
+			Animation.cancel_all(self.bubRot,'angle')
+			anim = Animation(angle=-level,t='out_quad' )
+			anim.start( self.bubRot )
+			
+		else:
+			self.bubRot.angle = -level
+		
+		
 		
 	def getSize(self):
 		return self.orgSize
@@ -114,9 +128,19 @@ class WidgetBubble(Widget):
 			return 0
 		if fromWho == "orientation":
 			#print("vals",vals)
-			self.setLevel( vals[4] )
-		
 			
+			
+			v = vals[4]
+			if self.myValue == None or self.myValue != v:
+				self.myValue = v
+				self.setLevel( v )
+				self.stat['update']+=1
+			else:
+				self.stat['skip']+=1
+				if (self.stat['skip']%50)==0:
+					print("widget stat bubble level -> ",self.stat)
+
+
 	def updateIt(self, *args):
 		print("bubble.updateIt")
 		try:

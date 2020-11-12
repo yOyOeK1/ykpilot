@@ -1,6 +1,9 @@
 
+import kivy
 from kivy.uix.widget import Widget
 from kivy.core.text import Label as textLabel
+from kivy.uix.label import Label as KiLabel
+from kivy.uix.textinput import TextInput
 from kivy.lang import Builder
 from kivy.uix.scatter import Scatter
 from kivy.graphics.opengl import *
@@ -8,6 +11,7 @@ from kivy.graphics import *
 from kivy.properties import ObjectProperty
 import sys
 import math
+from kivy.uix.boxlayout import BoxLayout
 
 class WidgetProto(Widget):
     
@@ -25,6 +29,13 @@ class WidgetProto(Widget):
             self.inEditMode = False
             
             
+class MyLabel(KiLabel):
+    def __init__(self,**kwargs):
+        super(MyLabel,self).__init__(**kwargs)
+        self.size_hint = [None,None]
+        self.height = kivy.metrics.cm(1)
+        
+            
 class Widget_cn(WidgetProto):
     
     pos = ObjectProperty(None)
@@ -39,13 +50,71 @@ class Widget_cn(WidgetProto):
         
         self.drawItC = 0
         
+        self.screen = 0
         self.pos = [0,0]
         self.size = [0,0]
         self.scale = 1.0
         self.rotation = 0.0
-        #self.bind(x=self.bin,y=self.bin)
-        #self.bind(pos=self.bin)
-        #self.bind(size=self.binS)
+        
+        self.myValue = None
+        self.stat = {
+            'skip': 0,
+            'update': 0
+            }
+        self.subPix = 1.25
+        
+        self.mtitle = ""
+        self.mcallback = None
+        self.mvalk = ""
+        self.munit = 1
+        self.mround = 1
+        self.maxnum = 4
+        
+    
+    def setValues(self, 
+        screen, title, callback, valk, unit, round_ ,maxnum ):
+        self.screen = screen
+        self.mtitle = title
+        self.mcallback = callback
+        self.mvalk = valk
+        self.munit = unit
+        self.mround = round_
+        self.maxnum = maxnum
+        
+    def settingsNeedIt(self):
+        return True
+    
+    
+    def settingsDoneStore(self):
+        pass
+        
+    def getSettingsDialogPart(self):
+        return {
+            'initStep': 'setValues',
+            'args':{
+                }
+            }
+        
+        
+        bl = BoxLayout(orientation="vertical")
+        bl.add_widget(MyLabel(text="Title:"))
+        self.tiTitle = TextInput(text=self.mtitle)
+        bl.add_widget( self.tiTitle )
+        
+        bl.add_widget(MyLabel(text="Round to:"))
+        self.tiRound = TextInput(text="1" )
+        bl.add_widget( self.tiRound )
+        
+        bl.add_widget(MyLabel(text="Unit:"))
+        self.tiUnit = TextInput(text="kts")
+        bl.add_widget( self.tiUnit )
+        
+        bl.add_widget(MyLabel(text="Max characters:"))
+        self.tiUnit = TextInput(text="4")
+        bl.add_widget( self.tiUnit )
+        
+        return bl
+        
     
     def bin(self,a='',b=''):
         print("bin a:[",a,"] b[",b,"]")    
@@ -62,6 +131,9 @@ class Widget_cn(WidgetProto):
         return self
         
     def update(self, fromWho, vals):
+        if self.gui.rl.current != 'Widgets':
+            return 0
+        
         if 0:
             print("update from widget_n[{}] from:{} callback:{} gotvals:{}".format(
                 self.mtitle, fromWho, self.mcallback, vals
@@ -72,37 +144,56 @@ class Widget_cn(WidgetProto):
                 vals = {
                     self.mvalk: vals
                     }
-            
-            self.l.text = str( "%s%s%s"%( 
-                round( vals[self.mvalk], self.mround ) if self.mround > 0 else int( vals[self.mvalk] ), 
-                self.munit,
-                'E' if self.inEditMode else '' 
-                ) )
-            self.l.refresh()
-            if self.drawItC > 0:
-                self.recL.texture = self.l.texture
-                #print("recl size",self.l.texture.size)
-                self.recL.size = self.l.texture.size
                 
-            if 0:
-                print("o ",self.mtitle,
-                        "pos:",int(self.pos[0]),"x",int(self.pos[1]),
-                        "size:",int(self.size[0]),"x",int(self.size[1]))
+            v = str( round( vals[self.mvalk], self.mround ) if self.mround > 0 else int( vals[self.mvalk] ) )
+            if self.myValue == None or self.myValue != v:
+                self.myValue = v
             
-        if self.drawItC == 1:
-            self.setPos(self.pos)
-            self.drawItC+=1
+            
+                self.l.text = str( "%s%s"%( v, self.munit) )
+                self.l.refresh()
+                self.recL.texture = self.l.texture
+                
+                
+                #print("recl size",self.l.texture.size)
+                self.recL.size = [ 
+                    self.l.texture.size[0]*self.subPix,
+                    self.l.texture.size[1]*self.subPix
+                    ]
+                #off = self.msize[0]*.55-(self.l.texture.size[0]*self.subPix) 
+                #self.posL.x = off
+                
+                    
+                if 0:
+                    print("o ",self.mtitle,
+                            "pos:",int(self.pos[0]),"x",int(self.pos[1]),
+                            "size:",int(self.size[0]),"x",int(self.size[1]))
+                self.stat['update']+=1
+            else:
+                self.stat['skip']+=1
+                if (self.stat['skip']%50)==0:
+                    print("widget stat",self.mtitle," -> ",self.stat)
+            
+            if self.drawItC == 1:
+                self.setPos(self.pos)
+                self.drawItC+=1
+            
         
     def setGui(self, gui):
         self.gui = gui
         
         lsize = 2.0
-        self.msize = [self.maxnum*self.gui.lineH*lsize, self.gui.lineH*lsize]
+        
+        self.msize = [
+            (self.maxnum+len(self.munit))*self.gui.lineH*lsize, 
+            self.gui.lineH*lsize
+            ]
         
         self.title = textLabel(
             text = self.mtitle,
-            font_size = self.gui.lineH*1.2,
-            bold = "bold" 
+            font_size = (self.gui.lineH*1.2)/self.subPix,
+            font_name='Segment7-4Gml.otf',
+            #bold = "bold" 
             )
         self.title.refresh()        
 
@@ -111,12 +202,16 @@ class Widget_cn(WidgetProto):
             self.valEmpty+="0"
 
         self.l = textLabel(
-            text=self.valEmpty,
-            font_size=self.gui.lineH*lsize
+            text="%s%s"%(self.valEmpty,self.munit),
+            font_size=(self.gui.lineH*lsize)/self.subPix,
+            font_name='Segment7-4Gml.otf',
             )
         self.l.refresh()
         
-        self.size = self.l.texture.size
+        self.size = [
+            self.l.texture.size[0]*self.subPix,
+            self.l.texture.size[1]*self.subPix
+            ]
         print("pos ",[self.x,self.y],' size ',self.size)
         self.pos = [self.x,self.y]
         
@@ -126,15 +221,6 @@ class Widget_cn(WidgetProto):
         #sys.exit(9)
 
     
-    def setValues(self, 
-        title, callback, valk, unit, round_ ,maxnum ):
-        self.mtitle = title
-        self.mcallback = callback
-        self.mvalk = valk
-        self.munit = unit
-        self.mround = round_
-        self.maxnum = maxnum
-        
         
     def getSize(self):
         return self.size
@@ -205,18 +291,25 @@ class Widget_cn(WidgetProto):
             
             PushMatrix()
             self.setColor("title")
-            Translate(-5,self.size[1],0)
-            Rotate(-90,0,0,1)
+            Translate(0,self.size[1]*.9,0)
+            Rotate(0,0,0,1)
             Rectangle(
-                size = self.title.texture.size,
+                size = [
+                    self.title.texture.size[0]*.5*self.subPix,
+                    self.title.texture.size[1]*.5*self.subPix
+                    ],
                 pos = (0,0),
                 texture = self.title.texture
                 )
             PopMatrix()
             
             self.setColor('w')
+            self.posL = Translate(0,0,0)
             self.recL = Rectangle(
-                size = (self.size),
+                size = [
+                    self.size[0],
+                    self.size[1]
+                    ],
                 pos = (0,0),
                 texture = self.l.texture
                 )

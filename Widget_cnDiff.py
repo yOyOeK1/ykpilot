@@ -46,10 +46,9 @@ class Widget_cnDiff(Widget_cn):
                 self.munit 
                 ) )
             self.l.refresh()
-            if self.drawItC > 0:
-                self.recL.texture = self.l.texture
-                #print("recl size",self.l.texture.size)
-                self.recL.size = self.l.texture.size
+            self.recL.texture = self.l.texture
+            #print("recl size",self.l.texture.size)
+            self.recL.size = self.l.texture.size
                 
                 
             if 0:

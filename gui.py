@@ -217,6 +217,7 @@ class gui(App):
 		
 		if kivy.platform == 'android':
 			self.platform = 'android'
+			self.animation = False
 			ipSens = '192.168.43.208'
 			if len(self.ips)>0:
 				ipSens = self.ips[0]			
@@ -238,7 +239,8 @@ class gui(App):
 
 		else:
 			self.platform = 'pc'
-			ipSens = '192.168.49.199'
+			self.animation = True
+			ipSens = '192.168.43.1'
 			if len(self.ips)>0:
 				ipSens = self.ips[0]			
 			ip = ipSens
@@ -450,6 +452,11 @@ class gui(App):
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			
+			ab = ActionButton(text="MSM")
+			ab.bind(on_release=self.screenChange)
+			av.add_widget(ab)
+			
+			
 			ab = ActionButton(text="NMEA multiplexer")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
@@ -470,6 +477,9 @@ class gui(App):
 		#play from file
 
 		
+		self.sWidgets = ScreenWidgets()
+		self.sWidgets.setGui(self)
+		#self.sWidgets.setUpGui()
 
 
 		#self.ap.setupDriver()
@@ -479,14 +489,13 @@ class gui(App):
 
 		#return self.rl 
 
-		self.sWidgets = ScreenWidgets()
-		self.sWidgets.setGui(self)
 		#Clock.schedule_once(self.sWidgets.setUpGui(self), 0.5)
 		
-		self.sWidgets.setUpGui()
 
 		
 		Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+		#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
+		
 		return toreturn 
 
 
@@ -505,6 +514,9 @@ class gui(App):
 		print("sw size",self.sw.size)
 		return root
 		"""		
+
+	def sWidgets_on_bgRelease(self,a='',b=''):
+		self.sWidgets.on_bgRelease(a, b)
 
 	def hide_widget(self, wid, dohide=True):
 		if hasattr(wid, 'saved_attrs'):
@@ -546,7 +558,10 @@ class gui(App):
 		print("save config res", 
 			DataSR_save(self.config, 'ykpilot.conf')
 			)
-	
+		
+		print("save widgets config")
+		self.sWidgets.saveConfig()
+		
 	
 	# Screen: "Welcome"
 	
@@ -599,12 +614,21 @@ class gui(App):
 		print("screenChange to [%s]"%sn)
 		if sn == "Model Screen" :
 			self.senBoat.on_displayNow()
+		if sn[:7] in ['Compass','Widgets']:
+			print("make updateIt on sn change")
+			if sn == 'Compass':
+				self.sCompass.updateIt()
+			elif sn[:7] == 'Widgets':
+				self.sWidgets.updateIt()
+				
 		if self.virtualButtons and sn == "Virtual Buttons":
 			self.vBut.on_displayNow()
 		if sn == "Autopilot":
 			self.ap.updateGui()
 		if self.rl.current == "3dtextures2":
 			self.d3tex2.on_displayNow()
+
+		
 
 		
 	def screenNight(self, a):

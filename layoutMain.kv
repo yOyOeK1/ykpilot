@@ -40,21 +40,10 @@
 	Screen:
 		name: "Widgets"
 		
-		BoxLayout:
+		FloatLayout:
 			orientation: "vertical"
-			padding: 5
-			spacing: 5
+			id: bl_wid
 			
-			FloatLayout:
-				orientation: "vertical"
-				id: bl_wid
-				canvas.before:
-					Color:
-						rgba: 0,1,0,0.2
-					Rectangle:
-						pos: self.pos
-						size: self.size
-				
 
 	Screen:
 		name: "ykpilot"
