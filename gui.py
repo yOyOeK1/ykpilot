@@ -20,6 +20,9 @@ from TimeHelper import *
 from FileActions import *
 from ScreenAutopilot import *
 from kivy.core.image import Image
+
+#from odeRTB import odeRTB
+
 try:
 	from ScreenAutopilot import *
 except:
@@ -180,6 +183,8 @@ class gui(App):
 		
 		
 		self.rl = RootLayout()
+		#self.rl.transition = FadeTransition()
+
 		
 		self.doLocalIp()
 		
@@ -240,7 +245,7 @@ class gui(App):
 		else:
 			self.platform = 'pc'
 			self.animation = True
-			ipSens = '192.168.43.1'
+			ipSens = '192.168.49.199'
 			if len(self.ips)>0:
 				ipSens = self.ips[0]			
 			ip = ipSens
@@ -487,14 +492,20 @@ class gui(App):
 		self.screenChange(self.config['screenCurrent'])
 		#Window.set_title("ykpilot")
 
+
+
+		#self.ode = odeRTB(self)
+		#self.sen.accel.addCallBack(self.ode)
+
 		#return self.rl 
 
 		#Clock.schedule_once(self.sWidgets.setUpGui(self), 0.5)
 		
 
 		
-		Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+		#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 		#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
+		Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
 		
 		return toreturn 
 

@@ -75,6 +75,12 @@ class phoneSensors:
 	def addCallBack(self, obj):
 		self.callBacksForUpdate.append( obj ) 
 		
+	def removeCallBack(self, obj):
+		for i,o in enumerate(self.callBacksForUpdate):
+			if o == obj:
+				self.callBacksForUpdate.pop(i)
+				return True
+		
 	def initSensors(self):
 		try:
 			light.enable()
@@ -293,6 +299,12 @@ class gpsData:
 	def addCallBack(self, obj):
 		self.callBacksForUpdate.append( obj ) 
 	
+	def removeCallBack(self, obj):
+		for i,o in enumerate(self.callBacksForUpdate):
+			if o == obj:
+				self.callBacksForUpdate.pop(i)
+				return True
+	
 	def update(self, val):
 		self.iter+= 1
 		if self.avgPos[0] == None:
@@ -466,6 +478,11 @@ class xyzData:
 	def addCallBack(self, obj):
 		self.callBacksForUpdate.append( obj ) 
 	
+	def removeCallBack(self, obj):
+		for i,o in enumerate(self.callBacksForUpdate):
+			if o == obj:
+				self.callBacksForUpdate.pop(i)
+				return True
 		
 	def getVals(self):
 		return [ self.x, self.y, self.z ]
@@ -1180,9 +1197,15 @@ class sensors:
 			
 	
 	def playerIter(self, a):
-		self.replayTCurrent+= 1.0/float(self.replayFps)
+		try:
+			aobeo = self.replayTCurrent
+		except:
+			print("EE - player Iter but no file to play :(")
+			return 0
 		
+		self.replayTCurrent+= 1.0/float(self.replayFps)
 		self.playerSeek.value = self.replayTCurrent
+		
 		#print("player", self.replayTCurrent)
 		for e in self.FromFileData:
 			tStart = self.replayTStart+self.replayTLast

@@ -14,6 +14,7 @@ class ScreenCompass(Widget):
 		super(ScreenCompass, self).__init__(**kwargs)
 		
 		self.screen = 0
+		self.mtitle = "Compass"
 		self.pos = [0.0,0.0]
 		self.orgSize = [145.0*2.0, 145.0*2.0]
 		self.size = [self.orgSize[0],self.orgSize[1]]
@@ -29,7 +30,7 @@ class ScreenCompass(Widget):
 		return self.orgSize
 		
 	def setPos(self, pos):
-		print("comapass pos",self.pos," size",self.size)
+		#print("comapass pos",self.pos," size",self.size)
 		self.pos = pos
 		
 	def setScale(self, scale):
@@ -236,7 +237,7 @@ class ScreenCompass(Widget):
 		
 		#self.size[0],self.size[1] = self.orgSize[0],self.orgSize[1]
 		
-		if 1:
+		if 0:
 			print("ScreenCompass - > update_rect")
 			print(" size parest ", self.parent.size)
 			print("	self.orgSize",self.orgSize)

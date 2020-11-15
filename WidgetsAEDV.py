@@ -26,6 +26,10 @@ class WidgetsAEDV:
         if self.actionType == 'start':
             
             bl = BoxLayout(orientation='vertical')
+            #bl.add_widget(Button(
+            #    text="rebuild!",
+            #    on_release=self.sw.rebuildWs
+            #    ))
             bl.add_widget(
                 Label(text="Awalable widgets to add to screen:")
                 )
@@ -35,13 +39,14 @@ class WidgetsAEDV:
                 bv = BoxLayout(
                     orientation="horizontal",
                     height = self.gui.btH,
+                    width = bl.width,
                     size_hint = [None,None]
                     )
                 
                 b = Button(
                     text = w['name'],
-                    height = self.gui.btH,
-                    size_hint = [None,None],
+                    #height = self.gui.btH,
+                    #size_hint = [None,None],
                     on_release=self.on_start_addW,
                     )
                 bv.add_widget(b)
