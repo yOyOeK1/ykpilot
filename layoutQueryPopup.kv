@@ -5,17 +5,33 @@
 	auto_dismiss: False
 	BoxLayout:
 		orientation: "vertical"
-		ScrollView:
-			Label:
-				id: lquery
-				text: "lquery"
-				text_size: self.width, None
-				size_hint_y: None
-				height: self.texture_size[1]
+		padding:5
+		spacing:5
+		#canvas:
+		#	Color:
+		#		rgba: 0, 1, 0,0.2
+		#	Rectangle:
+		#		pos: self.pos
+		#		size: self.size
+					
+		Label:
+			id: lquery
+			text: "lquery"
+			text_size: self.width, None
+			size_hint_y: None
+			height: self.texture_size[1]
 				
 		BoxLayout:
 			orientation: "horizontal"
-	
+			size_hint_y: None
+			height: app.btH
+            #canvas:
+			#	Color:
+			#		rgba: 0, 0, 1,0.2
+			#	Rectangle:
+			#		pos: self.pos
+			#		size: self.size
+		
 			Button:
 				id: bt_cancel
 				size_hint_y:None

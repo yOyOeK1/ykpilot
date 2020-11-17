@@ -12,6 +12,9 @@ from kivy.properties import ObjectProperty
 import sys
 import math
 from kivy.uix.boxlayout import BoxLayout
+from kivy.metrics import cm
+from WidgetValFunctionHandler import WidgetValFunctionHandler
+from WidgetHelper import WidgetHelper
 
 class WidgetProto(Widget):
     
@@ -29,14 +32,10 @@ class WidgetProto(Widget):
             self.inEditMode = False
             
             
-class MyLabel(KiLabel):
-    def __init__(self,**kwargs):
-        super(MyLabel,self).__init__(**kwargs)
-        self.size_hint = [None,None]
-        self.height = kivy.metrics.cm(1)
+
         
             
-class Widget_cn(WidgetProto):
+class Widget_cn(WidgetProto,WidgetHelper):
     
     pos = ObjectProperty(None)
     size = ObjectProperty(None)
@@ -69,14 +68,13 @@ class Widget_cn(WidgetProto):
         self.munit = 1
         self.mround = 1
         self.maxnum = 4
+        self.wvfh = WidgetValFunctionHandler()
         
     
     def setValues(self, 
-        screen, title, callback, valk, unit, round_ ,maxnum ):
+        screen, title, unit, round_ ,maxnum ):
         self.screen = screen
         self.mtitle = title
-        self.mcallback = callback
-        self.mvalk = valk
         self.munit = unit
         self.mround = round_
         self.maxnum = maxnum
@@ -88,33 +86,34 @@ class Widget_cn(WidgetProto):
     def settingsDoneStore(self):
         pass
         
-    def getSettingsDialogPart(self):
-        return {
-            'initStep': 'setValues',
-            'args':{
-                }
+    def setValuesFromDic(self,dic):
+        self.setValues(
+            screen = dic['screen'], 
+            title = dic['title'], 
+            unit = dic['unit'], 
+            round_ = dic['round'], 
+            maxnum = dic['maxnum']
+            )
+        self.wvfh.setParametersFromDict(dic['valHandler'])
+        
+    
+    def getAttrFromDialog(self): 
+        atr = {
+            'title': str(self.tiTitle.text),
+            'round': int(self.tiRound.text),
+            'unit': self.tiUnit.text,
+            'maxnum': int(self.tiMaxnum.text)
             }
+        return atr
         
+    def addSettingsDialogPart(self,bl):
         
-        bl = BoxLayout(orientation="vertical")
-        bl.add_widget(MyLabel(text="Title:"))
-        self.tiTitle = TextInput(text=self.mtitle)
-        bl.add_widget( self.tiTitle )
-        
-        bl.add_widget(MyLabel(text="Round to:"))
-        self.tiRound = TextInput(text="1" )
-        bl.add_widget( self.tiRound )
-        
-        bl.add_widget(MyLabel(text="Unit:"))
-        self.tiUnit = TextInput(text="kts")
-        bl.add_widget( self.tiUnit )
-        
-        bl.add_widget(MyLabel(text="Max characters:"))
-        self.tiUnit = TextInput(text="4")
-        bl.add_widget( self.tiUnit )
+        bl, self.tiTitle = self.addDialogRow(bl, "Title", "")
+        bl, self.tiRound = self.addDialogRow(bl, "Round to", "1")
+        bl, self.tiUnit = self.addDialogRow(bl, "Unit", "kts")
+        bl, self.tiMaxnum = self.addDialogRow(bl, "Max characters", "4")
         
         return bl
-        
     
     def bin(self,a='',b=''):
         print("bin a:[",a,"] b[",b,"]")    
@@ -123,37 +122,35 @@ class Widget_cn(WidgetProto):
         print("binS [",self.mtitle,"] a:[",a,"] b[",b,"]")
     
     def getWidget(self):
-        
         print("getWidget () o ",self.mtitle,
                   "pos:",int(self.pos[0]),"x",int(self.pos[1]),
                   "size:",int(self.size[0]),"x",int(self.size[1]))
         
         return self
+    
+    def updateIt(self, fromWho = '',vals = ''):
+        self.update(fromWho, vals)
         
     def update(self, fromWho, vals):
-        if self.gui.rl.current != 'Widgets':
+        if self.gui.rl.current[:7] != 'Widgets':
             return 0
         
         if 0:
-            print("update from widget_n[{}] from:{} callback:{} gotvals:{}".format(
-                self.mtitle, fromWho, self.mcallback, vals
+            print('''update from widget_n[{}] 
+                from:{}  
+                gotvals:{}'''.format(
+                self.mtitle, fromWho, vals
                 ))
-        if fromWho == self.mcallback:
             
-            if self.mcallback == 'comCal':
-                vals = {
-                    self.mvalk: vals
-                    }
-                
-            v = str( round( vals[self.mvalk], self.mround ) if self.mround > 0 else int( vals[self.mvalk] ) )
+        v = self.wvfh.updateVal(fromWho, vals)
+        if v != None:
+            v = str( round( v, self.mround ) if self.mround > 0 else int( v ) )
             if self.myValue == None or self.myValue != v:
                 self.myValue = v
-            
             
                 self.l.text = str( "%s%s"%( v, self.munit) )
                 self.l.refresh()
                 self.recL.texture = self.l.texture
-                
                 
                 #print("recl size",self.l.texture.size)
                 self.recL.size = [ 

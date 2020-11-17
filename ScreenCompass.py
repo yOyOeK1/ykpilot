@@ -23,6 +23,9 @@ class ScreenCompass(Widget):
 		self.updateItC = 0	
 		self.drawIt()
 		
+	def getCallbacks(self):
+		return ['gpsD','comCal','comCalAccelGyro']
+		
 	def settingsNeedIt(self):
 		return False
 		

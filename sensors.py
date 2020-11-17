@@ -288,7 +288,7 @@ class gpsData:
 		return self.title
 	
 	def getValuesOptions(self):
-		tr = { 'disc' :
+		tr = { 'dict' :
 			['lat','lon','speed','bearing','accuracy','avgSog']
 			}
 		return tr
@@ -297,6 +297,7 @@ class gpsData:
 		return [ self.lat, self.lon, self.cog, self.sog ]
 	
 	def addCallBack(self, obj):
+		print("addCallBack to ",self.title," obj",obj)
 		self.callBacksForUpdate.append( obj ) 
 	
 	def removeCallBack(self, obj):
@@ -405,6 +406,7 @@ class xyzData:
 		self.callBacksForUpdate = []
 		self.gui = gui
 		self.type = type_
+		self.title = self.type
 		self.iter = 0
 		self.guiObjs = debGuiObjcts
 		self.history = []

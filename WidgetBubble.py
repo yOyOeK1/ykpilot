@@ -6,6 +6,7 @@ from kivy.graphics import *
 from kivy.properties import ObjectProperty
 from kivy.core.image import Image as KImage
 from kivy.animation import Animation, AnimationTransition
+from WidgetValFunctionHandler import WidgetValFunctionHandler
 
 
 class WidgetBubble(Widget):
@@ -27,10 +28,26 @@ class WidgetBubble(Widget):
             'skip': 0,
             'update': 0
             }
+		self.wvfh = WidgetValFunctionHandler()
+		self.wvfh.setParameters()
+
+	def setValuesFromDic(self,dic):
+		print("setValuesFromDic",dic)
+		self.wvfh.setParametersFromDict(dic['valHandler'])
 		
+
+	def settingsNeedIt(self):
+		return True
+	
+	def getAttrFromDialog(self):
+		return {}
+	
+	def addSettingsDialogPart(self,bl):
+		return bl
+
 		
 	def setLevel(self,level):
-		#print("setLevel",level)
+		print("setLevel",level)
 		if self.gui.animation:
 			Animation.cancel_all(self.bubRot,'angle')
 			anim = Animation(angle=-level,t='out_quad' )
@@ -122,15 +139,13 @@ class WidgetBubble(Widget):
 			
 			
 	def update(self, fromWho, vals):
-		if self.gui.rl.current in [ 'Widgets']:
+		if self.gui.rl.current[:7] in [ 'Widgets']:
 			pass
 		else:
 			return 0
-		if fromWho == "orientation":
-			#print("vals",vals)
-			
-			
-			v = vals[4]
+		
+		v = self.wvfh.updateVal(fromWho, vals)
+		if v != None:
 			if self.myValue == None or self.myValue != v:
 				self.myValue = v
 				self.setLevel( v )
@@ -148,7 +163,7 @@ class WidgetBubble(Widget):
 		except:
 			return 0
 		
-		if self.gui.rl.current in ["Widgets"]:
+		if self.gui.rl.current[:7] in ["Widgets"]:
 			pass
 		else:
 			return 0
@@ -163,7 +178,7 @@ class WidgetBubble(Widget):
 			print("	self pos ",self.pos)
 		#self.rec.pos = self.pos
 		#self.rec.size = self.size
-		if self.gui.rl.current == 'Widgets':
+		if self.gui.rl.current[:7] == 'Widgets':
 			self.centPos.x = self.pos[0]
 			self.centPos.y = self.pos[1]
 			self.comScale.x = self.scale

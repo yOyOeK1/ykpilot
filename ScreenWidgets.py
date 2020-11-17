@@ -5,27 +5,25 @@ from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
 from kivy.graphics import Color
-from ScreenCompass import ScreenCompass
-from ScreenRace import ScreenRace
-import sys
 from kivy.uix.floatlayout import FloatLayout
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.screenmanager import Screen, FadeTransition
 from kivy.properties import ObjectProperty
 
-
 from WidgetsAEDV import WidgetsAEDV
 
-from Widget_n import Widget_n
 from Widget_cn import Widget_cn
-from Widget_cnDiff import Widget_cnDiff
+from Widget_niddle import Widget_niddle
+from ScreenCompass import ScreenCompass
 from WidgetBubble import WidgetBubble
+
 from FileActions import FileActions
 from DataSaveRestore import DataSR_save, DataSR_restore
 from QueryPopup import QueryPopup
 
 
+import sys
 
 class MyScatterWidgetOnScatter(Scatter):
     pass
@@ -53,15 +51,22 @@ class ScreenWidgets:
         return [
             {   'name': "Numeric",
                 'obj': Widget_cn(),
+                'objName': 'Widget_cn',
                 'thumb': 'widget_numeric.png'
-                },
-                
+                },                
             {   'name': 'Bubble',
                 'obj': WidgetBubble(),
+                'objName': 'WidgetBubble',
                 'thumb': 'widget_bubble.png'
+                },
+            {   'name': 'Niddle guage',
+                'obj': Widget_niddle(),
+                'objName': 'Widget_niddle',
+                'thumb': 'widget_niddle.png'
                 },
             {   'name': "Compass",
                 'obj' : ScreenCompass(),
+                'objName': 'ScreenCompass',
                 'thumb': 'widget_compass.png' 
                 },
             ]
@@ -69,12 +74,14 @@ class ScreenWidgets:
     def saveConfig(self):
         print("ScreenWidgets.saveConfig",self.wConfig)
         
+        print(" clean stuff befoare save to file")
         for s in self.wConfig:
             for w in s:
                 w['obj'] = ''
                 
         print("-------------------------------------------")
         print(self.wConfig)
+        print("-------------------------------------------")
         
         print("save config Widgets res:",
               DataSR_save(self.wConfig, self.wConfigPath)
@@ -100,7 +107,7 @@ class ScreenWidgets:
             self.wConfig = [[
                 {
                 'name': 'ScreenCompass',
-                'obj': None,
+                'obj': "",
                 'objName': 'ScreenCompass',
                 'callback': ['gpsD','comCal', 'comCalAccelGyro'],
                 'pos': [200,200],
@@ -135,66 +142,6 @@ class ScreenWidgets:
         self.buildW()
         return 0
     
-    
-        
-        aeoueaou= '''
-        nSOG = Widget_cn()
-        nSOG.setValues('SOG', 'gps', 'speed', 'kts', 1,4)
-        
-        #nCOG = Widget_cn()
-        #nCOG.setValues('COG', 'gps', 'bearing', '`', 0,4)
-        
-        cnHDG = Widget_cn()
-        cnHDG.setValues('HDG', 'comCal', 2, '`', 1, 4)
-        
-        #cnHeel = Widget_cn()
-        #cnHeel.setValues('heel', 'orientation', 4, '`', 0, 3)
-        
-        cnPitch = Widget_cn()
-        cnPitch.setValues('pitch', 'orientation', 3, '`', 0, 3)
-        
-        cnDiffHDG_COG = Widget_cnDiff()
-        cnDiffHDG_COG.setValues('HDG-COG', None, 0, '`', 1, 3)
-        cnDiffHDG_COG.setDiffs('gps', 'bearing', 'comCal', 0, angleNormalize=True)
-        
-        bubble = WidgetBubble()
-        
-        self.widgets = [
-         {   
-                'name': "bubble",
-                'obj': bubble,
-                'callback': ['orientation']
-                },
-            {   
-                'name': "diffHDG_COG",
-                'obj': cnDiffHDG_COG,
-                'callback': ['gpsD','comCal']
-                },
-            
-        
-            {   
-                'name': "nSOG",
-                'obj': nSOG,
-                'callback': ['gpsD']
-                },
-            
-            {   
-                'name': "cnHDG",
-                'obj': cnHDG,
-                'callback': ['comCal']
-                },
-            {   
-                'name': "pitch",
-                'obj': cnPitch,
-                'callback': ['orientation']
-                },
-            {
-                'name': 'ScreenCompass',
-                'obj': ScreenCompass(),
-                'callback': ['gpsD','comCal', 'comCalAccelGyro']
-                },
-            ]
-        '''
        
     def bindScatter(self):
         self.s.bind(pos = self.updateWidgetFromScatter)
@@ -230,19 +177,28 @@ class ScreenWidgets:
         for s in self.wConfig:
             for w in s:
                 obj = w['obj']
-                print("widget",w['objName'])
-                p = obj.parent
-                print("remove from parent [",p,"]...")
-                if p == None:
-                    break
-                p.remove_widget(obj)
-                print("remove callbacks...")
-                for cal in w['callback']:
-                    print("sensor",cal)
-                    unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
-                    #print("go with:",unSub)
-                    exec(unSub)
-                w['obj'] = None
+                if obj == "":
+                    w['obj'] = None
+                else:
+                    print("widget ",w['objName'],' type',type(obj))
+                    try:
+                        p = obj.parent
+                        obj2Remove = obj
+                    except:
+                        ot = obj.getWidget()
+                        p = ot.parent
+                        obj2Remove = ot
+                    print("remove from parent [",p,"]...")
+                    if p == None:
+                        break
+                    p.remove_widget(obj2Remove)
+                    print("remove callbacks...")
+                    for cal in w['callback']:
+                        print("sensor",cal)
+                        unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
+                        #print("go with:",unSub)
+                        exec(unSub)
+                    w['obj'] = None
         
         
         print("chk on scatter ...")
@@ -312,15 +268,25 @@ class ScreenWidgets:
         for b in self.navBts:
             b.y = y
       
-    def addWidgetOnScreen(self, wObj, callbaks=None):
+    def addWidgetOnScreen(self, wObj, callback=None):
         print("ScreenWidgets.add widget on screen",wObj)
         
         if len(self.wConfig)<=self.screen:
             print("adding first widget on screen !",self.screen)
             self.wConfig.append([])
         
+        self.wConfig[self.screen].append({
+            'name': wObj['name'],
+            'obj': "",
+            'objName': wObj['objName'],
+            'callback': wObj['obj'].getCallbacks(),
+            'pos': [200,200],
+            'scale':1.0,
+            'rotation':0.0
+            
+            })
         
-        
+        '''
         self.wConfig[self.screen].append({
             'name': 'ScreenCompass',
             'obj': ScreenCompass(),
@@ -329,8 +295,10 @@ class ScreenWidgets:
             'pos': [200,200],
             'scale':1.0,
             'rotation':0.0
-            })
+            })'''
         
+        #sys.exit(0)
+        self.saveConfig()
         
         tScreen = self.screen 
         self.rebuildWs()
@@ -354,7 +322,7 @@ class ScreenWidgets:
             o.setPos( [s.center_x,s.center_y] )
             o.setScale( s.scale )
             o.setRot( s.rotation )
-            self.wConfig[self.screen][i]['pos'] = o.pos
+            self.wConfig[self.screen][i]['pos'] = list(o.pos)
             self.wConfig[self.screen][i]['scale'] = o.scale
             self.wConfig[self.screen][i]['rotation'] = o.rotation
             o.updateIt()
@@ -389,7 +357,7 @@ class ScreenWidgets:
         print("current screen:",self.gui.rl.current[7:])
         self.screen = int(self.gui.rl.current[7:])
         print("wConfig",self.wConfig)
-        print("len",len(self.wConfig))
+        #print("len",len(self.wConfig))
         print("screen",self.screen)
 
         if len(self.wConfig) > self.screen:
@@ -440,8 +408,20 @@ class ScreenWidgets:
             self.startAddWidgetDialog()
             return True
         
+        if self.clikOn(pos,[3*btH,y],[btH,btH]):
+            print("    clikc on F")
+            self.on_toggleFullScreen()
+            return True
+        
         
         return False
+        
+    def on_toggleFullScreen(self,a='',b=''):
+        print("on_toggleFullScreen")
+        if self.gui.ab.height > 0.0:
+            self.gui.ab.height = 0.0
+        else:
+            self.gui.ab.height = self.gui.btH
         
     def on_touch(self,a=0):
         print("screeWidgets.on_touch screen:",self.screen)
@@ -551,6 +531,8 @@ class ScreenWidgets:
                 if w['obj'] == self.widgetEdit:
                     self.cleanAll()
                     self.wConfig[si].pop(wi)
+                    print("so widget removed. save new config")
+                    self.saveConfig()
                     tScreen = self.screen
                     self.buildW()
                     self.gui.screenChange("Widgets%s"%tScreen)
@@ -590,7 +572,7 @@ class ScreenWidgets:
     def setUpGui(self, screen, bWidget, widgets):  
         print("ScreenWidgets.setUpGui ",bWidget," widgets\n",widgets)      
         btEdit = Button(
-            background_color = (1,.1,.1,0.5)
+            background_color = (0,.0,.0,0.0)
             )
         btEdit.bind( on_release = self.on_btEdit)
         bWidget.add_widget(btEdit)
@@ -609,26 +591,46 @@ class ScreenWidgets:
             print("building widget [",w['name'],"]")
             exec("widgets[i]['obj'] = %s()"%w['objName'])
             o = widgets[i]['obj']
+
+            if w['objName'] in ['Widget_cn','Widget_niddle', 'WidgetBubble']:
+                print("passing atr setting to Widget_cn or 'Widget_niddle or WidgetBubble")
+                atr = w['atr']
+                atr['screen'] = screen
+                atr['valHandler'] = w['valHandler']
+                o.setValuesFromDic(atr)
+                print("    done")
+            print("setGui")
             o.setGui(self.gui)
             
-            
+            print("add widget")
             bWidget.add_widget( o.getWidget() )
+            
             try:
                 o = self.setPSR(o,w)
-                self.wConfig[screen][i]['pos'] = o.pos
+                self.wConfig[screen][i]['pos'] = list(o.pos)
                 self.wConfig[screen][i]['scale'] = o.scale
                 self.wConfig[screen][i]['rotation'] = o.rotation
-           
+                print("pos,scale,rotation equal !")
             except:
                 print("EE - widget build no pos or .....")
             
+                
             
-            print("\- - adding callbacks:")
+            print("\- - adding callbacks:",w['callback'])
             for c in w['callback']:
-                print(c)
-                eval("self.gui.sen.%s.addCallBack(o)"%(
-                    c
-                    ))
+                if c != '':
+                    print("callback to:",c)
+                    if c == 'gps':
+                        print("changing gps to gpsD")
+                        c = 'gpsD'
+                    print("add it ....")
+                    eval("self.gui.sen.%s.addCallBack(o)"%(
+                        c
+                        ))
+                    print("    DONE")
+                    #print("o",o)
+                    #print("widgets[i]['obj']",widgets[i]['obj'])
+                    #print("self.gui.sen.gps",self.gui.sen.gpsD.callBacksForUpdate)
         
         
         self.addNavBts( bWidget )          
@@ -709,6 +711,16 @@ class ScreenWidgets:
             )
         w.add_widget(btAdd)
         btAdd.x = self.gui.btH*2.0
+        self.navBts.append(btAdd)
+        
+        btAdd = Button(
+            text="F",
+            size = [self.gui.btH,self.gui.btH],
+            size_hint=(None,None),
+            #on_release=self.on_screenRight
+            )
+        w.add_widget(btAdd)
+        btAdd.x = self.gui.btH*3.0
         self.navBts.append(btAdd)
     
     

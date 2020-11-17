@@ -381,9 +381,9 @@ class gui(App):
 		#action bar
 		if True:
 			self.mw = BoxLayout(orientation="vertical")
-			a = ActionBar()
+			self.ab = ActionBar()
 			av = ActionView()
-			a.add_widget(av)
+			self.ab.add_widget(av)
 			ap = ActionPrevious( 
 				title="ykpilot", with_previous=False,
 				app_icon = "icons/ico_sailboat_256_256.png"
@@ -469,7 +469,7 @@ class gui(App):
 			
 			av.add_widget(ao)
 			
-			self.mw.add_widget(a)
+			self.mw.add_widget(self.ab)
 			self.mw.add_widget(self.rl)
 
 			toreturn = self.mw
@@ -489,7 +489,10 @@ class gui(App):
 
 		#self.ap.setupDriver()
 		self.sen.run()
-		self.screenChange(self.config['screenCurrent'])
+		try:
+			self.screenChange(self.config['screenCurrent'])
+		except:
+			self.screenChange("ykpilot")
 		#Window.set_title("ykpilot")
 
 
@@ -503,9 +506,12 @@ class gui(App):
 		
 
 		
-		#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+		Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 		#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
-		Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
+		#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
+		
+		
+		#self.ab.height = 1.0
 		
 		return toreturn 
 

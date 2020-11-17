@@ -40,11 +40,25 @@ def DataSR_restore(file,zip=False):
 			fc = fa.loadFile(file)
 			if fc != None:
 				forJson = str("\n".join(fc)).replace("'",'"')
+				#print("sssssssssssssssss")
+				#print(forJson)
+				#print("-----------")
 				j = json.loads(forJson)
 				return j
 			else:
 				print("no file")
 				return None
 		except:
+			print("EE - no json on restore !")
+			j = []
+			exec("j = list({})".format(forJson))
+			print("type",type(forJson))
+			print("type",type(list(forJson)))
+			print( list(forJson))
+			print(forJson[270:])
+			j = json.loads(str(forJson))
+			
+			print("j",j)
+			
 			None
 		
