@@ -56,9 +56,7 @@ class QueryPopup(Popup):
 			self.ids.bt_cancel.text = bt_cancel_text
 		
 		
-	def run(self):
-		self.open()
-		
+	def run(self,a='',b=''):
 		try:
 			hs = 0.0
 			for c in self.queryWidget.children:
@@ -72,6 +70,11 @@ class QueryPopup(Popup):
 		except:
 			print("queryPopup - no need to resize scroll view")
 		
+		print("preopen")
+		self.open()
+		print("postopen")
+		
+		
 	def on_bt_ok(self):
 		print( "on_bt_ok" )
 		self.dismiss()
@@ -81,6 +84,9 @@ class QueryPopup(Popup):
 	def on_bt_cancel(self):
 		print( "on_bt_cancel" )
 		self.dismiss()
-		if self.cancelCB != None:
+		
+		if str(self.cancelCB) == "":
+			pass
+		elif self.cancelCB != None:
 			self.cancelCB()
 		

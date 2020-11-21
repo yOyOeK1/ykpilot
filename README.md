@@ -20,6 +20,13 @@ for now qrl QReinforceLernig or pid :)
 ![Compass instrument](./screenshots/compass.png)
 one of many instruments to come
 
+###Widgets screen.
+![widgets set 0](./screenshots/widget0.png)
+example of using widgets screen. Now fully configurable. Move, resize, rotate of elements. Possible to configure value 
+functions (direct value display, different, sum, devide by different sensor \ channel, 
+![widgets set 1](./screenshots/widget1.png)
+
+
 ###Nmea and connectivity.
 ![broadcast nmea](./screenshots/sendnmea.png)
 so with it you can use phone as a gps reciver and by wifi you can get data in yout opencpn

@@ -29,12 +29,11 @@ class WidgetBubble(Widget):
             'update': 0
             }
 		self.wvfh = WidgetValFunctionHandler()
-		self.wvfh.setParameters()
+		#self.wvfh.setParameters()
 
 	def setValuesFromDic(self,dic):
 		print("setValuesFromDic",dic)
 		self.wvfh.setParametersFromDict(dic['valHandler'])
-		
 
 	def settingsNeedIt(self):
 		return True
@@ -42,12 +41,11 @@ class WidgetBubble(Widget):
 	def getAttrFromDialog(self):
 		return {}
 	
-	def addSettingsDialogPart(self,bl):
+	def addSettingsDialogPart(self,bl,inWConf=None):
 		return bl
-
 		
 	def setLevel(self,level):
-		print("setLevel",level)
+		#print("setLevel",level)
 		if self.gui.animation:
 			Animation.cancel_all(self.bubRot,'angle')
 			anim = Animation(angle=-level,t='out_quad' )
@@ -56,20 +54,8 @@ class WidgetBubble(Widget):
 		else:
 			self.bubRot.angle = -level
 		
-		
-		
 	def getSize(self):
 		return self.orgSize
-		
-	def setPos(self, pos):
-		print("bubble pos",self.pos," size",self.size)
-		self.pos = pos
-		
-	def setScale(self, scale):
-		self.scale = scale
-		
-	def setRot(self, rot):
-		self.rotation = rot
 		
 	def setGui(self, gui):
 		self.gui = gui
@@ -89,15 +75,11 @@ class WidgetBubble(Widget):
 		
 	def drawIt(self):
 		print("drawIt")
-		#self.iLevelBg = KImage("icons/ico_level_bg_512_512.png")
-		#self.iLevelBubble = KImage("icon/ico_level_bubble_256_256.png")
-
-				
 		with self.canvas:
 			self.setColor('w')
 			
 			PushMatrix()
-			self.centPos = Translate(0,0,0)
+			self.centPos = Translate(self.size[0]*.5, self.size[1]*.5,0)
 			self.comScale = Scale(1,1,1)
 			self.comRot = Rotate(0,0,0,1)
 			self.r = Rotate(0,0,0,1)
@@ -131,13 +113,7 @@ class WidgetBubble(Widget):
 	def updateOfSize(self,a='',b=''):
 		print("bubble.update of size",self.size,"\na",a,"\nb",b)
 			
-	def setHdg(self, v):
-		self.r.angle = v
-		
-	def setCog(self, v):
-		self.rCog.angle = v
-			
-			
+				
 	def update(self, fromWho, vals):
 		if self.gui.rl.current[:7] in [ 'Widgets']:
 			pass
@@ -157,7 +133,7 @@ class WidgetBubble(Widget):
 
 
 	def updateIt(self, *args):
-		print("bubble.updateIt")
+		#print("bubble.updateIt")
 		try:
 			aoeuobc = self.gui
 		except:
@@ -168,21 +144,4 @@ class WidgetBubble(Widget):
 		else:
 			return 0
 		
-		#self.size[0],self.size[1] = self.orgSize[0],self.orgSize[1]
-		
-		if 1:
-			print("Screenbubble - > update_rect")
-			print(" size parest ", self.parent.size)
-			print("	self.orgSize",self.orgSize)
-			print(" self size ",self.size)
-			print("	self pos ",self.pos)
-		#self.rec.pos = self.pos
-		#self.rec.size = self.size
-		if self.gui.rl.current[:7] == 'Widgets':
-			self.centPos.x = self.pos[0]
-			self.centPos.y = self.pos[1]
-			self.comScale.x = self.scale
-			self.comScale.y = self.scale
-			self.comRot.angle = self.rotation
-		#self.drawIt()
 	

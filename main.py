@@ -8,7 +8,17 @@ if __name__ == "__main__":
 	if kivy.platform == "android":
 
 		g = gui()
-		g.run()
+		try:
+			g.run()
+		except:
+			print("EE - there is a big error")
+			print("------------ trackback ------------")
+			print( traceback.format_exc() )
+			print("------------ trackback ------------")
+			print("-------------print_exc")
+			traceback.print_exc(limit=100, file=sys.stdout)
+			print("-------------print_exc")
+			
 		
 	# not android
 	else: 

@@ -17,23 +17,7 @@ from WidgetValFunctionHandler import WidgetValFunctionHandler
 from WidgetHelper import WidgetHelper
 
 class WidgetProto(Widget):
-    
-    inEditMode = False
-    
-    
-    def on_touch_down(self, touch):
-        print( "on_touch_down" )
-        if self.collide_point( *touch.pos):
-            #touch.grab(self)
-            print("collide")
-            self.inEditMode = True
-            #return True
-        else:
-            self.inEditMode = False
-            
-            
-
-        
+    pass    
             
 class Widget_cn(WidgetProto,WidgetHelper):
     
@@ -106,20 +90,17 @@ class Widget_cn(WidgetProto,WidgetHelper):
             }
         return atr
         
-    def addSettingsDialogPart(self,bl):
-        
-        bl, self.tiTitle = self.addDialogRow(bl, "Title", "")
-        bl, self.tiRound = self.addDialogRow(bl, "Round to", "1")
-        bl, self.tiUnit = self.addDialogRow(bl, "Unit", "kts")
-        bl, self.tiMaxnum = self.addDialogRow(bl, "Max characters", "4")
+    def addSettingsDialogPart(self,bl, wConf=None):
+        bl, self.tiTitle = self.addDialogRow(bl, "Title", 
+            "" if wConf == None else wConf['atr']['title'] )
+        bl, self.tiRound = self.addDialogRow(bl, "Round to", 
+            "1" if wConf == None else wConf['atr']['round'] )
+        bl, self.tiUnit = self.addDialogRow(bl, "Unit", 
+            "kts" if wConf == None else wConf['atr']['unit'] )
+        bl, self.tiMaxnum = self.addDialogRow(bl, "Max characters", 
+            "4"  if wConf == None else wConf['atr']['maxnum'] )
         
         return bl
-    
-    def bin(self,a='',b=''):
-        print("bin a:[",a,"] b[",b,"]")    
-    
-    def binS(self,a='',b=''):
-        print("binS [",self.mtitle,"] a:[",a,"] b[",b,"]")
     
     def getWidget(self):
         print("getWidget () o ",self.mtitle,
@@ -144,7 +125,17 @@ class Widget_cn(WidgetProto,WidgetHelper):
             
         v = self.wvfh.updateVal(fromWho, vals)
         if v != None:
-            v = str( round( v, self.mround ) if self.mround > 0 else int( v ) )
+            vAsInt = True
+            try:
+                vi = int(v)
+            except:
+                vAsInt = False
+            
+            if vAsInt:
+                v = str( round( v, self.mround ) if self.mround > 0 else int( v ) )
+            else:
+                v = str(v)
+                
             if self.myValue == None or self.myValue != v:
                 self.myValue = v
             
@@ -172,7 +163,6 @@ class Widget_cn(WidgetProto,WidgetHelper):
                     print("widget stat",self.mtitle," -> ",self.stat)
             
             if self.drawItC == 1:
-                self.setPos(self.pos)
                 self.drawItC+=1
             
         
@@ -222,33 +212,6 @@ class Widget_cn(WidgetProto,WidgetHelper):
     def getSize(self):
         return self.size
     
-    def calcPos(self, pos):
-        pos = list(pos)
-        #print("calcPos:",pos[0]," , ",pos[1]," rota",self.rotation)
-        x = pos[0]
-        y = pos[1]
-        return x,y
-        
-    def setPos(self, pos):
-        #print(self.mtitle,"pos:",pos)
-        self.pos = pos
-        dpos = self.calcPos(pos)
-        #print("dpos",dpos)
-        self.centPos.x = dpos[0]
-        self.centPos.y = dpos[1]
-        
-    def setRot(self, rot):
-        #print(self.mtitle,"rot:",rot)
-        self.rotation = rot
-        self.centRot.angle = self.rotation
-        
-    def setScale(self, scale):
-        #print(self.mtitle,"scale:",scale)
-        self.scale = scale
-        self.centScale.x = self.scale
-        self.centScale.y = self.scale
-         
-        
     def setColor(self,t):
         if t == "w":
             Color(1,1,1,1)
@@ -271,24 +234,9 @@ class Widget_cn(WidgetProto,WidgetHelper):
             PushMatrix()
             self.centPos = Translate( 0.0, 0.0, 0.0 )
             
-            self.centRot = Rotate(0,0,0,1)
-            self.centScale = Scale(1,1,1)
-            #Translate(-self.size[0]*0.5,-self.size[0]*0.5,0)
-            #self.centPosM = Translate( 0.0, 0.0, 0.0 )
-            
-            
-            Translate( -self.size[0]*.5, -self.size[1]*.5,0.0 )
-            
-            
-            #self.setColor('bg')
-            #Rectangle(
-            #    size = self.size,
-            #    pos = (0,0)
-            #    )
-            
             PushMatrix()
             self.setColor("title")
-            Translate(0,self.size[1]*.9,0)
+            Translate(0,self.size[1]*.7,0)
             Rotate(0,0,0,1)
             Rectangle(
                 size = [
@@ -301,7 +249,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
             PopMatrix()
             
             self.setColor('w')
-            self.posL = Translate(0,0,0)
+            self.posL = Translate(0,self.size[1]*-0.2,0)
             self.recL = Rectangle(
                 size = [
                     self.size[0],

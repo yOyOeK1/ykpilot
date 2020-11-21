@@ -15,9 +15,9 @@ class ScreenCompass(Widget):
 		
 		self.screen = 0
 		self.mtitle = "Compass"
-		self.pos = [0.0,0.0]
 		self.orgSize = [145.0*2.0, 145.0*2.0]
 		self.size = [self.orgSize[0],self.orgSize[1]]
+		self.pos = [self.size[0]*.5, self.size[1]*.5]
 		self.scale = 1.0
 		self.rotation = 0.0 
 		self.updateItC = 0	
@@ -217,8 +217,7 @@ class ScreenCompass(Widget):
 		if ( self.gui.sen.comCalAccelGyro.lastTimeIter + 5000000.0 ) < ms:
 			#print("comCalAccel not comming old")
 			if fromWho == "comCal":
-				#print("screenCompass.update got comCal[",vals,"]")
-				self.setHdg( int(vals) )
+				self.setHdg( int(vals[0]) )
 		
 		
 		if fromWho == 'gps':
@@ -227,7 +226,7 @@ class ScreenCompass(Widget):
 			self.setHdg( int(vals[2]) )
 		
 	def updateIt(self, *args):
-		print("compass.updateIt")
+		#print("compass.updateIt")
 		try:
 			aoeuobc = self.gui
 		except:

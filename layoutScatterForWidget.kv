@@ -1,0 +1,24 @@
+
+<bubbleRemEdit>
+	size_hint: (None, None)
+	size: (app.btH*4.0, app.btH*1.5)
+	pos: root.widgetPos
+	BubbleButton:
+		text: 'Remove'
+		on_release: root.on_remove()
+	BubbleButton:
+		text: 'Edit'
+		on_release: root.on_edit()
+	
+
+
+<ScatterForWidget>:
+	#on_size: self.center = win.Window.center
+	size: root.widgetSize
+	size_hint: None,None
+
+    canvas.before:
+        Color:
+            rgba: 0.5, .0, .5,.3
+        Rectangle:
+            size: self.size

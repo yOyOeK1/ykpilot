@@ -42,11 +42,6 @@ class Widget_n:
         #    ))
         if fromWho == self.callback:
             
-            if self.callback == 'comCal':
-                vals = {
-                    self.valk: vals
-                    }
-            
             self.l.text = str( "%s %s"%( 
                 round( vals[self.valk], self.round ) if self.round > 0 else int( vals[self.valk] ), self.unit 
                 ) )

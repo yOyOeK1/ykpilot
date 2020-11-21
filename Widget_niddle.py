@@ -33,8 +33,8 @@ class Widget_niddle(WidgetHelper):
         self.updateCount = 0
         
         self.screen = 0
-        self.pos = [10,10]
         self.size = [200,200]
+        self.pos = [0,0]
         self.scale = 1.0
         self.rotation = 0.0
         self.x = 0
@@ -73,6 +73,7 @@ class Widget_niddle(WidgetHelper):
         self.sm = MySpeedMeter()
         self.sm.size_hint = [None,None]
         self.sm.size = self.size
+        self.sm.pos = self.pos
         
         self.defSettings = [
             { 
@@ -167,6 +168,7 @@ class Widget_niddle(WidgetHelper):
         for k in self.smSettings.keys():
             print("key ",k," in dic is ",dic[k])
             try:
+                
                 try:
                     self.smSettings[k] = int(dic[k])
                 except:
@@ -174,14 +176,10 @@ class Widget_niddle(WidgetHelper):
                 print("set self.sm")
                 exec("self.sm.{0} = {1}".format(k,self.smSettings[k]))
                 print("    sm set")
+                
             except:
                 print(" pass ???")
             
-        self.pos = self.sm.pos
-        self.size = self.sm.size
-        self.sm.pos = self.pos
-        self.sm.size = self.size 
-        self.sm.value = 0.0
         
         print("so niddle pos",self.pos," size",self.size)
         
@@ -191,7 +189,7 @@ class Widget_niddle(WidgetHelper):
         return self.smSettings
         
         
-    def addSettingsDialogPart(self,bl):
+    def addSettingsDialogPart(self,bl, inWConf = None):
         
         presetVals = []
         for s in self.defSettings:
@@ -211,15 +209,28 @@ class Widget_niddle(WidgetHelper):
         bl.add_widget(bh)
         self.spPreset.bind(text=self.on_presetChange)
         
-        bl,self.ti_title = self.addDialogRow(bl, "Title", "")
-        bl,self.ti_min = self.addDialogRow(bl, "Min value", -175)
-        bl,self.ti_max = self.addDialogRow(bl, "Max value", 175)
-        bl,self.ti_tick = self.addDialogRow(bl, "Tick", 25)
-        bl,self.ti_subtick = self.addDialogRow(bl, "Sub ticks", 6)
-        bl,self.ti_start_angle = self.addDialogRow(bl, "Start angle", -170)
-        bl,self.ti_end_angle = self.addDialogRow(bl, "End angle", 170)
-        bl,self.ti_value_font_size = self.addDialogRow(bl, "Value size", 23)
-        bl,self.ti_label_font_size = self.addDialogRow(bl, "Labels size", 50)
+        if inWConf:
+            self.spPreset.text = inWConf['atr']['name']
+        
+        
+        bl,self.ti_title = self.addDialogRow(bl, "Title", 
+            "" if inWConf == None else inWConf['atr']['title'] )
+        bl,self.ti_min = self.addDialogRow(bl, "Min value", 
+            -175 if inWConf == None else str(inWConf['atr']['min']) )
+        bl,self.ti_max = self.addDialogRow(bl, "Max value", 
+            175 if inWConf == None else str(inWConf['atr']['max']) )
+        bl,self.ti_tick = self.addDialogRow(bl, "Tick", 
+            25  if inWConf == None else str(inWConf['atr']['tick']) )
+        bl,self.ti_subtick = self.addDialogRow(bl, "Sub ticks", 
+            6  if inWConf == None else str(inWConf['atr']['subtick']) )
+        bl,self.ti_start_angle = self.addDialogRow(bl, "Start angle", 
+            -170 if inWConf == None else str(inWConf['atr']['start_angle']))
+        bl,self.ti_end_angle = self.addDialogRow(bl, "End angle", 
+            170 if inWConf == None else str(inWConf['atr']['end_angle']) )
+        bl,self.ti_value_font_size = self.addDialogRow(bl, "Value size", 
+            23 if inWConf == None else str(inWConf['atr']['value_font_size']) )
+        bl,self.ti_label_font_size = self.addDialogRow(bl, "Labels size", 
+            50 if inWConf == None else str(inWConf['atr']['label_font_size']) )
         
         
         
@@ -284,12 +295,26 @@ class Widget_niddle(WidgetHelper):
             
         v = self.wvfh.updateVal(fromWho, vals)
         if v != None:
-            self.valueToDisplay = round( v, self.mround ) if self.mround > 0 else int( v ) 
+            
+            vAsInt = True
+            try:
+                vi = int(v)
+            except:
+                vAsInt = False
+            
+            if vAsInt:
+                self.valueToDisplay =  round( v, self.mround ) if self.mround > 0 else int( v )
+            else:
+                self.valueToDisplay = v
+            
+            
+             
             if self.smSettings['title'] != '':
                 self.sm.label = "{}\n{}".format(
                     self.smSettings['title'], self.valueToDisplay)
             else: 
                 self.sm.label = str(self.valueToDisplay)
+            
             
             if self.valueToDisplay > self.smSettings['max']:
                 self.valueToDisplay = self.smSettings['max']
@@ -325,36 +350,5 @@ class Widget_niddle(WidgetHelper):
         
     def getSize(self):
         return self.size
-    
-    def setPos(self, pos):
-        #print(self.mtitle,"pos:",pos)
-        print("sm.size",self.sm.size," got pos",pos," sm.pos",self.sm.pos)
-        self.sm.pos = [
-            pos[0]-self.sm.size[0]*.5,
-            pos[1]-self.sm.size[1]*.5
-            ]
-        self.pos = pos
-       
-        
-    def setRot(self, rot):
-        #print(self.mtitle,"rot:",rot)
-        self.rotation = rot
-        self.sm.start_angle = self.smSettings['start_angle']-rot
-        self.sm.end_angle = self.smSettings['end_angle']-rot
-        #self.centRot.angle = self.rotation
-        
-    def setScale(self, scale):
-        #print(self.mtitle,"scale:",scale)
-        self.scale = scale
-        self.sm.scale = scale
-        self.sm.size = [
-            self.size[0]*scale,
-            self.size[1]*scale
-            ]
-        #self.centScale.x = self.scale
-        #self.centScale.y = self.scale
-         
-        
-    
     
     

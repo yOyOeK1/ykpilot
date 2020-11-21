@@ -40,13 +40,14 @@ def transform90axis( upAxis, vals ):
 	elif upAxis == 'z': 
 		return [vals[0],vals[1],vals[2]]
 
-class phoneSensors:
+class deviceSensors:
 	def __init__(self,gui):
 		self.gui = gui
 		self.th = TimeHelper()
-		self.title = 'phone sensors'
+		self.title = 'device'
 		self.callBacksForUpdate = []
 		
+		self.upTimeStart = self.th.getTimestamp()
 		
 		self.battery = {
 			"ok": None,
@@ -62,12 +63,25 @@ class phoneSensors:
 			'org': None,
 			'current': None
 			}
+		self.uptime = 0.0
+		self.uptimeNice = ""
 		
 		self.iterCount = 0
 		self.updateEvery = 5
 		
+	def updateUptime(self):
+		ts = self.th.getTimestamp()
+		self.uptime = ts - self.upTimeStart
+		self.uptimeNice = self.th.getNiceHowMuchTimeItsTaking(self.uptime)
+		
 	def getValuesOptions(self):
-		return {'dict':['lightLumens', 'batteryCharging', 'batteryPercentage', 'bgLight']}
+		return {'dict':[
+			'lightLumens', 
+			'batteryCharging', 
+			'batteryPercentage', 
+			'bgLight',
+			'app uptime sec.',
+			'app uptime nice']}
 		
 	def getTitle(self):
 		return self.title
@@ -120,7 +134,11 @@ class phoneSensors:
 			
 		
 	def iter(self):
-		tcb = {}
+		self.updateUptime()
+		tcb = {
+			'app uptime sec.': self.uptime,
+			'app uptime nice': self.uptimeNice
+			}
 		if not self.iterCount % self.updateEvery:		
 			if self.light['ok']:
 				self.light['val'] = light.illumination
@@ -142,13 +160,13 @@ class phoneSensors:
 				self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
 				self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
 			
+			for o in self.callBacksForUpdate:
+				o.update(self.title, tcb)
+				
 		self.iterCount+= 1
 		
 		
 		# callbacks
-		for o in self.callBacksForUpdate:
-			o.update(self.title, tcb)
-			
 		
 		
 			
@@ -264,6 +282,7 @@ class gpsData:
 	lat = 0.0
 	lon = 0.0
 	avgSog = 0.0
+	avgCog = 0.0
 	maxSog = 0.0
 	gpsSog = 0.0
 	gpsCog = 0.0
@@ -288,8 +307,10 @@ class gpsData:
 		return self.title
 	
 	def getValuesOptions(self):
-		tr = { 'dict' :
-			['lat','lon','speed','bearing','accuracy','avgSog']
+		tr = { 'dict' : [
+				'lat','lon','speed','bearing','accuracy',
+				'avgSog','avgCog'
+				]
 			}
 		return tr
 	
@@ -357,6 +378,8 @@ class gpsData:
 			
 			self.gpscog = val['bearing']
 			self.guiObjs['cog'].text = "%s / %s"%(round(self.gpscog,1), round(self.cog,1))
+			self.avgCog = (self.avgCog*0.998)+(self.gpssog*0.002)
+			val['avgCog'] = self.avgCog
 			
 			self.accur = val['accuracy']		
 			self.guiObjs['accur'].text = "%s"%round(self.accur,0)
@@ -373,17 +396,17 @@ class gpsData:
 			msg = ("$YKRMC,,A,%s,%s,%s,%s,%s,%s,,,,A"%(latDM,latNS,lonDM,lonEW,round(self.sog,2),round(self.cog,2)))
 			self.gui.sf.sendToAll(msg)
 			
-			
-			# callbacks
-			for o in self.callBacksForUpdate:
-				o.update('gps', val)
-			
-			# json
-			jMsg = str({
-				"type": "gps",
-				"data": val
-				})
-			self.gui.sf.sendToAll( jMsg )
+			if self.gui.isReady:
+				# callbacks
+				for o in self.callBacksForUpdate:
+					o.update('gps', val)
+				
+				# json
+				jMsg = str({
+					"type": "gps",
+					"data": val
+					})
+				self.gui.sf.sendToAll( jMsg )
 		
 		
 class xyzData:
@@ -434,6 +457,7 @@ class xyzData:
 		self.updateTime = -1
 		#for heel slope detection
 		self.hsbOld = 0.0
+		self.avgHdg = 0.0
 
 		if True:
 			listConfig = DataSR_restore("ykpilot_calibration.conf")
@@ -465,7 +489,7 @@ class xyzData:
 				}
 		elif self.type in [ 'comCal', 'comCalAccelGyro']:
 			return { 'list':
-				['hdg']
+				['hdg',  'avgHdg']
 				}
 		elif self.type == 'orientation':
 			return { 'list':
@@ -719,7 +743,11 @@ class xyzData:
 				self.hdg = 180.0 + (180.0 + self.hdg)
 
 			self.axis['x'][-1] = self.hdg
-			self.gui.senBoat.setRoseta( self.hdg )
+			
+			#self.gui.senBoat.setRoseta( self.hdg )
+			print("TOFIX52352")
+			
+			
 			if updateGui:
 				self.gui.rl.ids.senLComDir.text = str(round(self.hdg,1))
 			
@@ -727,6 +755,7 @@ class xyzData:
 				self.gui.pc.points = self.gui.sen.sinHistoryArrayToGraph(
 					self.axis['x'][-90:])
 
+			self.avgHdg = (self.avgHdg*0.998)+(self.hdg*0.002)
 		# nmea	
 		if self.type == "orientation":
 			pitch = round( self.y, 2 )
@@ -747,7 +776,7 @@ class xyzData:
 		
 		
 		if self.type == 'comCal':
-			valToPropagate = self.hdg
+			valToPropagate = [self.hdg,self.avgHdg]
 		elif self.type == 'orientation':
 			valToPropagate = [val[0],val[1],val[2],pitch,heel]
 		else:
@@ -833,10 +862,9 @@ class sensors:
 		
 		self.mic = micData(gui)
 		#self.mic.runIt()
-		self.phone = phoneSensors(gui)
-		self.sensorsList.append( self.phone )
-		self.phone.initSensors()
-		
+		self.device = deviceSensors(gui)
+		self.sensorsList.append( self.device )
+		self.device.initSensors()
 		
 		
 		self.gpsD = gpsData(gui, {
@@ -1310,7 +1338,7 @@ class sensors:
 		debPrints = False
 		if debPrints: print("sensors.interval...")
 		
-		self.phone.iter()
+		self.device.iter()
 		
 		try:
 			accelVal = accelerometer.acceleration[:3]
@@ -1370,6 +1398,6 @@ class sensors:
 	def run(self):
 		#pass
 		#self.mic.runIt()
-		iterTime = 1.0/15.0 if self.gui.platform == 'android' else 0.8 
+		iterTime = (1.0/15.0) if self.gui.platform == 'android' else 1.0
 		self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
 		

@@ -1,5 +1,12 @@
 import kivy
 from kivy.app import App
+
+from kivy.support import install_twisted_reactor
+install_twisted_reactor()
+
+from twisted.internet import reactor
+from twisted.internet import protocol
+
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager
@@ -8,25 +15,21 @@ from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.actionbar import ActionBar, ActionPrevious, ActionView,\
 	ActionOverflow, ActionButton
-from kivy.properties import NumericProperty
+from kivy.properties import NumericProperty,ObjectProperty,StringProperty
 from kivy.core.window import Window
 from kivy_garden.graph import Graph, MeshLinePlot
-from kivy.support import install_twisted_reactor
 from kivy.uix.floatlayout import FloatLayout
+from kivy.graphics.instructions import RenderContext
+mkservice = False
+
+
 
 from shaderTree import ShaderWidget
 from shadersDefinition import *
-from TimeHelper import *
-from FileActions import *
-from ScreenAutopilot import *
 from kivy.core.image import Image
 
 #from odeRTB import odeRTB
-
-try:
-	from ScreenAutopilot import *
-except:
-	print("EE - no audiostream so no ScreenAutopilot")
+	
 #from d3DriveIt import d3tex2
 
 #from ScreenVirtualButtons import ScreenVirtualButtons
@@ -35,40 +38,19 @@ try:
 except:
 	pass
 
-install_twisted_reactor()
-
-from twisted.internet import reactor
-from twisted.internet import protocol
 
 import _thread
 
 
 from twistedTcpClient import *
 
-from sensors import *
 from helperUdp import *
 from remotePython import remotePython
 from helperTCP import helperTCP
 from helperTwistedTcp import *
-from boatRender import Renderer
-from simRender import simRender
-from simEngine import *
 from DataSaveRestore import *
-from ScreenRace import *
-from ScreenCompass import *
-from ScreenNMEAMultiplexer import *
-from ScreenWidgets import *
-#from Screen3dtextures import *
 
-from driver1 import *
-from driver2 import *
-from driver3 import *
-from driver4 import *
-from driver5 import *
-from driver6 import *
-from driver7 import *
-from driver8 import *
-from driver9 import *
+#from Screen3dtextures import *
 
 if kivy.platform == 'android':
 
@@ -94,11 +76,36 @@ if kivy.platform == 'android':
 
 
 else:
-	Window.size = (480,640)
+	Window.size = (480,740)
 	Window.set_title( "ykpilot" )
 	#pass
 
 class RootLayout(ScreenManager):
+	
+	fs = StringProperty(None)
+	
+	def __init__(self, **kwargs):
+	
+		self.canvas = RenderContext(use_parent_projection=True,
+                                    use_parent_modelview=True,
+                                    use_parent_frag_modelview=True)
+		super(RootLayout, self).__init__(**kwargs)
+		
+
+	def update_glsl(self, *largs):
+		print("RL.update_glsl")
+		
+	def on_fs(self, instance, value):
+		print("RL.on_fs")
+		# set the fragment shader to our source code
+		shader = self.canvas.shader
+		old_value = shader.fs
+		print("old_value",old_value)
+		shader.fs = value
+		if not shader.success:
+			shader.fs = old_value
+			#raise Exception('failed')
+
 	
 	def passGuiApp(self,gui):
 		self.gui = gui
@@ -135,6 +142,7 @@ class gui(App):
 			self.sensorsRemoteTcp = "192.168.49.199:11223"
 		
 		self.colorTheme = "day"
+		self.isReady = False
 	
 	def doLocalIp(self):
 		print("- do local ips")
@@ -174,29 +182,324 @@ class gui(App):
 		Window.bind(on_key_down=self.on_key_down)
 		Window.bind(on_key_up=self.on_key_up)
 		
-		self.th = TimeHelper()
-		self.timeAppStart = self.th.getTimestamp()
-
-		self.config = DataSR_restore('ykpilot.conf')
-		if self.config == None:
-			self.config = {}
-		
-		
 		self.rl = RootLayout()
-		#self.rl.transition = FadeTransition()
+		self.rl.current = 'Loader'
+		
+		self.loaderStep = 0
+		Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		return self.rl
+	
+	def loaderNextStep(self,a=0,b=0):
+		self.loaderStep+=1 
+		print("loaderNextStep step now",self.loaderStep)
+		
+		
+		if self.loaderStep == 1:
+			self.rl.ids.l_loaMaiWin.text = "DONE"
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+			
+		elif self.loaderStep == 2:
+			from TimeHelper import TimeHelper
+			from FileActions import FileActions
+			self.th = TimeHelper()
+			self.fa = FileActions()
+			self.timeAppStart = self.th.getTimestamp()
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 3:
+			self.rl.ids.l_loaHel.text = "DONE"
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+			
+		elif self.loaderStep == 4:
+			bS = self.th.benStart()
+			self.config = DataSR_restore('ykpilot.conf')
+			if self.config == None:
+				self.config = {}
+			self.doLocalIp()
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 5:
+			self.rl.ids.l_loaCon.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		
+		elif self.loaderStep == 6:
+			bS = self.th.benStart()
+			if kivy.platform == 'android':
+				self.platform = 'android'
+				self.animation = False
+				ipSens = '192.168.43.208'
+				if len(self.ips)>0:
+					ipSens = self.ips[0]			
+				ip = ipSens
+				self.senderIp = ip
+				self.senderPort = 11223
+				makeRender = True
+				print("- setting up a sensor server at ",ipSens,":",self.senderPort)
+				
+				# android service
+				if mkservice:
+					from android import AndroidService
+					service = AndroidService("ykpilot background","running ....")
+					service.start("service started")
+					self.service = service
+				# android service
+	
+				self.workingFolderAdress = '/storage/emulated/0/ykpilot/'
+				self.virtualButtons = False
+	
+			else:
+				self.platform = 'pc'
+				self.animation = True
+				ipSens = '192.168.49.199'
+				if len(self.ips)>0:
+					ipSens = self.ips[0]			
+				ip = ipSens
+				self.senderIp = ip
+				self.senderPort = 11225
+				makeRender = True
+				Clock.schedule_once(self.connectToSensorsRemoteTcp, 4 )
+				self.workingFolderAdress = './ykpilot/'
+				self.virtualButtons = True
+	
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 7:
+			self.rl.ids.l_loaPlaChk.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		elif self.loaderStep == 8:
+			bS = self.th.benStart()
+			self.loaderStep0()
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 9:
+			self.rl.ids.l_loaRest.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		
+		elif self.loaderStep == 10:
+			bS = self.th.benStart()
+			from ScreenWidgets import ScreenWidgets
+			self.sWidgets = ScreenWidgets(self)
+			self.sWidgets.setGui()
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 11:
+			self.rl.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		elif self.loaderStep == 12:
+			bS = self.th.benStart()
+			try:
+				from ScreenAutopilot import ScreenAutopilot
+				self.ap = ScreenAutopilot(self)
+				self.sen.comCal.addCallBack( self.ap )
+			except:
+				print("EE - no audiostream so no ScreenAutopilot")
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 13:
+			self.rl.ids.l_loaSAut.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		
+		elif self.loaderStep == 14:
+			bS = self.th.benStart()
+			from ScreenRace import ScreenRace
+			self.sRace = ScreenRace(self)
+			self.sRace.setupGui()
+			self.sen.gpsD.addCallBack( self.sRace )
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 15:
+			self.rl.ids.l_loaSRac.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+			
+		elif self.loaderStep == 16:
+			bS = self.th.benStart()
+			from ScreenCompass import ScreenCompass
+			self.sCompass = ScreenCompass()
+			self.sCompass.setGui(self)
+			self.rl.ids.blCompass.add_widget( self.sCompass )
+			self.sen.gpsD.addCallBack( self.sCompass )
+			self.sen.comCal.addCallBack( self.sCompass )
+			self.sen.comCalAccelGyro.addCallBack( self.sCompass )
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 17:
+			self.rl.ids.l_loaSCom.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		elif self.loaderStep == 18:
+			bS = self.th.benStart()
+			from ScreenNMEAMultiplexer import ScreenNMEAMultiplexer
+			self.sNMEAMul = ScreenNMEAMultiplexer()
+			self.sNMEAMul.setGui(self)
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 19:
+			self.rl.ids.l_loaSMul.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 		
-		self.doLocalIp()
+		elif self.loaderStep == 20:
+			bS = self.th.benStart()	
+			from boatRender import Renderer		
+			self.senBoat = Renderer()
+			self.senBoat.setGui(self)
+			self.rl.ids.blModelScreen.add_widget( self.senBoat )
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 21:
+			self.rl.ids.l_loaMScr.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+
 		
-		self.sRace = ScreenRace(self)
-		self.sCompass = ScreenCompass()
-		self.sCompass.setGui(self)
-		self.rl.ids.blCompass.add_widget( self.sCompass )
+		
+		elif self.loaderStep == 22:
+			bS = self.th.benStart()
+			from simRender import simRender
+			from simEngine import simEngine
+			from driver1 import driver1
+			from driver2 import driver2
+			from driver3 import driver3
+			from driver4 import driver4
+			from driver5 import driver5
+			from driver6 import driver6
+			from driver7 import driver7
+			from driver8 import driver8
+			from driver9 import driver9
+
+			self.simRen = simRender()
+			self.simEng = simEngine(self,self.simRen)
+			self.simRen.setSim(self.simEng)
+			self.simRen.setGui(self)
+			self.simEng.renderFrame()
+
+			self.rl.ids.blSimulator.add_widget( self.simRen )
+
+			self.driver1 = driver1(self.simEng)
+			self.driver2 = driver2(self.simEng)
+			self.driver3 = driver3(self.simEng)
+			self.driver4 = driver4(self.simEng)
+			self.driver5 = driver5(self.simEng)
+			self.driver6 = driver6(self.simEng)
+			self.driver7 = driver7(self.simEng)
+			self.driver8 = driver8(self.simEng)
+			self.driver9 = driver9(self.simEng)
+			
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 23:
+			self.rl.ids.l_loaSSim.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+
+		
+		
+		elif self.loaderStep == 24:
+			bS = self.th.benStart()
+			print("Sender Server is on port[%s]"%self.senderPort)
+			self.sf = MyServerFactory(self)
+			reactor.listenTCP(self.senderPort, self.sf )
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 25:
+			self.rl.ids.l_loaTcpSer.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		
+		elif self.loaderStep == 26:
+			bS = self.th.benStart()
+			self.tcp4ap = ttc(self)
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 27:
+			self.rl.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		
+		
+		
+		
+		elif self.loaderStep == 999:
+			bS = self.th.benStart()
+			
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 1000:
+			#self.rl.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		
+		
+		
+		
+		
+		else:
+			print(" loader finished ?")
+			defScreen = 'ykpilot'
+			goToScreen = defScreen
+			dontStartAt = ['Loader','EditWidget', 'SettingUpWidget', 'SelectWidgetToAdd']
+			try:
+				goToScreen = self.config['screenCurrent']
+			except:
+				print("EE - no def  config['screenCurrent'] :/")
+			
+			if goToScreen in dontStartAt:
+				goToScreen = defScreen
+				
+			try:
+				self.screenChange(goToScreen)
+			except:
+				print("EE - no screen [",goToScreen,"] in screenmanager")
+				self.screenChange(defScreen)
+				
+			print(" starting main loop for sensors ")
+			self.sen.run()
+			
+			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
+			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
+		
+			self.isReady = True
+		
+		
+	def loaderStep0(self):
+		
+
+		
+		
 		#self.s3dtextures = Screen3dtextures()
 		#self.s3dtextures.setGui(self)
 		#self.rl.ids.bl3dtextures.add_widget( self.s3dtextures.l )
-		self.sRace.setupGui()
-		
+		from sensors import sensors
+
 		
 		
 		self.cDefVals = {
@@ -217,51 +520,14 @@ class gui(App):
 				self.config[k] = self.cDefVals[k]
 		
 		
-		self.tcp4ap = ttc(self)
-		self.ap = ScreenAutopilot(self)
 		
-		if kivy.platform == 'android':
-			self.platform = 'android'
-			self.animation = False
-			ipSens = '192.168.43.208'
-			if len(self.ips)>0:
-				ipSens = self.ips[0]			
-			ip = ipSens
-			self.senderIp = ip
-			self.senderPort = 11223
-			makeRender = True
-			print("- setting up a sensor server at ",ipSens,":",self.senderPort)
-			
-			# android service
-			from android import AndroidService
-			service = AndroidService("ykpilot background","running ....")
-			service.start("service started")
-			self.service = service
-			# android service
-
-			self.workingFolderAdress = '/storage/emulated/0/ykpilot/'
-			self.virtualButtons = False
-
-		else:
-			self.platform = 'pc'
-			self.animation = True
-			ipSens = '192.168.49.199'
-			if len(self.ips)>0:
-				ipSens = self.ips[0]			
-			ip = ipSens
-			self.senderIp = ip
-			self.senderPort = 11225
-			makeRender = True
-			Clock.schedule_once(self.connectToSensorsRemoteTcp, 2 )
-			self.workingFolderAdress = './ykpilot/'
-			self.virtualButtons = True
-
+		
 		if self.virtualButtons:
 			self.vBut = ScreenVirtualButtons(self)
 
 		wfa = self.workingFolderAdress.split("/")
 		dirName = wfa[-2]
-		self.fa = FileActions()
+
 		try:
 			print("working folder adres ",
 				self.fa.mkDir(self.workingFolderAdress[:-1])
@@ -273,20 +539,13 @@ class gui(App):
 		#self.tcp = helperTCP(ip)
 		self.rl.passGuiApp(self)
 		self.sen = sensors(self)
-		self.sen.gpsD.addCallBack( self.sRace )
-		self.sen.gpsD.addCallBack( self.sCompass )
 		self.sen.comCal.addCallBack( self.sen )
-		self.sen.comCal.addCallBack( self.sCompass )
-		self.sen.comCalAccelGyro.addCallBack( self.sCompass )
-		self.sen.comCal.addCallBack( self.ap )
+		
 		#self.sen.run()
 
 		
-		self.sNMEAMul = ScreenNMEAMultiplexer()
-		self.sNMEAMul.setGui(self)
-		
 
-
+		"""
 		self.graph = Graph(xlabel='time', ylabel="angle", x_ticks_minor=1,
 			ymax=1.0,ymin=0.0			
 			)
@@ -333,48 +592,15 @@ class gui(App):
 		self.graphMic.add_plot(self.pMic1)
 		self.graphMic.add_plot(self.pMic2)
 		self.rl.ids.blMicScre.add_widget(self.graphMic)
-
+		"""
+		
 		
 		#self.d3tex2 = d3tex2()
 		#self.d3tex2.setGui(self)
 		#self.rl.ids.bl3dtextures2.add_widget( self.d3tex2 )
 
-		#makeRender = False
-		if makeRender:
-			#self.rl.current= "Sensors"
-			self.senBoat = Renderer()
-			self.senBoat.setGui(self)
-			self.rl.ids.blModelScreen.add_widget( self.senBoat )
-
-
-
 		
-
-		if True:
-			self.simRen = simRender()
-			self.simEng = simEngine(self,self.simRen)
-			self.simRen.setSim(self.simEng)
-			self.simRen.setGui(self)
-			self.simEng.renderFrame()
-
-			self.rl.ids.blSimulator.add_widget( self.simRen )
-
-
-			self.driver1 = driver1(self.simEng)
-			self.driver2 = driver2(self.simEng)
-			self.driver3 = driver3(self.simEng)
-			self.driver4 = driver4(self.simEng)
-			self.driver5 = driver5(self.simEng)
-			self.driver6 = driver6(self.simEng)
-			self.driver7 = driver7(self.simEng)
-			self.driver8 = driver8(self.simEng)
-			self.driver9 = driver9(self.simEng)
-
-
-
-		print("Sender Server is on port[%s]"%self.senderPort)
-		self.sf = MyServerFactory(self)
-		reactor.listenTCP(self.senderPort, self.sf )
+		
 		
 		
 		
@@ -442,24 +668,23 @@ class gui(App):
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 
-			"""
+			
 			ao = ActionOverflow()
 			ab = ActionButton(text="Day")
-			ab.bind(on_release=self.screenNight)
+			ab.bind(on_release=self.screenDay)
 			av.add_widget(ab)
 			ao = ActionOverflow()
 			ab = ActionButton(text="Night")
-			ab.bind(on_release=self.screenDay)
+			ab.bind(on_release=self.screenNight)
 			av.add_widget(ab)
-			"""
 			
 			ab = ActionButton(text="Widgets")
 			ab.bind(on_release=self.screenChange)
 			av.add_widget(ab)
 			
-			ab = ActionButton(text="MSM")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
+			#ab = ActionButton(text="MSM")
+			#ab.bind(on_release=self.screenChange)
+			#av.add_widget(ab)
 			
 			
 			ab = ActionButton(text="NMEA multiplexer")
@@ -470,6 +695,12 @@ class gui(App):
 			av.add_widget(ao)
 			
 			self.mw.add_widget(self.ab)
+			try:
+				rlParent = self.rl.parent
+				rlParent.remove_widget(self.rl)
+				
+			except:
+				print("rl. don't have parent !")
 			self.mw.add_widget(self.rl)
 
 			toreturn = self.mw
@@ -481,18 +712,12 @@ class gui(App):
 		toreturn = self.sen.buidPlayer(toreturn)
 		#play from file
 
-		
-		self.sWidgets = ScreenWidgets()
-		self.sWidgets.setGui(self)
+			
 		#self.sWidgets.setUpGui()
 
 
 		#self.ap.setupDriver()
-		self.sen.run()
-		try:
-			self.screenChange(self.config['screenCurrent'])
-		except:
-			self.screenChange("ykpilot")
+		
 		#Window.set_title("ykpilot")
 
 
@@ -500,41 +725,11 @@ class gui(App):
 		#self.ode = odeRTB(self)
 		#self.sen.accel.addCallBack(self.ode)
 
-		#return self.rl 
-
-		#Clock.schedule_once(self.sWidgets.setUpGui(self), 0.5)
-		
 
 		
-		Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
-		#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
-		#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
-		
-		
-		#self.ab.height = 1.0
-		
-		return toreturn 
+		rlParent.add_widget( toreturn )
 
-
-		"""		
-		#SHADER TREE
-		self.shader_index = 0
-		root = FloatLayout()
-		self.sw = ShaderWidget()
-		root.add_widget(self.sw)
-		#bl = BoxLayout(orientation="vertical")
-		#bl.add_widget(toreturn)
-		#self.sw.add_widget(bl)
-		self.sw.add_widget(Button(text="abc"))
-		#self.sw.fs = shader_monochrome
-		print("sw pos",self.sw.pos)
-		print("sw size",self.sw.size)
-		return root
-		"""		
-
-	def sWidgets_on_bgRelease(self,a='',b=''):
-		self.sWidgets.on_bgRelease(a, b)
-
+	
 	def hide_widget(self, wid, dohide=True):
 		if hasattr(wid, 'saved_attrs'):
 			if not dohide:
@@ -551,6 +746,7 @@ class gui(App):
 			dont_go_sleep()
 		except:
 			pass
+		
 		
 	def on_pause(self):
 		print( "--------- on pause")
@@ -576,9 +772,13 @@ class gui(App):
 			DataSR_save(self.config, 'ykpilot.conf')
 			)
 		
+	
 		print("save widgets config")
-		self.sWidgets.saveConfig()
-		
+		try:
+			self.sWidgets.saveConfig()
+		except:
+			print("EE - trying to save sWidget but it is not there yet !")
+	
 	
 	# Screen: "Welcome"
 	
@@ -649,11 +849,15 @@ class gui(App):
 
 		
 	def screenNight(self, a):
+		print("screenNight")
 		self.corolTheme = "night"
-		self.sw.fs = shader_red
+		self.rl.fs = shader_red
+		
 	def screenDay(self, a):
+		print("screenDay")
 		self.colorTheme = "day"
-		self.sw.fs = shader_red
+		self.rl.fs = shader_day
+				
 		
 	def screenNightDay(self, a):
 		if self.colorTheme == "day":

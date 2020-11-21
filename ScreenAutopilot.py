@@ -217,7 +217,7 @@ class ScreenAutopilot:
 			
 	def update(self,fromWho, vals):
 		if fromWho == "comCal":
-			self.gui.rl.ids.lAutHdg.text = "%sº" % round(vals)
+			self.gui.rl.ids.lAutHdg.text = "%sº" % round(vals[0])
 	
 	def updateGui(self):
 		if self.gui.rl.current != "Autopilot":

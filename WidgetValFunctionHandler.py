@@ -5,6 +5,8 @@ from Widget_n import MSLabel
 from kivy.uix.checkbox import CheckBox
 from WidgetHelper import WidgetHelper
 from QueryPopup import QueryPopup
+import sys
+
 
 class WidgetValFunctionHandler(WidgetHelper):
     
@@ -39,7 +41,6 @@ class WidgetValFunctionHandler(WidgetHelper):
         ):
         #    don't need to set up in setValues correct callbacks
         
-        
         self.fun = fun
         self.callback0 = callback0.replace('gpsD','gps')
         self.valn0 = valn0
@@ -51,14 +52,14 @@ class WidgetValFunctionHandler(WidgetHelper):
         
         self.setUp = True
     
-    def makeSourceSettingsPart(self, bl, sensorsList):
+    def makeSourceSettingsPart(self, bl, sensorsList, wConf=None):
         self.sensorsList = sensorsList
         self.selChanType0 = None
         self.selChanType1 = None
         
         vSens0 = []
         for s in self.sensorsList:
-            print("s",s)
+            #print("s",s)
             vSens0.append(s.title)
         selSource0 = Spinner(
             text="select source 1",
@@ -102,9 +103,9 @@ class WidgetValFunctionHandler(WidgetHelper):
         self.selFunction = selFunction
         
         
-        vSens1 = []
+        vSens1 = vSens0
         for s in self.sensorsList:
-            print("s",s)
+            #print("s",s)
             vSens1.append(s.title)
         selSource1 = Spinner(
             text="select source 2",
@@ -116,7 +117,7 @@ class WidgetValFunctionHandler(WidgetHelper):
         self.selSource1 = selSource1
         
         selChannel1 = Spinner(
-            text="select channel 2",
+            text="select channel 2", 
             values = [],
             size_hint_y = None,
             height = cm(1)
@@ -155,8 +156,35 @@ class WidgetValFunctionHandler(WidgetHelper):
         self.chkAngleNorm = CheckBox()
         bh.add_widget(self.chkAngleNorm)
         
+        if wConf != None:
+            if wConf['valHandler']['callback0']:
+                self.selSource0.text = str(wConf['valHandler']['callback0'])
+            if wConf['valHandler']['valn0'] != '':
+                self.selChannel0.text = self.getChannelStrSelection( self.selChannel0.values, wConf['valHandler']['valn0']  )
+            
+            if wConf['valHandler']['callback1']:
+                self.selSource1.text = str(wConf['valHandler']['callback1'])
+            if wConf['valHandler']['valn1']!='':
+                self.selChannel1.text = self.getChannelStrSelection( self.selChannel1.values, wConf['valHandler']['valn1']  )
+            
+            self.selFunction.text = str(self.funOpts[self.funReal.index( wConf['valHandler']['fun'] ) ] )
+            self.chkAngleNorm.active = True if wConf['valHandler']['angleNormalize']==1 else False
+
         return bl
     
+    def getChannelStrSelection(self, values, val):
+        valInt = False
+        try:
+            i = int(val)
+            valInt = True
+        except:
+            pass
+        
+        if valInt:
+            return values[i]
+        else:
+            return val 
+        
     def on_sourceSelected0(self,a='',b=''):
         self.on_sourceSelected(0)
     
@@ -164,7 +192,7 @@ class WidgetValFunctionHandler(WidgetHelper):
         self.on_sourceSelected(1)    
             
     def on_sourceSelected(self,a='',b=''):
-        print("on_sourceSelected",a,"\n",b)
+        print("on_sourceSelected",a)
         print("it's for ",a)
         
         vChann = []
@@ -174,8 +202,10 @@ class WidgetValFunctionHandler(WidgetHelper):
             src = self.selSource1.text
             
         for s in self.sensorsList:
-            if s.title == src:
-                print("s",s.title)
+            sTitle = s.title.replace('gpsD','gps')
+            src = src.replace('gpsD','gps')
+            print("s.title123:",s.title,"    src",src)
+            if sTitle == src:
                 svo = s.getValuesOptions()
                 print("got options",svo)
                 svt = list(svo.keys())[0]
@@ -195,9 +225,11 @@ class WidgetValFunctionHandler(WidgetHelper):
                 if a == 0:
                     self.selChannel0.text = "select channel %s"%(a+1)
                     self.selChannel0.values = vChann
+                    print("    ->",self.selChannel0.values)
                 elif a == 1:
                     self.selChannel1.text = "select channel %s"%(a+1)
                     self.selChannel1.values = vChann
+                    print("    ->",self.selChannel1.values)
                 return True
                 
     def on_channelSelected0(self,a='',b=''):
@@ -212,6 +244,9 @@ class WidgetValFunctionHandler(WidgetHelper):
             chn0 = self.selChannel0.text
         else:
             try:
+                print("self.selChannel0",self.selChannel0)
+                print("self.selChannel0.values",self.selChannel0.values)
+                print("self.selChannel0.text",self.selChannel0.text)
                 chn0 = self.selChannel0.values.index(self.selChannel0.text)
             except:
                 print("EE - no source selected !")
@@ -236,7 +271,10 @@ class WidgetValFunctionHandler(WidgetHelper):
         if src1 == 'gps':
             src1 = "gpsD"
             
-            
+        
+        if src0 == '' and src1 == '':
+            print("EE - no src for WVFH")
+            sys.exit()
         
         print("src0",src0)
         print("chn0",chn0)
@@ -269,17 +307,14 @@ class WidgetValFunctionHandler(WidgetHelper):
         if self.setUp == False:
             return None
         
-        if 1:#self.fun == 'diff':
-            print('''updateVal from widget_n[{}] 
+        if 0:#self.fun == 'diff':
+            print('''updateVal in WVFH[{}] 
     from:[{}] gotvals:[{}] fun:[{}] 
     c0[{}] vn0[{}] 
     c1[{}] vn1[{}]'''.format(
                 "widgetValFunHand", fromWho, vals, self.fun,
                 self.callback0, self.valn0, self.callback1, self.valn1
                 ))
-            
-        if fromWho == 'comCal':
-            vals = [vals]
             
         
             

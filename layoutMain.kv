@@ -13,8 +13,8 @@
 
 <MSLabel@Label>:
 	height:app.lineH
-	size_hint: None, None
-	size: self.texture_size
+	#size_hint: None, None
+	#size: self.texture_size
 	
 	
 <Widget_nn>:
@@ -45,6 +45,108 @@
 					
 
 <RootLayout>:
+
+	Screen:
+		name: "Loader"
+		
+		GridLayout:
+			cols:2
+			
+			MSLabel:
+				text: "Loading modules..."
+			Label:
+				
+			
+			MSLabel:
+				text: "Main Window"
+			MSLabel:
+				text: "?"
+				id: l_loaMaiWin
+
+			MSLabel:
+				text: "Helpers"
+			MSLabel:
+				text: "?"
+				id: l_loaHel
+
+
+			MSLabel:
+				text: "Configs"
+			MSLabel:
+				text: "?"
+				id: l_loaCon
+
+			MSLabel:
+				text: "Platform chk"
+			MSLabel:
+				text: "?"
+				id: l_loaPlaChk
+			
+
+			MSLabel:
+				text: "Rest"
+			MSLabel:
+				text: "?"
+				id: l_loaRest
+				
+			MSLabel:
+				text: "Screen Widgets"
+			MSLabel:
+				text: "?"
+				id: l_loaSWid
+				
+			MSLabel:
+				text: "Screen Autopilot"
+			MSLabel:
+				text: "?"
+				id: l_loaSAut
+				
+			MSLabel:
+				text: "Screen Race"
+			MSLabel:
+				text: "?"
+				id: l_loaSRac
+				
+			MSLabel:
+				text: "Screen Com"
+			MSLabel:
+				text: "?"
+				id: l_loaSCom
+				
+			MSLabel:
+				text: "Screen Multiplexer"
+			MSLabel:
+				text: "?"
+				id: l_loaSMul
+				
+			MSLabel:
+				text: "Model Screen"
+			MSLabel:
+				text: "?"
+				id: l_loaMScr
+				
+			MSLabel:
+				text: "Screen Simulator"
+			MSLabel:
+				text: "?"
+				id: l_loaSSim
+				
+			MSLabel:
+				text: "tx/rx tcp sensors"
+			MSLabel:
+				text: "?"
+				id: l_loaTcpSer
+				
+			MSLabel:
+				text: "Autopilot wifi arm"
+			MSLabel:
+				text: "?"
+				id: l_AutoWifiArmTCP
+				
+				
+
+			
+
 	Screen:
 		name: "Widgets"
 		
@@ -52,6 +154,96 @@
 			orientation: "vertical"
 			id: bl_wid
 			
+	Screen:
+		name: "SelectWidgetToAdd"
+		
+		BoxLayout:
+			orientation: "vertical"
+
+			ScrollView:
+				pos_hint: {'center_x': .5, 'center_y': 1}
+				do_scroll_x: False
+				height:500
+			
+				BoxLayout:
+					orientation: "vertical"
+					size_hint_y: None
+					id: bl_selWidToAdd
+
+			Button:
+				text: "Cancel"
+				size_hint: [None,None]
+				size: [root.width, app.btH*2.0]
+				on_release: app.sWidgets.screenBack()
+				
+	Screen:
+		name: "SettingUpWidget"
+
+		BoxLayout:
+			orientation: "vertical"
+
+			ScrollView:
+				pos_hint: {'center_x': .5, 'center_y': 1}
+				do_scroll_x: False
+				height:500
+				
+				BoxLayout:
+					orientation: "vertical"
+					size_hint_y: None
+					id: bl_setUpWid
+
+			BoxLayout:
+				orientation: "horizontal"
+				size_hint: [None,None]
+				size: [root.width,app.btH*2.0]
+				
+				Button:
+					text: "Cancel"
+					size_hint: [None,None]
+					size: [root.width*.5, app.btH*2.0]
+					on_release: app.sWidgets.screenBack()
+			
+				Button:
+					text: "Add"
+					size_hint: [None,None]
+					size: [root.width*.5, app.btH*2.0]
+					on_release: app.sWidgets.WAEDV.on_widgetSetUpDone()
+			
+	Screen:
+		name: "EditWidget"
+
+		BoxLayout:
+			orientation: "vertical"
+
+			ScrollView:
+				pos_hint: {'center_x': .5, 'center_y': 1}
+				do_scroll_x: False
+				height:500
+				
+				BoxLayout:
+					orientation: "vertical"
+					size_hint_y: None
+					id: bl_EditWid
+
+			BoxLayout:
+				orientation: "horizontal"
+				size_hint: [None,None]
+				size: [root.width,app.btH*2.0]
+				
+				Button:
+					text: "Cancel"
+					size_hint: [None,None]
+					size: [root.width*.5, app.btH*2.0]
+					on_release: app.sWidgets.screenBack()
+			
+				Button:
+					text: "Save"
+					size_hint: [None,None]
+					size: [root.width*.5, app.btH*2.0]
+					on_release: app.sWidgets.WAEDV.on_editDoneSaveSettings()
+			
+		
+	
 
 	Screen:
 		name: "ykpilot"
@@ -63,6 +255,11 @@
 		
 			Label:
 				text: "Welcome in ykpilot"
+				
+				
+			Button:
+				text: "build widgets"
+				on_release: app.on_buildWidgets()
 				
 			Button:
 				text: "push udp msg"
