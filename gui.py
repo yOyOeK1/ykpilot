@@ -779,6 +779,9 @@ class gui(App):
 				)
 			)
 		
+		
+		print("odometer....")
+		self.sen.odometer.saveData()
 	
 		print("save widgets config")
 		try:
