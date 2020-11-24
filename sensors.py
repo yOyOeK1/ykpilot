@@ -426,6 +426,7 @@ class xyzData:
 	
 	def __init__(self, gui, type_, debGuiObjcts=[]):
 		self.th = TimeHelper()
+		self.fa = FileActions()
 		self.callBacksForUpdate = []
 		self.gui = gui
 		self.type = type_
@@ -460,7 +461,9 @@ class xyzData:
 		self.avgHdg = 0.0
 
 		if True:
-			listConfig = DataSR_restore("ykpilot_calibration.conf")
+			listConfig = DataSR_restore(
+                self.fa.join( self.gui.homeDirPath,"ykpilot_calibration.conf" )
+                )
 			try: 
 				key = "%s.offset"%self.type
 				print("	key: ",key," -> ",listConfig[key])
@@ -1102,7 +1105,10 @@ class sensors:
 				"pitchHz": pitchHz
 				}
 			
-			DataSR_save(dataToFila, "ykpilot_calibration.conf")
+			DataSR_save(
+                dataToFila, 
+                self.fa.join(self.gui.homeDirPath,"ykpilot_calibration.conf")
+                )
 			print("config file on drive. ykpilot_calibration.conf")
 			
 		

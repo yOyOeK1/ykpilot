@@ -26,6 +26,7 @@ from functools import partial
 import sys
 from kivy.uix.bubble import Bubble
 from Widget_circularProgress import Widget_circularProgress
+from kivy.animation import Animation, AnimationTransition
 
 
 
@@ -177,7 +178,7 @@ class ScreenWidgets:
         
         self.fa = FileActions()
         self.wConfigPath = self.fa.join(
-            self.gui.workingFolderAdress, 
+            self.gui.homeDirPath, 
             'ykpilotWidgets.conf'
             )
         if self.fa.isFile(self.wConfigPath) == False:
@@ -223,6 +224,41 @@ class ScreenWidgets:
     def getWe(self,si,wi):
         return self.wConfig[si][wi]
     
+    def on_widgetReleased(self, screen='', wi='', sfw='',d=''):
+        print("on_widgetReleased")
+        colision = sfw.collide_point(d.pos[0],d.pos[1]) 
+        if colision:
+            rot = self.wConfig[screen][wi]['rotation']%360.0
+            print("ok do correction!")
+            print("rotation of widget is",rot)
+            
+            if rot < 10.0 or rot > 350.0:
+                print("set 0.0")
+                self.wConfig[screen][wi]['rotation'] = 0.0
+                
+            elif rot > 80.0 and rot < 100.0:
+                print("set 0.0")
+                self.wConfig[screen][wi]['rotation'] = 90.0
+                
+            elif rot > 170.0 and rot < 190.0:
+                print("set 0.0")
+                self.wConfig[screen][wi]['rotation'] = 180.0
+                
+            elif rot > 260.0 and rot < 280.0:
+                print("set 0.0")
+                self.wConfig[screen][wi]['rotation'] = 270.0
+                
+            sfw.rotation = rot
+            '''    
+            if self.gui.animation:
+                Animation.cancel_all(sfw,'rotation')
+                anim = Animation(rotation=rot,t='out_quad' )
+                anim.start( sfw )
+                
+            else:
+                sfw.rotation = rot
+            '''
+        
     def on_widgetSelected(self,screen='',wi='',sfw='',d=''):
         print("on_widgetSelected d",d)
         print("    ->pos",d.pos)
@@ -263,6 +299,7 @@ class ScreenWidgets:
         sfw.bind(scale=partial(self.updateValsInWConfig,si,wi))
         sfw.bind(rotation=partial(self.updateValsInWConfig,si,wi))
         sfw.bind(on_touch_down=partial(self.on_widgetSelected,si,wi))
+        sfw.bind(on_touch_up=partial(self.on_widgetReleased,si,wi))
         
         
     def unbindScatter(self, sfw, si,wi):
@@ -270,6 +307,7 @@ class ScreenWidgets:
         sfw.unbind(scale=partial(self.updateValsInWConfig,si,wi))
         sfw.unbind(rotation=partial(self.updateValsInWConfig,si,wi))
         sfw.unbind(on_touch_down=partial(self.on_widgetSelected,si,wi))
+        sfw.bind(on_touch_up=partial(self.on_widgetReleased,si,wi))
         
     def rebuildWs(self,a='',b=''):
         print("ScreenWidgets.rebuildWs")

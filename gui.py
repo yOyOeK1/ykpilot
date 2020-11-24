@@ -40,7 +40,7 @@ except:
 
 
 import _thread
-
+import sys
 
 from twistedTcpClient import *
 
@@ -205,6 +205,9 @@ class gui(App):
 			from FileActions import FileActions
 			self.th = TimeHelper()
 			self.fa = FileActions()
+			self.homeDirPath = self.fa.getHomeDirectoryForApp('ykpilot', kivy.platform)
+			print("homeDir",self.homeDirPath)
+			#sys.exit(0)
 			self.timeAppStart = self.th.getTimestamp()
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
@@ -215,7 +218,9 @@ class gui(App):
 			
 		elif self.loaderStep == 4:
 			bS = self.th.benStart()
-			self.config = DataSR_restore('ykpilot.conf')
+			self.config = DataSR_restore(
+				self.fa.join( self.homeDirPath,'ykpilot.conf')
+				)
 			if self.config == None:
 				self.config = {}
 			self.doLocalIp()
@@ -768,8 +773,10 @@ class gui(App):
 		self.config['screenCurrent'] = self.rl.current
 		self.config['totalUptime']+= self.th.getTimestamp()-self.timeAppStart
 		
-		print("save config res", 
-			DataSR_save(self.config, 'ykpilot.conf')
+		print("save config res", DataSR_save(
+				self.config, 
+				self.fa.join( self.homeDirPath,'ykpilot.conf')
+				)
 			)
 		
 	
