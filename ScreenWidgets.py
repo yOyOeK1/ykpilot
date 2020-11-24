@@ -493,9 +493,10 @@ class ScreenWidgets:
     def on_toggleFullScreen(self,a='',b=''):
         print("on_toggleFullScreen")
         if self.gui.ab.height > 0.0:
+            self.gui_abOrgHeight = self.gui.ab.height
             self.gui.ab.height = 0.0
         else:
-            self.gui.ab.height = self.gui.btH
+            self.gui.ab.height = self.gui_abOrgHeight
         
     
     def on_editWidget(self, a='',b=''):
@@ -546,10 +547,10 @@ class ScreenWidgets:
     def setUpGui(self, screen, bWidget, widgets):  
         print("ScreenWidgets.setUpGui ")#,bWidget," widgets\n",widgets)      
         
-        for i,w in enumerate( widgets ):
+        for wi,w in enumerate( widgets ):
             print("building widget [",w['name'],"]")
             exec("widgets[i]['obj'] = %s()"%w['objName'])
-            o = widgets[i]['obj']
+            o = widgets[wi]['obj']
 
             if w['objName'] != 'ScreenCompass':
                 print("passing atr setting to Widget_cn or 'Widget_niddle or WidgetBubble")
@@ -565,12 +566,12 @@ class ScreenWidgets:
             sfw = ScatterForWidget(
                 widgetSize = o.getSize()
                 )
-            sfw.rotation = self.wConfig[screen][i]['rotation']
-            sfw.scale = self.wConfig[screen][i]['scale']
-            sfw.pos = self.wConfig[screen][i]['pos']
+            sfw.rotation = self.wConfig[screen][wi]['rotation']
+            sfw.scale = self.wConfig[screen][wi]['scale']
+            sfw.pos = self.wConfig[screen][wi]['pos']
             
             sfw.add_widget( o.getWidget() )
-            self.bindScatter(sfw, screen,i)
+            self.bindScatter(sfw, screen,wi)
             bWidget.add_widget( sfw )
             
             
