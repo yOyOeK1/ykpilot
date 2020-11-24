@@ -133,6 +133,7 @@ class deviceSensors:
             print("backlight NO")
             self.backlight['ok'] = False
             
+        #sys.exit(0)
         
     def iter(self):
         self.updateUptime()
@@ -280,6 +281,7 @@ class micData:
             
 class gpsData:
     status = "---"
+    androidServiceStatus = False
     lat = 0.0
     lon = 0.0
     avgSog = 0.0
@@ -749,7 +751,7 @@ class xyzData:
             self.axis['x'][-1] = self.hdg
             
             #self.gui.senBoat.setRoseta( self.hdg )
-            print("TOFIX52352")
+            #print("TOFIX52352")
             
             
             if updateGui:
@@ -928,6 +930,7 @@ class sensors:
         self.gui = gui
         self.boat = {}
 
+        self.permissonsStatus = False
         self.sensorsList = []
 
         self.th = TimeHelper()
@@ -958,8 +961,10 @@ class sensors:
         self.recordToFile = "ready"
         self.toFileList = []
         
-        self.mic = micData(gui)
         #self.mic.runIt()
+    def makeSensors(self):
+        gui = self.gui
+        self.mic = micData(gui)
         self.device = deviceSensors(gui)
         self.sensorsList.append( self.device )
         self.device.initSensors()
@@ -1024,7 +1029,9 @@ class sensors:
         
         self.comCalAccelGyro = xyzData(gui, "comCalAccelGyro")
         self.sensorsList.append( self.comCalAccelGyro )
-        
+    
+    
+    def askForPermissions(self):
         if kivy.platform == 'android':
             #self.request_android_permissions2()
             print("trying ... gps ...")
@@ -1252,9 +1259,9 @@ class sensors:
         self.playerBt = Button(
             text=">",
             size_hint = (None, None),
-            size = (self.gui.btH, self.gui.btH)
+            size = (self.gui.btH, self.gui.btH),
+            on_release=self.on_PlayFromFile_play
             )
-        self.playerBt.bind(on_release=self.on_PlayFromFile_play)
         self.playerBL.add_widget(self.playerBt)
         self.playerSeek = Slider(
             min = 0.0,
@@ -1336,6 +1343,8 @@ class sensors:
             aobeo = self.replayTCurrent
         except:
             print("EE - player Iter but no file to play :(")
+            print("I will try to stop playng ?...")
+            self.on_PlayFromFile_play(None)
             return 0
         
         self.replayTCurrent+= 1.0/float(self.replayFps)
@@ -1389,15 +1398,23 @@ class sensors:
     @mainthread
     def on_gps_location(self, **kwargs):
         #print("gps raw(%s)"%(kwargs))
-        self.gpsD.update(kwargs)
+        try:
+            self.gpsD.update(kwargs)
+        except:
+            pass
     
     @mainthread
     def on_gps_status(self, stype, status):
-        if status == 'gps: available':
-            self.gpsD.status = 'ready'
-        else:
-            self.gpsD.status = 'busy'
-        print("gps status stype(%s) status(%s)"%(stype,status))
+        #print("gps status",status)
+        try:
+            if status == 'gps: available':
+                self.gpsD.status = 'ready'
+            else:
+                self.gpsD.status = 'busy'
+            print("gps status stype(%s) status(%s)"%(stype,status))
+        except:
+            pass
+        
         
     def request_android_permissions1(self):
         print("request permissions ")
@@ -1406,12 +1423,16 @@ class sensors:
         def callback( permissions, results):
             if all([res for res in results]):
                 print("permissions OK!")
+                self.permissonsStatus = True
             else:
                 print("permissions no bueno :(")
+                print("TODO - if permission are not fine do something!")
+                print("results",results)
+                self.permissonsStatus = False
                 
         request_permissions([Permission.ACCESS_COARSE_LOCATION,
                              Permission.ACCESS_FINE_LOCATION,
-                             Permission.WRITE_SETTINGS,
+                             #Permission.WRITE_SETTINGS,
                              Permission.READ_EXTERNAL_STORAGE,
                              Permission.WRITE_EXTERNAL_STORAGE,
                              Permission.WAKE_LOCK        
@@ -1421,11 +1442,19 @@ class sensors:
     
     def gps_start(self, mt, md):
         print("gps_start")
-        gps.start(mt,md)
+        if self.gpsD.androidServiceStatus:
+            print("skipp ! it's running allrady")
+        else:
+            self.gpsD.androidServiceStatus = True
+            gps.start(mt,md)
         
     def gps_stop(self):
         print("gps_stop")
-        gps.stop()
+        if self.gpsD.androidServiceStatus:
+            self.gpsD.androidServiceStatus = False
+            gps.stop()
+        else:
+            print("skipp ! it's not running")
     
     def update(self,fromWho, vals):
         #print("sensors.update fromWho[{}]".format(fromWho))

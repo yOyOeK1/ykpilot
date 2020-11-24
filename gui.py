@@ -2,6 +2,7 @@ import kivy
 from kivy.app import App
 
 from kivy.support import install_twisted_reactor
+from sensors import sensors
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -33,10 +34,10 @@ from kivy.core.image import Image
 #from d3DriveIt import d3tex2
 
 #from ScreenVirtualButtons import ScreenVirtualButtons
-try:
-	from ScreenVirtualButtons import ScreenVirtualButtons
-except:
-	pass
+#try:
+#	from ScreenVirtualButtons import ScreenVirtualButtons
+#except:
+#	pass
 
 
 import _thread
@@ -139,7 +140,7 @@ class gui(App):
 		else:
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
-			self.sensorsRemoteTcp = "192.168.49.199:11223"
+			self.sensorsRemoteTcp = "192.168.43.56:11223"
 		
 		self.colorTheme = "day"
 		self.isReady = False
@@ -158,8 +159,8 @@ class gui(App):
 			i = str(i)[2:-1]
 			#print("i:[",i,']')
 			if len(i)>2:
-				if i[-1] == ":":
-					print("	interface: ",i)
+				#if i[-1] == ":":
+				#	print("	interface: ",i)
 				
 				if str(l[ii-1])[2:-1] == 'inet':
 					ip = i
@@ -186,7 +187,7 @@ class gui(App):
 		self.rl.current = 'Loader'
 		
 		self.loaderStep = 0
-		Clock.schedule_once( self.loaderNextStep, 0.1 )
+		_thread.start_new(self.loaderNextStep,() )
 		
 		return self.rl
 	
@@ -194,6 +195,7 @@ class gui(App):
 		self.loaderStep+=1 
 		print("loaderNextStep step now",self.loaderStep)
 		
+		p = 0
 		
 		if self.loaderStep == 1:
 			self.rl.ids.l_loaMaiWin.text = "DONE"
@@ -237,7 +239,7 @@ class gui(App):
 			if kivy.platform == 'android':
 				self.platform = 'android'
 				self.animation = False
-				ipSens = '192.168.43.208'
+				ipSens = '192.168.43.56'
 				if len(self.ips)>0:
 					ipSens = self.ips[0]			
 				ip = ipSens
@@ -260,16 +262,15 @@ class gui(App):
 			else:
 				self.platform = 'pc'
 				self.animation = True
-				ipSens = '192.168.49.199'
+				ipSens = '192.168.43.56'
 				if len(self.ips)>0:
 					ipSens = self.ips[0]			
 				ip = ipSens
 				self.senderIp = ip
 				self.senderPort = 11225
 				makeRender = True
-				Clock.schedule_once(self.connectToSensorsRemoteTcp, 4 )
 				self.workingFolderAdress = './ykpilot/'
-				self.virtualButtons = True
+				self.virtualButtons = False
 	
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
@@ -288,10 +289,52 @@ class gui(App):
 		elif self.loaderStep == 9:
 			self.rl.ids.l_loaRest.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
-		
-		
-		
+			
+			
 		elif self.loaderStep == 10:
+			bS = self.th.benStart()
+			from sensors import sensors
+			self.sen = sensors(self)
+			print("pre ask for permissions")
+			self.sen.askForPermissions()
+			print("post ask for permissions")
+			self.bE = self.th.benDone(bS, "")
+			
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 11:
+			if self.platform == 'android' and self.sen.permissonsStatus == False:
+				self.loaderStep-=1
+			else:
+				self.rl.ids.l_permissions.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+
+
+		elif self.loaderStep == 12:
+			bS = self.th.benStart()
+			
+			self.sen.makeSensors()
+			p = self.rl.parent
+			p.remove_widget(self.rl)
+			rl = self.sen.buidPlayer(self.rl)
+			p.add_widget(rl)
+			#self.sen.run()
+			#try:
+			#	self.sen.gps_start(1000, 0)
+			#except:
+			#	print("EE - can't start sen.gps")
+			#	print(sys.exc_info())
+			#	pass
+			
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+		elif self.loaderStep == 13:
+			self.rl.ids.l_sensors.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		
+		
+		elif self.loaderStep == 14:
 			bS = self.th.benStart()
 			from ScreenWidgets import ScreenWidgets
 			self.sWidgets = ScreenWidgets(self)
@@ -299,12 +342,12 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 11:
+		elif self.loaderStep == 15:
 			self.rl.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
-		elif self.loaderStep == 12:
+		elif self.loaderStep == 16:
 			bS = self.th.benStart()
 			try:
 				from ScreenAutopilot import ScreenAutopilot
@@ -315,13 +358,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 13:
+		elif self.loaderStep == 17:
 			self.rl.ids.l_loaSAut.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 14:
+		elif self.loaderStep == 18:
 			bS = self.th.benStart()
 			from ScreenRace import ScreenRace
 			self.sRace = ScreenRace(self)
@@ -330,12 +373,12 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 15:
+		elif self.loaderStep == 19:
 			self.rl.ids.l_loaSRac.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 			
-		elif self.loaderStep == 16:
+		elif self.loaderStep == 20:
 			bS = self.th.benStart()
 			from ScreenCompass import ScreenCompass
 			self.sCompass = ScreenCompass()
@@ -347,12 +390,12 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 17:
+		elif self.loaderStep == 21:
 			self.rl.ids.l_loaSCom.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
-		elif self.loaderStep == 18:
+		elif self.loaderStep == 22:
 			bS = self.th.benStart()
 			from ScreenNMEAMultiplexer import ScreenNMEAMultiplexer
 			self.sNMEAMul = ScreenNMEAMultiplexer()
@@ -360,12 +403,12 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 19:
+		elif self.loaderStep == 23:
 			self.rl.ids.l_loaSMul.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 		
-		elif self.loaderStep == 20:
+		elif self.loaderStep == 24:
 			bS = self.th.benStart()	
 			from boatRender import Renderer		
 			self.senBoat = Renderer()
@@ -374,13 +417,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 21:
+		elif self.loaderStep == 25:
 			self.rl.ids.l_loaMScr.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 		
 		
-		elif self.loaderStep == 22:
+		elif self.loaderStep == 26:
 			bS = self.th.benStart()
 			from simRender import simRender
 			from simEngine import simEngine
@@ -415,14 +458,14 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 23:
+		elif self.loaderStep == 27:
 			self.rl.ids.l_loaSSim.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 
 		
 		
-		elif self.loaderStep == 24:
+		elif self.loaderStep == 28:
 			bS = self.th.benStart()
 			print("Sender Server is on port[%s]"%self.senderPort)
 			self.sf = MyServerFactory(self)
@@ -430,19 +473,19 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 25:
+		elif self.loaderStep == 29:
 			self.rl.ids.l_loaTcpSer.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 26:
+		elif self.loaderStep == 30:
 			bS = self.th.benStart()
 			self.tcp4ap = ttc(self)
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 27:
+		elif self.loaderStep == 31:
 			self.rl.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
@@ -487,10 +530,26 @@ class gui(App):
 				
 			print(" starting main loop for sensors ")
 			self.sen.run()
+		
+			if self.sen.gpsD.androidServiceStatus == False:
+				try:
+					self.sen.gps_start(1000, 0)
+				except:
+					print("EE - can't gps_start :(")
+			
+			
+			self.sen.comCal.addCallBack( self.sen )
+			self.sen.comCal.addCallBack( self.senBoat )
+			#self.gui.senBoat.setRoseta( self.hdg )
 			
 			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
 			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
+		
+			print("starting listener for sensors :) if pc")
+			if self.platform == 'pc':
+				Clock.schedule_once(self.connectToSensorsRemoteTcp, 1 )
+				
 		
 			self.isReady = True
 		
@@ -503,10 +562,7 @@ class gui(App):
 		#self.s3dtextures = Screen3dtextures()
 		#self.s3dtextures.setGui(self)
 		#self.rl.ids.bl3dtextures.add_widget( self.s3dtextures.l )
-		from sensors import sensors
-
-		
-		
+				
 		self.cDefVals = {
 			'screenCurrent': 'Sensors', 
 			'totalUptime' : 0,
@@ -543,8 +599,7 @@ class gui(App):
 	
 		#self.tcp = helperTCP(ip)
 		self.rl.passGuiApp(self)
-		self.sen = sensors(self)
-		self.sen.comCal.addCallBack( self.sen )
+		
 		
 		#self.sen.run()
 
@@ -713,10 +768,7 @@ class gui(App):
 			toreturn = self.rl
 		# actionbar
 		
-		#play from file
-		toreturn = self.sen.buidPlayer(toreturn)
-		#play from file
-
+		
 			
 		#self.sWidgets.setUpGui()
 
@@ -766,7 +818,11 @@ class gui(App):
 	
 	def on_resume(self):
 		print( "------- on resume")
-		self.sen.gps_start(1000, 0)
+		try:
+			abcaa = self.sen
+			self.sen.gps_start(1000, 0)
+		except:
+			print("EE - no self.sen or other gps error")
 	
 	
 	def on_configSave(self):
@@ -779,9 +835,12 @@ class gui(App):
 				)
 			)
 		
-		
 		print("odometer....")
-		self.sen.odometer.saveData()
+		try:
+			abcue = self.sen
+			self.sen.odometer.saveData()
+		except:
+			pass
 	
 		print("save widgets config")
 		try:

@@ -124,6 +124,11 @@ class Renderer(Widget):
 	def setRoseta(self, angle):
 		self.o['roseta'].mrot[1].angle = self.AnimateValue(self.o['roseta'].mrot[1].angle, -angle)
 	
+	def update(self, fromWho, vals):
+		#print("boatRender.update fromWho",fromWho," - ",vals)
+		if self.gui.rl.current == "Model Screen" and fromWho == 'comCal':
+			self.setRoseta(vals[0])
+	
 	def setArrowsAccel(self, axis=[]):
 		#print("\n\nsetArrowsAccel",axis)
 		for i,a in enumerate("XYZ"):
