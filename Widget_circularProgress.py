@@ -193,10 +193,10 @@ class Widget_circularProgress(WidgetHelper):
         return bl
        
     def getWidget(self):
-        print("getWidget () o ",self.mtitle,
+        '''print("getWidget () o ",self.mtitle,
                   "pos:",int(self.pos[0]),"x",int(self.pos[1]),
                   "size:",int(self.size[0]),"x",int(self.size[1]))
-        
+        '''
         return self.sm
     
     def updateIt(self, fromWho = '',vals = ''):
@@ -232,13 +232,8 @@ update from widget_circularProgress[{}]
             200,
             200
             ]
-        print("pos ",[self.x,self.y],' size ',self.size)
         self.pos = [self.x,self.y]
         
-        
-        print("from widget pos:",self.pos," size:",self.size)
-        #sys.exit(9)
-
     
         
     def getSize(self):

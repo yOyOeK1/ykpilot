@@ -30,7 +30,7 @@ class Widget_n:
         print("on_release title:",self.title)
         
     def getWidget(self):
-        print("getWidget",self.title)
+        #print("getWidget",self.title)
         return self.bl
     
     def setGui(self, gui):

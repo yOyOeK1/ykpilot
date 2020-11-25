@@ -166,22 +166,23 @@ class Widget_niddle(WidgetHelper):
         self.wvfh.setParametersFromDict(dic['valHandler'])
 
         for k in self.smSettings.keys():
-            print("key ",k," in dic is ",dic[k])
+            #print("key ",k," in dic is ",dic[k])
             try:
                 
                 try:
                     self.smSettings[k] = int(dic[k])
                 except:
                     self.smSettings[k] = str(dic[k])
-                print("set self.sm")
+                #print("set self.sm")
                 exec("self.sm.{0} = {1}".format(k,self.smSettings[k]))
-                print("    sm set")
+                #print("    sm set")
                 
             except:
-                print(" pass ???")
+                pass
+                #print(" pass ???")
             
         
-        print("so niddle pos",self.pos," size",self.size)
+        #print("so niddle pos",self.pos," size",self.size)
         
     
     def getAttrFromDialog(self):
@@ -270,10 +271,10 @@ class Widget_niddle(WidgetHelper):
         print("affter change smSettings is ",self.smSettings)
     
     def getWidget(self):
-        print("getWidget () o ",self.mtitle,
+        '''print("getWidget () o ",self.mtitle,
                   "pos:",int(self.pos[0]),"x",int(self.pos[1]),
                   "size:",int(self.size[0]),"x",int(self.size[1]))
-        
+        '''
         return self.sm
     
     def updateIt(self, fromWho = '',vals = ''):
@@ -339,13 +340,8 @@ class Widget_niddle(WidgetHelper):
             200,
             200
             ]
-        print("pos ",[self.x,self.y],' size ',self.size)
         self.pos = [self.x,self.y]
         
-        
-        print("from widget pos:",self.pos," size:",self.size)
-        #sys.exit(9)
-
     
         
     def getSize(self):

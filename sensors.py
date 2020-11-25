@@ -88,6 +88,7 @@ class deviceSensors:
         return self.title
     
     def addCallBack(self, obj):
+        print("addCallBack to [",self.title,"] obj ",obj)
         self.callBacksForUpdate.append( obj ) 
         
     def removeCallBack(self, obj):
@@ -321,7 +322,7 @@ class gpsData:
         return [ self.lat, self.lon, self.cog, self.sog ]
     
     def addCallBack(self, obj):
-        print("addCallBack to ",self.title," obj",obj)
+        print("addCallBack to [",self.title,"] obj ",obj)
         self.callBacksForUpdate.append( obj ) 
     
     def removeCallBack(self, obj):
@@ -508,6 +509,7 @@ class xyzData:
     
     
     def addCallBack(self, obj):
+        print("addCallBack to [",self.title,"] obj ",obj)
         self.callBacksForUpdate.append( obj ) 
     
     def removeCallBack(self, obj):
@@ -864,6 +866,7 @@ class odometer:
                 }
         
     def addCallBack(self, obj):
+        print("addCallBack to [",self.title,"] obj ",obj)
         self.callBacksForUpdate.append( obj ) 
     
     def removeCallBack(self, obj):
@@ -941,17 +944,15 @@ class sensors:
         self.FromFileData = {}
         self.replayFps = 60
         
-        self.filesToPlay = self.fa.getFileList( self.gui.workingFolderAdress )
-        print("files to play --\ \n",str(self.filesToPlay))
-        sPlaFroFil = Spinner(
-            values = list(self.filesToPlay),
+        self.sPlaFroFil = Spinner(
+            values = [],#list(self.filesToPlay),
             text = "play from file:",
             size_hint = (None,None),
             size = (self.gui.btH*4,self.gui.btH)        
             )
-        sPlaFroFil.bind(text=self.on_PlaFroFile)
+        self.sPlaFroFil.bind(text=self.on_PlaFroFile)
         bl = self.gui.rl.ids.bl_sensorsPlaFroFil
-        bl.add_widget(sPlaFroFil)
+        bl.add_widget(self.sPlaFroFil)
         
         print("new Spinner with updated list DONE")
         #self.wHeelBoat = waveCicleHolder(gui,'boat_heel')
@@ -1247,6 +1248,16 @@ class sensors:
     
     def buidPlayer(self, toReturn ):
         print("buidPlayer ---------------------------------------------------")
+        
+        print("update list of files...")
+        self.filesToPlay = self.fa.getFileList( 
+            self.gui.workingFolderAdress,
+            filter=".rec" 
+            )
+        print("-> list is ",self.filesToPlay)
+        self.sPlaFroFil.values = list(self.filesToPlay)
+        print("    done")
+        
         bl = BoxLayout(
             orientation="vertical",
             )

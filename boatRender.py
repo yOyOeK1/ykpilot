@@ -57,7 +57,7 @@ class Renderer(Widget):
 		self.o = ml.getObjects()
 		scenRos = ObjFile(resource_find("./3dModels/3d_roseta.obj"))
 		self.o['roseta'] = scenRos.objects[ list(scenRos.objects.keys())[0] ]
-		print("roseta[%s]"%self.o['roseta'])
+		#print("roseta[%s]"%self.o['roseta'])
 		
 		
 		super(Renderer, self).__init__(**kwargs)

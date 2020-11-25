@@ -1,8 +1,11 @@
 import kivy
+import _thread
+import sys
+
 from kivy.app import App
 
 from kivy.support import install_twisted_reactor
-from sensors import sensors
+from kivy.uix.gridlayout import GridLayout
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -18,7 +21,7 @@ from kivy.uix.actionbar import ActionBar, ActionPrevious, ActionView,\
 	ActionOverflow, ActionButton
 from kivy.properties import NumericProperty,ObjectProperty,StringProperty
 from kivy.core.window import Window
-from kivy_garden.graph import Graph, MeshLinePlot
+#from kivy_garden.graph import Graph, MeshLinePlot
 from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics.instructions import RenderContext
 mkservice = False
@@ -40,8 +43,6 @@ from kivy.core.image import Image
 #	pass
 
 
-import _thread
-import sys
 
 from twistedTcpClient import *
 
@@ -77,9 +78,12 @@ if kivy.platform == 'android':
 
 
 else:
-	Window.size = (480,740)
+	Window.size = (480,700)
 	Window.set_title( "ykpilot" )
 	#pass
+
+class LoaderLayout(GridLayout):
+	pass
 
 class RootLayout(ScreenManager):
 	
@@ -178,30 +182,38 @@ class gui(App):
 	
 	def build(self):	
 		
-		Builder.load_file('layoutMain.kv')
+		print("layoutMyWidgets...")
+		Builder.load_file('layoutMyWidgets.kv')
+		print("layoutLoader...")
+		Builder.load_file('layoutLoader.kv')
 
 		Window.bind(on_key_down=self.on_key_down)
 		Window.bind(on_key_up=self.on_key_up)
 		
-		self.rl = RootLayout()
-		self.rl.current = 'Loader'
+		self.ll = LoaderLayout()
+		
+		#sys.exit(9)
 		
 		self.loaderStep = 0
-		_thread.start_new(self.loaderNextStep,() )
+		Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
-		return self.rl
+		return self.ll
 	
 	def loaderNextStep(self,a=0,b=0):
 		self.loaderStep+=1 
 		print("loaderNextStep step now",self.loaderStep)
 		
-		p = 0
 		
 		if self.loaderStep == 1:
-			self.rl.ids.l_loaMaiWin.text = "DONE"
+			if kivy.platform == 'android':
+				self.platform = 'android'
+			else:
+				self.platform = 'pc'
+			
+			self.ll.ids.l_loaMaiWin.text = "DONE"
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-			
+		
 		elif self.loaderStep == 2:
 			from TimeHelper import TimeHelper
 			from FileActions import FileActions
@@ -214,11 +226,26 @@ class gui(App):
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		elif self.loaderStep == 3:
-			self.rl.ids.l_loaHel.text = "DONE"
+			self.ll.ids.l_loaHel.text = "DONE"
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-			
+		
 		elif self.loaderStep == 4:
+			bS = self.th.benStart()
+			Builder.load_file('layoutMain.kv')
+			self.rl = RootLayout()
+			self.bE = self.th.benDone(bS,'')
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 5:
+			self.ll.ids.l_appRooLay.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+				
+			
+			
+			
+		elif self.loaderStep == 6:
 			bS = self.th.benStart()
 			self.config = DataSR_restore(
 				self.fa.join( self.homeDirPath,'ykpilot.conf')
@@ -229,12 +256,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 5:
-			self.rl.ids.l_loaCon.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 7:
+			self.ll.ids.l_loaCon.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		
-		elif self.loaderStep == 6:
+		
+		elif self.loaderStep == 8:
 			bS = self.th.benStart()
 			if kivy.platform == 'android':
 				self.platform = 'android'
@@ -275,23 +303,25 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 7:
-			self.rl.ids.l_loaPlaChk.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 9:
+			self.ll.ids.l_loaPlaChk.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
-		elif self.loaderStep == 8:
+		
+		elif self.loaderStep == 10:
 			bS = self.th.benStart()
 			self.loaderStep0()
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 9:
-			self.rl.ids.l_loaRest.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 11:
+			self.ll.ids.l_loaRest.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 			
-		elif self.loaderStep == 10:
+			
+		elif self.loaderStep == 12:
 			bS = self.th.benStart()
 			from sensors import sensors
 			self.sen = sensors(self)
@@ -302,15 +332,16 @@ class gui(App):
 			
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 11:
+		elif self.loaderStep == 13:
 			if self.platform == 'android' and self.sen.permissonsStatus == False:
 				self.loaderStep-=1
 			else:
-				self.rl.ids.l_permissions.text = "DONE in %s sec."%self.bE
+				self.ll.ids.l_permissions.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 
-		elif self.loaderStep == 12:
+
+		elif self.loaderStep == 14:
 			bS = self.th.benStart()
 			
 			self.sen.makeSensors()
@@ -328,13 +359,14 @@ class gui(App):
 			
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
-		elif self.loaderStep == 13:
-			self.rl.ids.l_sensors.text = "DONE in %s sec."%self.bE
+			
+		elif self.loaderStep == 15:
+			self.ll.ids.l_sensors.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		
 		
-		elif self.loaderStep == 14:
+		elif self.loaderStep == 16:
 			bS = self.th.benStart()
 			from ScreenWidgets import ScreenWidgets
 			self.sWidgets = ScreenWidgets(self)
@@ -342,12 +374,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 15:
-			self.rl.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 17:
+			self.ll.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
-		elif self.loaderStep == 16:
+		
+		elif self.loaderStep == 18:
 			bS = self.th.benStart()
 			try:
 				from ScreenAutopilot import ScreenAutopilot
@@ -358,44 +391,42 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 17:
-			self.rl.ids.l_loaSAut.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 19:
+			self.ll.ids.l_loaSAut.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 18:
+		elif self.loaderStep == 20:
 			bS = self.th.benStart()
 			from ScreenRace import ScreenRace
 			self.sRace = ScreenRace(self)
 			self.sRace.setupGui()
-			self.sen.gpsD.addCallBack( self.sRace )
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 19:
-			self.rl.ids.l_loaSRac.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 21:
+			self.ll.ids.l_loaSRac.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 			
-		elif self.loaderStep == 20:
+			
+		elif self.loaderStep == 22:
 			bS = self.th.benStart()
 			from ScreenCompass import ScreenCompass
 			self.sCompass = ScreenCompass()
 			self.sCompass.setGui(self)
 			self.rl.ids.blCompass.add_widget( self.sCompass )
-			self.sen.gpsD.addCallBack( self.sCompass )
-			self.sen.comCal.addCallBack( self.sCompass )
-			self.sen.comCalAccelGyro.addCallBack( self.sCompass )
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 21:
-			self.rl.ids.l_loaSCom.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 23:
+			self.ll.ids.l_loaSCom.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
-		elif self.loaderStep == 22:
+		
+		elif self.loaderStep == 24:
 			bS = self.th.benStart()
 			from ScreenNMEAMultiplexer import ScreenNMEAMultiplexer
 			self.sNMEAMul = ScreenNMEAMultiplexer()
@@ -403,12 +434,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 23:
-			self.rl.ids.l_loaSMul.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 25:
+			self.ll.ids.l_loaSMul.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
+
 		
-		elif self.loaderStep == 24:
+		elif self.loaderStep == 26:
 			bS = self.th.benStart()	
 			from boatRender import Renderer		
 			self.senBoat = Renderer()
@@ -417,13 +449,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 25:
-			self.rl.ids.l_loaMScr.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 27:
+			self.ll.ids.l_loaMScr.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 		
 		
-		elif self.loaderStep == 26:
+		elif self.loaderStep == 28:
 			bS = self.th.benStart()
 			from simRender import simRender
 			from simEngine import simEngine
@@ -458,14 +490,14 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 27:
-			self.rl.ids.l_loaSSim.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 29:
+			self.ll.ids.l_loaSSim.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 
 		
 		
-		elif self.loaderStep == 28:
+		elif self.loaderStep == 30:
 			bS = self.th.benStart()
 			print("Sender Server is on port[%s]"%self.senderPort)
 			self.sf = MyServerFactory(self)
@@ -473,20 +505,20 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 29:
-			self.rl.ids.l_loaTcpSer.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 31:
+			self.ll.ids.l_loaTcpSer.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 30:
+		elif self.loaderStep == 32:
 			bS = self.th.benStart()
 			self.tcp4ap = ttc(self)
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 31:
-			self.rl.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
+		elif self.loaderStep == 33:
+			self.ll.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
@@ -501,7 +533,7 @@ class gui(App):
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		elif self.loaderStep == 1000:
-			#self.rl.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
+			#self.ll.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
@@ -511,25 +543,12 @@ class gui(App):
 		
 		else:
 			print(" loader finished ?")
-			defScreen = 'ykpilot'
-			goToScreen = defScreen
-			dontStartAt = ['Loader','EditWidget', 'SettingUpWidget', 'SelectWidgetToAdd']
-			try:
-				goToScreen = self.config['screenCurrent']
-			except:
-				print("EE - no def  config['screenCurrent'] :/")
-			
-			if goToScreen in dontStartAt:
-				goToScreen = defScreen
 				
-			try:
-				self.screenChange(goToScreen)
-			except:
-				print("EE - no screen [",goToScreen,"] in screenmanager")
-				self.screenChange(defScreen)
 				
 			print(" starting main loop for sensors ")
 			self.sen.run()
+		
+		
 		
 			if self.sen.gpsD.androidServiceStatus == False:
 				try:
@@ -538,6 +557,11 @@ class gui(App):
 					print("EE - can't gps_start :(")
 			
 			
+			
+			self.sen.gpsD.addCallBack( self.sCompass )
+			self.sen.comCal.addCallBack( self.sCompass )
+			self.sen.comCalAccelGyro.addCallBack( self.sCompass )
+			self.sen.gpsD.addCallBack( self.sRace )
 			self.sen.comCal.addCallBack( self.sen )
 			self.sen.comCal.addCallBack( self.senBoat )
 			#self.gui.senBoat.setRoseta( self.hdg )
@@ -550,6 +574,36 @@ class gui(App):
 			if self.platform == 'pc':
 				Clock.schedule_once(self.connectToSensorsRemoteTcp, 1 )
 				
+		
+			print('flip layouts....')
+			par = self.ll.parent
+			par.remove_widget(self.ll)
+			par.add_widget(self.rootLayout)
+			self.ll = None
+			print("	DONE")
+			
+			
+			print("config",self.config)
+			defScreen = 'ykpilot'
+			goToScreen = defScreen
+			dontStartAt = ['Loader','EditWidget', 'SettingUpWidget', 'SelectWidgetToAdd']
+			try:
+				goToScreen = self.config['screenCurrent']
+			except:
+				print("EE - no def  config['screenCurrent'] :/")
+			
+			if goToScreen in dontStartAt:
+				print("goToScreen is in dont start list")
+				goToScreen = defScreen
+				
+			print("go to screen is ",goToScreen)
+			try:
+				self.screenChange(goToScreen)
+			except:
+				print("EE - no screen [",goToScreen,"] in screenmanager")
+				self.screenChange(defScreen)
+			
+		
 		
 			self.isReady = True
 		
@@ -586,6 +640,8 @@ class gui(App):
 		if self.virtualButtons:
 			self.vBut = ScreenVirtualButtons(self)
 
+
+		'''
 		wfa = self.workingFolderAdress.split("/")
 		dirName = wfa[-2]
 
@@ -595,7 +651,7 @@ class gui(App):
 				)
 		except:
 			pass
-	
+		'''
 	
 		#self.tcp = helperTCP(ip)
 		self.rl.passGuiApp(self)
@@ -755,12 +811,6 @@ class gui(App):
 			av.add_widget(ao)
 			
 			self.mw.add_widget(self.ab)
-			try:
-				rlParent = self.rl.parent
-				rlParent.remove_widget(self.rl)
-				
-			except:
-				print("rl. don't have parent !")
 			self.mw.add_widget(self.rl)
 
 			toreturn = self.mw
@@ -784,7 +834,7 @@ class gui(App):
 
 
 		
-		rlParent.add_widget( toreturn )
+		self.rootLayout = toreturn
 
 	
 	def hide_widget(self, wid, dohide=True):
@@ -806,13 +856,14 @@ class gui(App):
 		
 		
 	def on_pause(self):
-		print( "--------- on pause")
-		try:
-			self.sen.gps_stop()
-		except:
-			pass
-			
-		self.on_configSave()
+		if self.isReady:
+			print( "--------- on pause")
+			try:
+				self.sen.gps_stop()
+			except:
+				pass
+				
+			self.on_configSave()
 		
 		return True
 	
@@ -844,7 +895,7 @@ class gui(App):
 	
 		print("save widgets config")
 		try:
-			self.sWidgets.saveConfig()
+			print("	res",self.sWidgets.saveConfig())
 		except:
 			print("EE - trying to save sWidget but it is not there yet !")
 	

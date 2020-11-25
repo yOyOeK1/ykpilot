@@ -45,9 +45,10 @@ class ScatterForWidget(Scatter):
 class bubbleRemEdit(Bubble):
     widgetPos = ObjectProperty([0,0])
     destroyTimer = None
+    deb = False
     
     def setPosForWidget(self,sfw='',pos=''):
-        print("setPosForWidget")
+        if self.deb: print("setPosForWidget")
         self.widgetPos = [
             pos[0],
             pos[1]+(sfw.size[1]*sfw.scale)
@@ -64,29 +65,35 @@ class bubbleRemEdit(Bubble):
         self.destroyTimer = Clock.schedule_once(self.hideIt, timeOut)
         
     def hideIt(self,a='',b=''):
-        print("bubble hideIT!!")
+        if self.deb: print("bubble hideIT!!")
         self.widgetPos = [-1000,0]  
         
         
     def on_remove(self):
-        print("on_remove")
+        if self.deb: print("on_remove")
         self.sw.on_removeWidget()
         
     def on_edit(self):
-        print("on_edit")
+        if self.deb: print("on_edit")
         self.sw.on_editWidget()
+    
+    
+    
+    
+    
         
 class ScreenWidgets:
-    
+    deb = False
+
     def __init__(self,gui):
         self.gui = gui
     
     def makeSensorsList(self):
-        print("ScreenWidgets.makeSensorsList")
+        if self.deb: print("ScreenWidgets.makeSensorsList")
         sl = self.gui.sen.sensorsList
-        print("have now: ",len(sl)," sensors registered")
+        if self.deb: print("have now: ",len(sl)," sensors registered")
         for s in sl:
-            print('''    sensor: {}        class:{}
+            if self.deb: print('''    sensor: {}        class:{}
         values: {}
         '''.format(
                 s.getTitle(), type(s), s.getValuesOptions()
@@ -101,10 +108,10 @@ class ScreenWidgets:
         try:
             bl = bl.children[0]
         except:
-            print("EE - no children[0]")
-        print("type",type(bl))
-        print("children count",len(bl.children))
-        print("parent type",type(bl.parent))
+            self.deb: print("EE - no children[0]")
+        if self.deb: print("type",type(bl))
+        if self.deb: print("children count",len(bl.children))
+        if self.deb: print("parent type",type(bl.parent))
         
         for c in bl.children:
             
@@ -115,35 +122,36 @@ class ScreenWidgets:
         
         
     def getWidgetsTypeList(self):
-        print("ScreenWidgets.getWidgetsTypeList")
+        if self.deb: print("ScreenWidgets.getWidgetsTypeList")
         return self.widgetsTypeList
     
     def updateValsInWConfig(self,si='',wi='',sfw='', c =''):
-        #print("updateValsInWConfig si",si," wi",wi,"\n    sfw",sfw,"\n    c",c)
-        self.wConfig[si][wi]['pos'] = list(sfw.pos)
+        #if self.deb: print("updateValsInWConfig si",si," wi",wi,"\n    sfw",sfw,"\n    c",c)
+        posScale = self.pixelToScreenScale(list(sfw.pos))
+        self.wConfig[si][wi]['pos'] = posScale#list(sfw.pos)
         self.wConfig[si][wi]['scale'] = sfw.scale
         self.wConfig[si][wi]['rotation'] = sfw.rotation
         self.bubble.startTimer(self,self.bubbleTimeOut)
         
         
     def saveConfig(self):
-        print("ScreenWidgets.saveConfig")#,self.wConfig)
+        if self.deb: print("ScreenWidgets.saveConfig")#,self.wConfig)
         
-        print(" clean stuff befoare save to file")
+        if self.deb: print(" clean stuff befoare save to file")
         for s in self.wConfig:
             for w in s:
                 w['obj'] = ''
                 
-        #print("-------------------------------------------")
-        #print(self.wConfig)
-        #print("-------------------------------------------")
+        #if self.deb: print("-------------------------------------------")
+        #if self.deb: print(self.wConfig)
+        #if self.deb: print("-------------------------------------------")
         
-        print("save config Widgets res:",
-              DataSR_save(self.wConfig, self.wConfigPath)
-              )
+        res = DataSR_save(self.wConfig, self.wConfigPath)
+        if self.deb: print("save config Widgets res:",res)
+        return res
     
     def setGui(self,a='',b=''):
-        print("ScreenWidgets.setGui")
+        if self.deb: print("ScreenWidgets.setGui")
         self.flSize = ObjectProperty([.0,.0])
         
         
@@ -182,7 +190,7 @@ class ScreenWidgets:
             'ykpilotWidgets.conf'
             )
         if self.fa.isFile(self.wConfigPath) == False:
-            print("screen widgets no config file setting default")
+            if self.deb: print("screen widgets no config file setting default")
             self.wConfig = [[{
                 'name': 'ScreenCompass',
                 'obj': "",
@@ -194,10 +202,10 @@ class ScreenWidgets:
                 }
                 ]]
         else:
-            print("screen widgets resuming config")
+            if self.deb: print("screen widgets resuming config")
             self.wConfig = DataSR_restore(self.wConfigPath)
-            print(self.wConfig)
-            print("------------------------------") 
+            if self.deb: print(self.wConfig)
+            if self.deb: print("------------------------------") 
             #sys.exit(0)
 
         self.screen = 0
@@ -225,34 +233,34 @@ class ScreenWidgets:
         return self.wConfig[si][wi]
     
     def on_widgetReleased(self, screen='', wi='', sfw='',d=''):
-        print("on_widgetReleased")
+        if self.deb: print("on_widgetReleased")
         colision = sfw.collide_point(d.pos[0],d.pos[1]) 
         if colision:
             rot = self.wConfig[screen][wi]['rotation']%360.0
-            print("ok do correction!")
-            print("rotation of widget is",rot)
+            if self.deb: print("ok do correction!")
+            if self.deb: print("rotation of widget is",rot)
             
             if rot < 10.0 or rot > 350.0:
-                print("set 0.0")
+                if self.deb: print("set 0.0")
                 self.wConfig[screen][wi]['rotation'] = 0.0
                 
             elif rot > 80.0 and rot < 100.0:
-                print("set 0.0")
+                if self.deb: print("set 0.0")
                 self.wConfig[screen][wi]['rotation'] = 90.0
                 
             elif rot > 170.0 and rot < 190.0:
-                print("set 0.0")
+                if self.deb: print("set 0.0")
                 self.wConfig[screen][wi]['rotation'] = 180.0
                 
             elif rot > 260.0 and rot < 280.0:
-                print("set 0.0")
+                if self.deb: print("set 0.0")
                 self.wConfig[screen][wi]['rotation'] = 270.0
                 
             #sfw.rotation = self.wConfig[screen][wi]['rotation']
             if self.gui.animation:
                 Animation.cancel_all(sfw,'rotation')
                 r = self.wConfig[screen][wi]['rotation']
-                #print("rotation sfw.rotation",sfw.rotation," to ",r)
+                #if self.deb: print("rotation sfw.rotation",sfw.rotation," to ",r)
                 
                 if (sfw.rotation-r)>180.0:
                     r+= 360.0
@@ -267,9 +275,29 @@ class ScreenWidgets:
             else:
                 sfw.rotation = self.wConfig[screen][wi]['rotation']
             
+            
+    def pixelToScreenScale(self,xy):
+        #print("pixelToScreenScale xy",xy)
+        ws = Window.size
+        #print("    ws",ws)
+        x = xy[0]/ws[0]
+        y = xy[1]/ws[1]
+        #print('xy scale',[x,y])
+        return [x,y]
+    
+    def screenScaleToPixel(self, xyScale):
+        #print("screenScaleToPixel xyScale",xyScale)
+        ws = Window.size
+        #print("    ws",ws)
+        x = xyScale[0]*ws[0]
+        y = xyScale[1]*ws[1]
+        #print('xy scale',[x,y])
+        return [x,y]
+        
+            
     def on_widgetSelected(self,screen='',wi='',sfw='',d=''):
-        print("on_widgetSelected d",d)
-        print("    ->pos",d.pos)
+        if self.deb: print("on_widgetSelected d",d)
+        if self.deb: print("    ->pos",d.pos)
         colision = sfw.collide_point(d.pos[0],d.pos[1]) 
         if colision == False:
             return False
@@ -281,8 +309,8 @@ class ScreenWidgets:
             } 
         weObj = self.getWeObj(screen,wi)
         
-        print("    -> ",weObj)
-        print("    -> col",colision)
+        if self.deb: print("    -> ",weObj)
+        if self.deb: print("    -> col",colision)
         
         try:
             sfw = weObj.parent
@@ -318,27 +346,27 @@ class ScreenWidgets:
         sfw.unbind(on_touch_up=partial(self.on_widgetReleased,si,wi))
         
     def rebuildWs(self,a='',b=''):
-        print("ScreenWidgets.rebuildWs")
+        if self.deb: print("ScreenWidgets.rebuildWs")
         tScreen = self.screen 
-        print("--- so cleanAll !!")
+        if self.deb: print("--- so cleanAll !!")
         self.cleanAll()
-        print("--- so cleanAll !! DONE")
+        if self.deb: print("--- so cleanAll !! DONE")
         
-        print("--- so build !!")
+        if self.deb: print("--- so build !!")
         self.buildW()
-        print("--- so build !! DONE")
+        if self.deb: print("--- so build !! DONE")
         self.updateIt()    
         self.gui.screenChange(("Widgets%s"%tScreen))
         
         
         
     def cleanAll(self,a='',b=''):
-        print("ScreenWidgets.cleanAll")
+        if self.deb: print("ScreenWidgets.cleanAll")
         if self.editMode:
-            print("is in edit mode exiting ...")
+            if self.deb: print("is in edit mode exiting ...")
             self.on_btEdit()
         
-        print("goint by widgets in wConfig")
+        if self.deb: print("goint by widgets in wConfig")
         for si,s in enumerate(self.wConfig):
             for wi,w in enumerate(s):
                 obj = w['obj']
@@ -346,7 +374,7 @@ class ScreenWidgets:
                 if obj == "":
                     w['obj'] = None
                 else:
-                    print("widget ",w['objName'],' type',type(obj))
+                    if self.deb: print("widget ",w['objName'],' type',type(obj))
                     try:
                         p = obj.parent
                         obj2Remove = obj
@@ -354,50 +382,50 @@ class ScreenWidgets:
                         ot = obj.getWidget()
                         p = ot.parent
                         obj2Remove = ot
-                    print("remove from parent [",p,"]...")
+                    if self.deb: print("remove from parent [",p,"]...")
                     if p == None:
                         break
                     
-                    print("remove from parent scatter")
+                    if self.deb: print("remove from parent scatter")
                     p.remove_widget(obj2Remove)
                     pScater = p.parent
-                    print("remove scater from fLayout")
+                    if self.deb: print("remove scater from fLayout")
                     pScater.remove_widget(p)
-                    print("unbind scatter")
+                    if self.deb: print("unbind scatter")
                     self.unbindScatter(p, si,wi)
                     
                     
-                    print("remove callbacks...")
+                    if self.deb: print("remove callbacks...")
                     for cal in w['callback']:
-                        print("sensor",cal)
+                        if self.deb: print("sensor",cal)
                         unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
-                        #print("go with:",unSub)
+                        #if self.deb: print("go with:",unSub)
                         exec(unSub)
                     w['obj'] = None
         
-        print("removing nav bt's...")
+        if self.deb: print("removing nav bt's...")
         for bt in self.navBts:
             p = bt.parent
             p.remove_widget(bt)
         
-        print("removing fls...")
+        if self.deb: print("removing fls...")
         for fl in self.fls:
             p = fl.parent
             p.remove_widget(fl)
         
         self.gui.rl.current = "Widgets"
-        print("removing screens...")
+        if self.deb: print("removing screens...")
         for scr in self.screenObjs:
             self.gui.rl.remove_widget(scr)
             
             
-        print("DONE")
+        if self.deb: print("DONE")
         #sys.exit(0)
         
     def buildW(self):
-        print("ScreenWidgets.buildW")
+        if self.deb: print("ScreenWidgets.buildW")
         
-        print("- screens now count is",self.screens)
+        if self.deb: print("- screens now count is",self.screens)
         self.fls = []
         self.screenObjs = []
         self.flsOrgs = []
@@ -423,22 +451,22 @@ class ScreenWidgets:
             self.gui.rl.add_widget(screen)
             self.flChangeSize(b=fl.size)
         
-        print("    DONE")
+        if self.deb: print("    DONE")
            
         
         
     def flChangeSize(self,a='',b=''):
-        print("flChangeSize",a,"\n",b)
+        if self.deb: print("flChangeSize",a,"\n",b)
         self.flSize = b
         y = b[1]-self.gui.btH
         for b in self.navBts:
             b.y = y
       
     def addWidgetOnScreen(self, wObj, callback=None):
-        print("ScreenWidgets.add widget on screen",wObj)
+        if self.deb: print("ScreenWidgets.add widget on screen",wObj)
         
         if len(self.wConfig)<=self.screen:
-            print("adding first widget on screen !",self.screen)
+            if self.deb: print("adding first widget on screen !",self.screen)
             self.wConfig.append([])
         
         self.wConfig[self.screen].append({
@@ -473,21 +501,21 @@ class ScreenWidgets:
          
         
     def updateIt(self,a='',b=''):
-        print("ScreenWidgets.updateIt")
+        if self.deb: print("ScreenWidgets.updateIt")
         if self.gui.rl.current == "Widgets":
             self.gui.screenChange("Widgets0")
             return 0
         
         
         
-        print("current screen:",self.gui.rl.current[7:])
+        if self.deb: print("current screen:",self.gui.rl.current[7:])
         self.screen = int(self.gui.rl.current[7:])
-        #print("wConfig",self.wConfig)
-        #print("len",len(self.wConfig))
-        #print("screen",self.screen)
+        #if self.deb: print("wConfig",self.wConfig)
+        #if self.deb: print("len",len(self.wConfig))
+        #if self.deb: print("screen",self.screen)
 
         if len(self.wConfig) > self.screen:
-            print("updating widgets on screen...")
+            if self.deb: print("updating widgets on screen...")
             for w in self.wConfig[self.screen]:
                 o = w['obj']
                 try:
@@ -495,11 +523,11 @@ class ScreenWidgets:
                 except:
                     pass
         else:
-            print("EE - nothing to update :( no widgets in screen",self.screen)
+            if self.deb: print("EE - nothing to update :( no widgets in screen",self.screen)
         
         
     def on_toggleFullScreen(self,a='',b=''):
-        print("on_toggleFullScreen")
+        if self.deb: print("on_toggleFullScreen")
         if self.gui.ab.height > 0.0:
             self.gui_ab_height = self.gui.ab.height
             self.gui.ab.height = 0.0
@@ -508,17 +536,17 @@ class ScreenWidgets:
         
     
     def on_editWidget(self, a='',b=''):
-        print("on_editWidget")
-        print("widgetEdit",self.widgetEdit)
+        if self.deb: print("on_editWidget")
+        if self.deb: print("widgetEdit",self.widgetEdit)
         #self.WAEDV = WidgetsAEDV(self)
         self.WAEDV.startEditWizard()
         
         
         
     def on_removeWidget(self,a='',b=''):
-        print("ScreenWidgets.on_removeWidget")
-        print("remove obj from screen ",self.screen)
-        print("widgetEdit",self.widgetEdit)
+        if self.deb: print("ScreenWidgets.on_removeWidget")
+        if self.deb: print("remove obj from screen ",self.screen)
+        if self.deb: print("widgetEdit",self.widgetEdit)
         
         self.q = QueryPopup()
         self.q.setAction(
@@ -530,16 +558,16 @@ class ScreenWidgets:
         self.q.run()
         
     def on_removeWidgetConfirme(self,a='',b=''):
-        print("on_removeWidgetConfirme")
-        print("looking for object in wConfig")
+        if self.deb: print("on_removeWidgetConfirme")
+        if self.deb: print("looking for object in wConfig")
         for si,s in enumerate(self.wConfig):
-            print("screen",si)
+            if self.deb: print("screen",si)
             for wi,w in enumerate(s):
-                print("widget",wi," -> ",w['objName'])
+                if self.deb: print("widget",wi," -> ",w['objName'])
                 if [si,wi] == [self.widgetEdit['screen'], self.widgetEdit['wi']]:
                     self.cleanAll()
                     self.wConfig[si].pop(wi)
-                    print("so widget removed. save new config")
+                    if self.deb: print("so widget removed. save new config")
                     self.saveConfig()
                     tScreen = self.screen
                     self.buildW()
@@ -547,36 +575,45 @@ class ScreenWidgets:
                     return True
         
     def on_bgRelease(self,a='',b=''):
-        print("ScreenWidgets.on_bgRelease")
+        if self.deb: print("ScreenWidgets.on_bgRelease")
         if self.editMode == True:
             self.on_btEdit(a)
             return True
         
     def setUpGui(self, screen, bWidget, widgets):  
-        print("ScreenWidgets.setUpGui ")#,bWidget," widgets\n",widgets)      
+        if self.deb: print("ScreenWidgets.setUpGui ")#,bWidget," widgets\n",widgets)      
         
         for i,w in enumerate( widgets ):
-            print("building widget [",w['name'],"]")
+            if self.deb: print("building widget [",w['name'],"]")
             exec("widgets[i]['obj'] = %s()"%w['objName'])
             o = widgets[i]['obj']
 
             if w['objName'] != 'ScreenCompass':
-                print("passing atr setting to Widget_cn or 'Widget_niddle or WidgetBubble")
+                if self.deb: print("passing atr setting to Widget_cn or 'Widget_niddle or WidgetBubble")
                 atr = w['atr']
                 atr['screen'] = screen
                 atr['valHandler'] = w['valHandler']
                 o.setValuesFromDic(atr)
-                print("    done")
-            print("setGui")
+                if self.deb: print("    done")
+            if self.deb: print("setGui")
             o.setGui(self.gui)
             
-            print("add widget")
+            if self.deb: print("add widget")
             sfw = ScatterForWidget(
                 widgetSize = o.getSize()
                 )
             sfw.rotation = self.wConfig[screen][i]['rotation']
             sfw.scale = self.wConfig[screen][i]['scale']
-            sfw.pos = self.wConfig[screen][i]['pos']
+            
+            if( self.wConfig[screen][i]['pos'][0] < 1.0 and 
+                self.wConfig[screen][i]['pos'][1] <1.0 and
+                self.wConfig[screen][i]['pos'][0]>-1.0 and 
+                self.wConfig[screen][i]['pos'][1]>-1.0 ):
+                sfw.pos = self.screenScaleToPixel(
+                    self.wConfig[screen][i]['pos']
+                    )
+            else:
+                sfw.pos = self.wConfig[screen][i]['pos']
             
             sfw.add_widget( o.getWidget() )
             self.bindScatter(sfw, screen,i)
@@ -584,21 +621,21 @@ class ScreenWidgets:
             
             
        
-            print("\- - adding callbacks:",w['callback'])
+            if self.deb: print("\- - adding callbacks:",w['callback'])
             for c in w['callback']:
                 if c != '':
-                    print("callback to:",c)
+                    if self.deb: print("callback to:",c)
                     if c == 'gps':
-                        print("changing gps to gpsD")
+                        if self.deb: print("changing gps to gpsD")
                         c = 'gpsD'
-                    print("add it ....")
+                    if self.deb: print("add it ....")
                     eval("self.gui.sen.%s.addCallBack(o)"%(
                         c
                         ))
-                    print("    DONE")
-                    #print("o",o)
-                    #print("widgets[i]['obj']",widgets[i]['obj'])
-                    #print("self.gui.sen.gps",self.gui.sen.gpsD.callBacksForUpdate)
+                    if self.deb: print("    DONE")
+                    #if self.deb: print("o",o)
+                    #if self.deb: print("widgets[i]['obj']",widgets[i]['obj'])
+                    #if self.deb: print("self.gui.sen.gps",self.gui.sen.gpsD.callBacksForUpdate)
         
         
         self.addNavBts( bWidget )          
@@ -607,7 +644,7 @@ class ScreenWidgets:
     
     
     def on_screenLeft(self,a=''):
-        print("ScreenWidgets.on_screenLeft")
+        if self.deb: print("ScreenWidgets.on_screenLeft")
         #self.on_btEdit()
         s = self.screen-1
         if s < 0:
@@ -616,7 +653,7 @@ class ScreenWidgets:
         self.gui.screenChange( "Widgets%s"%s )
         
     def on_screenRight(self,a=''):
-        print("ScreenWidgets.on_screenRight")
+        if self.deb: print("ScreenWidgets.on_screenRight")
         #self.on_btEdit()
         s = self.screen+1
         if s >= self.screens:
@@ -625,13 +662,13 @@ class ScreenWidgets:
         self.gui.screenChange( "Widgets%s"%s )
         
     def startAddWidgetDialog(self,a=''):
-        print("ScreenWidgets.on_screenLeft")
+        if self.deb: print("ScreenWidgets.on_screenLeft")
         #self.WAEDV = WidgetsAEDV(self)
         self.WAEDV.startWizard()
             
     
     def addNavBts(self, w):
-        print("ScreenWidgets.addNavBts")
+        if self.deb: print("ScreenWidgets.addNavBts")
         navBtColor = ( .9, .0, .0, 0.6)
         
         #sys.exit()

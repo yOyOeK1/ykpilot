@@ -1,0 +1,48 @@
+#:kivy 1.1.0
+
+
+<MySpeedMeter@SpeedMeter>:
+	#subtick: 6
+	min: -3
+	max: 3
+	tick: 1
+	subtick: 11
+
+<SLabel@Label>:
+	height:10
+
+<MSLabel@Label>:
+	height:app.lineH
+	#size_hint: None, None
+	#size: self.texture_size
+	
+	
+<Widget_nn>:
+	Label:
+		id: lwn
+		text: "abc"
+	
+<MSTitLabel@Label>:
+	height:app.lineH
+	font_size: app.lineH
+	bold: "bold"
+	size_hint: None, None
+	size: self.texture_size
+	canvas.before:
+		Color:
+			rgba: (.2, .2, .2, 1.0)
+		Rectangle:
+			pos: self.pos
+			size: (self.parent.size[0],self.size[1])
+	
+	
+<MSBoldLabel@Label>:
+	height:app.lineH
+	font_size: app.lineH*0.5
+	bold: "bold"
+	size_hint: None, None
+	size: self.texture_size
+		
+		
+
+		
