@@ -26,6 +26,7 @@ if __name__ == "__main__":
 		g = gui() 
 		g.run()
 
+
 		print("force to save config for ykpilot")
 		g.on_pause()
 		

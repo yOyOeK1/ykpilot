@@ -1,11 +1,13 @@
 import kivy
+
+#/home/yoyo/.local/share/python-for-android/dists/Aykp7__armeabi-v7a/_python_bundle/_python_bundle/site-packages/kivy/weakmethod.py
+
 import _thread
 import sys
 
 from kivy.app import App
 
 from kivy.support import install_twisted_reactor
-from kivy.uix.gridlayout import GridLayout
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -13,7 +15,9 @@ from twisted.internet import protocol
 
 from kivy.lang import Builder
 from kivy.clock import Clock
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
@@ -21,16 +25,15 @@ from kivy.uix.actionbar import ActionBar, ActionPrevious, ActionView,\
 	ActionOverflow, ActionButton
 from kivy.properties import NumericProperty,ObjectProperty,StringProperty
 from kivy.core.window import Window
+#from kivy.core.image import Image
 #from kivy_garden.graph import Graph, MeshLinePlot
-from kivy.uix.floatlayout import FloatLayout
 from kivy.graphics.instructions import RenderContext
 mkservice = False
 
 
 
-from shaderTree import ShaderWidget
+#from shaderTree import ShaderWidget
 from shadersDefinition import *
-from kivy.core.image import Image
 
 #from odeRTB import odeRTB
 	
@@ -78,11 +81,15 @@ if kivy.platform == 'android':
 
 
 else:
-	Window.size = (480,700)
+	Window.size = (411,700)
 	Window.set_title( "ykpilot" )
 	#pass
 
 class LoaderLayout(GridLayout):
+	pass
+
+
+class ykpActionBar(ActionBar):
 	pass
 
 class RootLayout(ScreenManager):
@@ -90,7 +97,6 @@ class RootLayout(ScreenManager):
 	fs = StringProperty(None)
 	
 	def __init__(self, **kwargs):
-	
 		self.canvas = RenderContext(use_parent_projection=True,
                                     use_parent_modelview=True,
                                     use_parent_frag_modelview=True)
@@ -110,7 +116,6 @@ class RootLayout(ScreenManager):
 		if not shader.success:
 			shader.fs = old_value
 			#raise Exception('failed')
-
 	
 	def passGuiApp(self,gui):
 		self.gui = gui
@@ -146,6 +151,7 @@ class gui(App):
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
 			self.sensorsRemoteTcp = "192.168.43.56:11223"
 		
+		self.windowSize = Window.size
 		self.colorTheme = "day"
 		self.isReady = False
 	
@@ -242,10 +248,20 @@ class gui(App):
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 				
-			
-			
-			
 		elif self.loaderStep == 6:
+			bS = self.th.benStart()
+			Builder.load_file('layoutActionBar.kv')
+			self.ab = ykpActionBar()
+			self.bE = self.th.benDone(bS,'')
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 7:
+			self.ll.ids.l_actBarLay.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+			
+			
+		elif self.loaderStep == 8:
 			bS = self.th.benStart()
 			self.config = DataSR_restore(
 				self.fa.join( self.homeDirPath,'ykpilot.conf')
@@ -256,13 +272,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 7:
+		elif self.loaderStep == 9:
 			self.ll.ids.l_loaCon.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		
 		
-		elif self.loaderStep == 8:
+		elif self.loaderStep == 10:
 			bS = self.th.benStart()
 			if kivy.platform == 'android':
 				self.platform = 'android'
@@ -303,25 +319,28 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 9:
+		elif self.loaderStep == 11:
 			self.ll.ids.l_loaPlaChk.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 10:
-			bS = self.th.benStart()
-			self.loaderStep0()
-			self.bE = self.th.benDone(bS, "")
-			Clock.schedule_once( self.loaderNextStep, 0.1 )
-			
-		elif self.loaderStep == 11:
-			self.ll.ids.l_loaRest.text = "DONE in %s sec."%self.bE
-			Clock.schedule_once( self.loaderNextStep, 0.1 )
-			
-			
-			
 		elif self.loaderStep == 12:
+			bS = self.th.benStart()
+			print("preloaderStep0")
+			self.loaderStep0()
+			print("postloaderStep0")
+			self.bE = self.th.benDone(bS, "")
+			#Clock.schedule_once( 
+			self.loaderNextStep()#, 0.1 )
+			
+		elif self.loaderStep == 13:
+			self.ll.ids.l_loaRest.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.5 )
+			
+			
+			
+		elif self.loaderStep == 14:
 			bS = self.th.benStart()
 			from sensors import sensors
 			self.sen = sensors(self)
@@ -330,9 +349,9 @@ class gui(App):
 			print("post ask for permissions")
 			self.bE = self.th.benDone(bS, "")
 			
-			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			Clock.schedule_once( self.loaderNextStep, 0.5 )
 			
-		elif self.loaderStep == 13:
+		elif self.loaderStep == 15:
 			if self.platform == 'android' and self.sen.permissonsStatus == False:
 				self.loaderStep-=1
 			else:
@@ -341,7 +360,7 @@ class gui(App):
 
 
 
-		elif self.loaderStep == 14:
+		elif self.loaderStep == 16:
 			bS = self.th.benStart()
 			
 			self.sen.makeSensors()
@@ -360,13 +379,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 15:
+		elif self.loaderStep == 17:
 			self.ll.ids.l_sensors.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 		
 		
-		elif self.loaderStep == 16:
+		elif self.loaderStep == 18:
 			bS = self.th.benStart()
 			from ScreenWidgets import ScreenWidgets
 			self.sWidgets = ScreenWidgets(self)
@@ -374,13 +393,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 17:
+		elif self.loaderStep == 19:
 			self.ll.ids.l_loaSWid.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 18:
+		elif self.loaderStep == 20:
 			bS = self.th.benStart()
 			try:
 				from ScreenAutopilot import ScreenAutopilot
@@ -391,13 +410,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 19:
+		elif self.loaderStep == 21:
 			self.ll.ids.l_loaSAut.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 20:
+		elif self.loaderStep == 22:
 			bS = self.th.benStart()
 			from ScreenRace import ScreenRace
 			self.sRace = ScreenRace(self)
@@ -405,13 +424,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 21:
+		elif self.loaderStep == 23:
 			self.ll.ids.l_loaSRac.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
 			
 			
-		elif self.loaderStep == 22:
+		elif self.loaderStep == 24:
 			bS = self.th.benStart()
 			from ScreenCompass import ScreenCompass
 			self.sCompass = ScreenCompass()
@@ -420,13 +439,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 23:
+		elif self.loaderStep == 25:
 			self.ll.ids.l_loaSCom.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 24:
+		elif self.loaderStep == 26:
 			bS = self.th.benStart()
 			from ScreenNMEAMultiplexer import ScreenNMEAMultiplexer
 			self.sNMEAMul = ScreenNMEAMultiplexer()
@@ -434,13 +453,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 25:
+		elif self.loaderStep == 27:
 			self.ll.ids.l_loaSMul.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 
 		
-		elif self.loaderStep == 26:
+		elif self.loaderStep == 28:
 			bS = self.th.benStart()	
 			from boatRender import Renderer		
 			self.senBoat = Renderer()
@@ -449,13 +468,13 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 27:
+		elif self.loaderStep == 29:
 			self.ll.ids.l_loaMScr.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 
 		
 		
-		elif self.loaderStep == 28:
+		elif self.loaderStep == 30:
 			bS = self.th.benStart()
 			from simRender import simRender
 			from simEngine import simEngine
@@ -490,14 +509,14 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 29:
+		elif self.loaderStep == 31:
 			self.ll.ids.l_loaSSim.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 
 		
 		
-		elif self.loaderStep == 30:
+		elif self.loaderStep == 32:
 			bS = self.th.benStart()
 			print("Sender Server is on port[%s]"%self.senderPort)
 			self.sf = MyServerFactory(self)
@@ -505,19 +524,19 @@ class gui(App):
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 31:
+		elif self.loaderStep == 33:
 			self.ll.ids.l_loaTcpSer.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
 		
 		
-		elif self.loaderStep == 32:
+		elif self.loaderStep == 34:
 			bS = self.th.benStart()
 			self.tcp4ap = ttc(self)
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		elif self.loaderStep == 33:
+		elif self.loaderStep == 35:
 			self.ll.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
@@ -636,11 +655,11 @@ class gui(App):
 		
 		
 		
-		
-		if self.virtualButtons:
-			self.vBut = ScreenVirtualButtons(self)
-
-
+		print(1)
+		#if self.virtualButtons:
+		#	self.vBut = ScreenVirtualButtons(self)
+		#
+		print(2)
 		'''
 		wfa = self.workingFolderAdress.split("/")
 		dirName = wfa[-2]
@@ -655,7 +674,7 @@ class gui(App):
 	
 		#self.tcp = helperTCP(ip)
 		self.rl.passGuiApp(self)
-		
+		print(4)
 		
 		#self.sen.run()
 
@@ -719,105 +738,21 @@ class gui(App):
 		
 		
 		
-		
+		print(5)
 		#action bar
 		if True:
 			self.mw = BoxLayout(orientation="vertical")
-			self.ab = ActionBar()
-			av = ActionView()
-			self.ab.add_widget(av)
-			ap = ActionPrevious( 
-				title="ykpilot", with_previous=False,
-				app_icon = "icons/ico_sailboat_256_256.png"
-				)
-			ap.bind(on_release=self.screenChange)
-			av.add_widget(ap)
-
-			ao = ActionOverflow()
-			ab = ActionButton(text="Sensors",
-				icon = "icons/ico_find_256_256.png")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			ab = ActionButton(text="Model Screen",
-				icon = "icons/ico_sailboat_256_256.png")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			ab = ActionButton(text="Simulator",
-				icon = "icons/ico_sum_256_256.png")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
 			
-			if self.virtualButtons:
-				ab = ActionButton(text="Virtual Buttons",
-					icon = "icons/ico_in_256_256.png")
-				ab.bind(on_release=self.screenChange)
-				av.add_widget(ab)
-
-
-			ab = ActionButton(text="Compass")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			
-			"""
-			ab = ActionButton(text="3dtextures")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			
-			ab = ActionButton(text="3dtextures2")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			"""
-			
-			ab = ActionButton(text="Race",
-				icon = "icons/ico_time_256_256.png")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			
-			ab = ActionButton(text="Autopilot")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-
-			
-
-
-			ab = ActionButton(text="Mic Screen")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-
-			
-			ao = ActionOverflow()
-			ab = ActionButton(text="Day")
-			ab.bind(on_release=self.screenDay)
-			av.add_widget(ab)
-			ao = ActionOverflow()
-			ab = ActionButton(text="Night")
-			ab.bind(on_release=self.screenNight)
-			av.add_widget(ab)
-			
-			ab = ActionButton(text="Widgets")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-			
-			#ab = ActionButton(text="MSM")
-			#ab.bind(on_release=self.screenChange)
-			#av.add_widget(ab)
-			
-			
-			ab = ActionButton(text="NMEA multiplexer")
-			ab.bind(on_release=self.screenChange)
-			av.add_widget(ab)
-
-			
-			av.add_widget(ao)
+			print(7)
 			
 			self.mw.add_widget(self.ab)
 			self.mw.add_widget(self.rl)
-
-			toreturn = self.mw
+			print(8)
+			self.rootLayout = self.mw
 		else:
-			toreturn = self.rl
+			self.rootLayout = self.rl
 		# actionbar
-		
+		print(9)
 		
 			
 		#self.sWidgets.setUpGui()
@@ -831,10 +766,6 @@ class gui(App):
 
 		#self.ode = odeRTB(self)
 		#self.sen.accel.addCallBack(self.ode)
-
-
-		
-		self.rootLayout = toreturn
 
 	
 	def hide_widget(self, wid, dohide=True):
@@ -912,6 +843,59 @@ class gui(App):
 		self.testHDG+=1
 		self.tcp.sendToAll("$AAHDG,%s,0,W,0,E"%self.testHDG)
 		
+	def doBranch(self,widget,level,search):
+		p = ""
+		for i in range(level):
+			p+= " "
+			
+		for i,c in enumerate(widget.walk(restrict=True)):
+			if i >= 1:
+				print(p,level,"i",i," - id:",c.id,"	",c)
+				parent = None
+				#while True:
+				#	try:
+				#		if parent == None:
+				#			parent = c
+						
+						#print(p,"parent",parent)
+						#print(p,"id:",parent.id)
+						#print(p,"pos",parent.pos)
+						#print(p,"size:",parent.size)
+				#		parent = parent.parent
+						
+				#	except:
+				#		break
+						
+						
+				try:
+					abc = str(c).index(search)
+					print(p,"got IT!")
+					return None
+				except:
+					self.doBranch(c, level+1, search)
+		
+		''''p = ""
+		for i in range(level):
+			p+= " "
+		print(p,"doBranch children",len(widget.content.children))
+		for c in widget.content.chirdren:
+			print(p,"-",c)
+			try:
+				abc = c.index(search)
+				print(p," got it !")
+				return None
+			except:
+				if len(c.content.chirdren) > 0:
+					self.doBranch(c, level+1, search)
+		'''	
+		
+	def on_findWidgetByAdres(self, text):
+		print("on_findWidgetByAdres",text)
+		print("search for [",text,"]")
+		self.doBranch(self.rootLayout, 0, text)
+		
+		
+		
 		
 	def on_cb_remotePython(self,checkbox):
 		print( checkbox.active )
@@ -930,7 +914,8 @@ class gui(App):
 		print("sensors running :)")
 	
 	# actionbar
-	def screenChange(self, screenName):
+	def screenChange(self, screenName = '',b=''):
+		print("screenChange",screenName,' b:',b)
 		if type(screenName) == str:
 			sn = screenName
 		else:
@@ -968,18 +953,18 @@ class gui(App):
 		
 
 		
-	def screenNight(self, a):
+	def screenNight(self, a=0):
 		print("screenNight")
 		self.corolTheme = "night"
 		self.rl.fs = shader_red
 		
-	def screenDay(self, a):
+	def screenDay(self, a=0):
 		print("screenDay")
 		self.colorTheme = "day"
 		self.rl.fs = shader_day
 				
 		
-	def screenNightDay(self, a):
+	def screenNightDay(self, a=0):
 		if self.colorTheme == "day":
 			self.corolTheme = "night"
 		elif self.colorTheme == "night":
@@ -1002,17 +987,19 @@ class gui(App):
 	
 	def on_key_down(self, *args):
 		print("on_key_down",list(args))
-		if self.rl.current == '3dtextures':
-			self.s3dtextures.on_key_down(list(args))
+		if self.isReady:
+			if self.rl.current == '3dtextures':
+				self.s3dtextures.on_key_down(list(args))
 		
 	
 	
 	def on_key_up(self, *args):
 		print("on_key_up",list(args))
-		if self.rl.current == 'Simulator':
-			self.simEng.on_key_up(list(args))
-		elif self.rl.current == '3dtextures':
-			self.s3dtextures.on_key_up(list(args))
+		if self.isReady:
+			if self.rl.current == 'Simulator':
+				self.simEng.on_key_up(list(args))
+			elif self.rl.current == '3dtextures':
+				self.s3dtextures.on_key_up(list(args))
 		
 	
 	

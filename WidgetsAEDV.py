@@ -206,7 +206,7 @@ class WidgetsAEDV:
             'callback': callback,
             'atr':atr,
             'valHandler': wvfh,
-            'pos': [100,100],
+            'pos': [0.1,0.1],
             'rotation' : 0.0,
             'scale': 1.0
             })
@@ -216,9 +216,9 @@ class WidgetsAEDV:
         self.sw.saveConfig()
         #sys.exit(9)
         
-        tScreen = self.sw.screen 
+        #tScreen = self.sw.screen 
         self.sw.rebuildWs()        
-        self.sw.gui.screenChange(("Widgets%s"%tScreen))
+        #self.sw.gui.screenChange(("Widgets%s"%tScreen))
         
         
     def on_next_setup_widget(self):
@@ -331,10 +331,11 @@ class WidgetsAEDV:
         
         print("inWConfig after change!",inWConf)
         
+        tScreen = self.sw.screen 
         self.sw.buildW()
-        self.sw.updateIt()
-        self.gui.screenChange(("Widgets%s"%screen))
-        print("Edit widget DONE!")
+        self.gui.screenChange(("Widgets%s"%tScreen))
+        self.sw.updateIt()    
+        
         #sys.exit()
         
         

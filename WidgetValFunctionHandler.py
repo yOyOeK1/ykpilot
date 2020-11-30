@@ -274,7 +274,7 @@ class WidgetValFunctionHandler(WidgetHelper):
         
         if src0 == '' and src1 == '':
             print("EE - no src for WVFH")
-            sys.exit()
+            #sys.exit()
         
         print("src0",src0)
         print("chn0",chn0)

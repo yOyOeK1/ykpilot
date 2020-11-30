@@ -9,7 +9,8 @@ try:
     import cv2
 except:
     print("E    no cv2!")
-    sys.exit(-43)
+    #sys.exit(-43)
+    
 class ScreenVirtualButtons:
     
     def __init__(self,gui):

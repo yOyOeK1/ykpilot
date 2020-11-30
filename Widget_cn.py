@@ -207,7 +207,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
     
         
     def getSize(self):
-        return self.size
+        return [self.size[0],self.size[1], -1.0, 1.0/12.0 ]
     
     def setColor(self,t):
         if t == "w":

@@ -45,11 +45,11 @@ class MyServerFactory( protocol.Factory ):
 	
 class MyClient( protocol.Protocol ):
 	
-	def as_complex(dct):
+	'''def as_complex(dct):
 		if '__complex__' in dct:
 			return complex(dct['real'], dct['imag'])
 		return dct
-	
+	'''
 	def dataReceived(self, data):
 		msg = data.decode('utf-8')
 		lines = []

@@ -2529,7 +2529,7 @@ class PyGlops:
             self.CAMERA_FIRST_PERSON()
         if not isinstance(self.settings, dict):
             print("[ PyGlops ] FATAL ERROR: missing settings dict")
-            sys.exit(1)
+            #sys.exit(1)
         self._delay_is_available_enable = False
         self._player_indices = []  # player number 1 is 0
         self._visual_debug_enable = False

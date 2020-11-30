@@ -66,15 +66,24 @@ class bubbleRemEdit(Bubble):
         
     def hideIt(self,a='',b=''):
         if self.deb: print("bubble hideIT!!")
+        
+        if self.destroyTimer != None:
+            try:
+                Clock.unschedule(self.destroyTimer)
+            except:
+                pass
+        
         self.widgetPos = [-1000,0]  
         
         
     def on_remove(self):
         if self.deb: print("on_remove")
+        self.hideIt()
         self.sw.on_removeWidget()
         
     def on_edit(self):
         if self.deb: print("on_edit")
+        self.hideIt()
         self.sw.on_editWidget()
     
     
@@ -128,8 +137,12 @@ class ScreenWidgets:
     def updateValsInWConfig(self,si='',wi='',sfw='', c =''):
         #if self.deb: print("updateValsInWConfig si",si," wi",wi,"\n    sfw",sfw,"\n    c",c)
         posScale = self.pixelToScreenScale(list(sfw.pos))
+        try:
+            oScaleToScreen = self.wConfig[si][wi]['oScaleToScreen']
+        except:
+            oScaleToScreen = 1.0
         self.wConfig[si][wi]['pos'] = posScale#list(sfw.pos)
-        self.wConfig[si][wi]['scale'] = sfw.scale
+        self.wConfig[si][wi]['scale'] = sfw.scale/ oScaleToScreen
         self.wConfig[si][wi]['rotation'] = sfw.rotation
         self.bubble.startTimer(self,self.bubbleTimeOut)
         
@@ -146,10 +159,11 @@ class ScreenWidgets:
         #if self.deb: print(self.wConfig)
         #if self.deb: print("-------------------------------------------")
         
-        res = DataSR_save(self.wConfig, self.wConfigPath)
+        #res = DataSR_save(self.wConfig, self.wConfigPath)
+        res = self.fa.pickleMake(self.wConfig, self.wConfigPath, makeAsList=False)
         if self.deb: print("save config Widgets res:",res)
         return res
-    
+
     def setGui(self,a='',b=''):
         if self.deb: print("ScreenWidgets.setGui")
         self.flSize = ObjectProperty([.0,.0])
@@ -196,14 +210,14 @@ class ScreenWidgets:
                 'obj': "",
                 'objName': 'ScreenCompass',
                 'callback': ['gpsD','comCal', 'comCalAccelGyro'],
-                'pos': [10,10],
+                'pos': [0.0,0.0],
                 'scale':1.0,
                 'rotation':0.0
                 }
                 ]]
         else:
             if self.deb: print("screen widgets resuming config")
-            self.wConfig = DataSR_restore(self.wConfigPath)
+            self.wConfig = self.fa.pickleLoad(self.wConfigPath)#DataSR_restore(self.wConfigPath)
             if self.deb: print(self.wConfig)
             if self.deb: print("------------------------------") 
             #sys.exit(0)
@@ -277,21 +291,13 @@ class ScreenWidgets:
             
             
     def pixelToScreenScale(self,xy):
-        #print("pixelToScreenScale xy",xy)
-        ws = Window.size
-        #print("    ws",ws)
-        x = xy[0]/ws[0]
-        y = xy[1]/ws[1]
-        #print('xy scale',[x,y])
+        x = xy[0]/self.gui.windowSize[0]
+        y = xy[1]/self.gui.windowSize[1]
         return [x,y]
     
     def screenScaleToPixel(self, xyScale):
-        #print("screenScaleToPixel xyScale",xyScale)
-        ws = Window.size
-        #print("    ws",ws)
-        x = xyScale[0]*ws[0]
-        y = xyScale[1]*ws[1]
-        #print('xy scale',[x,y])
+        x = xyScale[0]*self.gui.windowSize[0]
+        y = xyScale[1]*self.gui.windowSize[1]
         return [x,y]
         
             
@@ -599,21 +605,37 @@ class ScreenWidgets:
             o.setGui(self.gui)
             
             if self.deb: print("add widget")
+            
+            oSize = o.getSize()
+            self.wConfig[screen][i]['oSize'] = oSize
+            oScaleToScreen = 1.0
+            print("o.getSize",oSize)
+            print("windowSize",self.gui.windowSize)
+            if oSize[2] and oSize[3] == -1.0:
+                print("by X scaling")
+                screenPixInX = self.gui.windowSize[0]*oSize[2]
+                print("screenPixInX",screenPixInX)
+                oScaleToScreen = screenPixInX/oSize[0] 
+                print("oSccaleToScreen",oScaleToScreen)
+            elif oSize[3] and oSize[2] == -1.0:
+                print("by Y scaling")
+                screenPixInY = self.gui.windowSize[1]*oSize[3]
+                print("screenPixInY",screenPixInY)
+                oScaleToScreen = screenPixInY/oSize[1] 
+                print("oSccaleToScreen",oScaleToScreen)
+            
+            self.wConfig[screen][i]['oScaleToScreen'] = oScaleToScreen
+            
+            
+            
             sfw = ScatterForWidget(
-                widgetSize = o.getSize()
+                widgetSize = [oSize[0],oSize[1]]
                 )
             sfw.rotation = self.wConfig[screen][i]['rotation']
-            sfw.scale = self.wConfig[screen][i]['scale']
-            
-            if( self.wConfig[screen][i]['pos'][0] < 1.0 and 
-                self.wConfig[screen][i]['pos'][1] <1.0 and
-                self.wConfig[screen][i]['pos'][0]>-1.0 and 
-                self.wConfig[screen][i]['pos'][1]>-1.0 ):
-                sfw.pos = self.screenScaleToPixel(
-                    self.wConfig[screen][i]['pos']
-                    )
-            else:
-                sfw.pos = self.wConfig[screen][i]['pos']
+            sfw.scale = self.wConfig[screen][i]['scale']*oScaleToScreen
+            sfw.pos = self.screenScaleToPixel(
+                self.wConfig[screen][i]['pos']
+                )
             
             sfw.add_widget( o.getWidget() )
             self.bindScatter(sfw, screen,i)

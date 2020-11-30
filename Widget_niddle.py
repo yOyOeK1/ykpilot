@@ -345,6 +345,6 @@ class Widget_niddle(WidgetHelper):
     
         
     def getSize(self):
-        return self.size
+        return [self.size[0],self.size[1], 0.5, -1.0 ]
     
     

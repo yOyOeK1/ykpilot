@@ -30,7 +30,8 @@ class ScreenCompass(Widget):
 		return False
 		
 	def getSize(self):
-		return self.orgSize
+		return [self.orgSize[0],self.orgSize[1], 0.25, -1.0 ]
+		#return self.orgSize
 		
 	def setPos(self, pos):
 		#print("comapass pos",self.pos," size",self.size)

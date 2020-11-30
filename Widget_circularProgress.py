@@ -237,6 +237,6 @@ update from widget_circularProgress[{}]
     
         
     def getSize(self):
-        return self.size
+        return [self.size[0],self.size[1], 0.25, -1.0 ]
     
     

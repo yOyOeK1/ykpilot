@@ -1,0 +1,79 @@
+#:kivy 1.1.0
+
+<ykpActionBar>:
+	ActionView:
+		ActionPrevious:
+			title: 'ykpilot'
+			with_previous: False
+			app_icon: "icons/ico_sailboat_256_256.png"
+			on_release: app.screenChange(self.title)
+			
+		
+#		ActionOverflow:
+		ActionButton:
+			text: "Sensors"
+			icon: "icons/ico_find_256_256.png"
+			on_release: app.screenChange(self.text)
+	
+		ActionButton:
+			text: "Model Screen"
+			icon: "icons/ico_sailboat_256_256.png"
+			on_release: app.screenChange(self.text)
+		
+		ActionButton:
+			text:"Simulator"
+			icon: "icons/ico_sum_256_256.png"
+			on_release: app.screenChange(self.text)
+				
+		ActionButton:
+			text: "Compass"
+			on_release: app.screenChange(self.text)
+			
+		#ActionButton(text="3dtextures")
+		#		ab.bind(on_release=self.screenChange)
+		#		av.add_widget(ab)
+				
+		#		ab = ActionButton(text="3dtextures2")
+		#		ab.bind(on_release=self.screenChange)
+		#		av.add_widget(ab)
+		#if self.virtualButtons:
+		#			ab = ActionButton(text="Virtual Buttons",
+		#				icon = "icons/ico_in_256_256.png")
+		#			ab.bind(on_release=self.screenChange)
+		#			av.add_widget(ab)
+		#		
+		
+		ActionButton:
+			text: "Race"
+			icon: "icons/ico_time_256_256.png"
+			on_release: app.screenChange(self.text)
+		
+		ActionButton:
+			text: "Autopilot"
+			on_release: app.screenChange(self.text)
+			
+		#ActionButton:
+		#	text: "Mic Screen"
+		#	on_release: app.screenChange(self.text)
+		
+		ActionButton:
+			text: "Day"
+			on_release: app.screenDay()
+		
+		ActionButton:
+			text: "Night"
+			on_release: app.screenNight()
+	
+		ActionButton:
+			text: "Widgets"
+			on_release: app.screenChange(self.text)
+				
+		#ab = ActionButton(text="MSM")
+		#ab.bind(on_release=self.screenChange)
+		#av.add_widget(ab)
+		
+		
+		ActionButton:
+			text: "NMEA multiplexer"
+			on_release: app.screenChange(self.text)
+				

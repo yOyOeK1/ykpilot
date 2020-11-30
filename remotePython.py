@@ -13,7 +13,7 @@ class remotePython:
 		s.bind((host,port))
 		s.listen(1)
 		c = s.accept()[0] # client socket
-		
+		print("client connected")
 		def sread(s, len):
 			return s.recv(len)
 		

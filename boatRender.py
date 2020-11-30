@@ -195,13 +195,21 @@ class Renderer(Widget):
 			m = self.meshs[i]
 			m[0].angle = m[0].angle*self.aniSteps+m[1]*(1.00-self.aniSteps)
 		"""
-		self.camPos.x = self.AnimateValue(self.camPos.x,self.cam[0])
-		self.camPos.y = self.AnimateValue(self.camPos.y,self.cam[1])
-		self.camPos.z = self.AnimateValue(self.camPos.z,self.cam[2])
 		
 		boat = self.o["boat"]
-		for i in range(0,3,1):
-			boat.mrot[i].angle = self.AnimateValue(boat.mrot[i].angle, self.boatRot[i])
+		if self.gui.animation:
+			self.camPos.x = self.AnimateValue(self.camPos.x,self.cam[0])
+			self.camPos.y = self.AnimateValue(self.camPos.y,self.cam[1])
+			self.camPos.z = self.AnimateValue(self.camPos.z,self.cam[2])
+			
+			for i in range(0,3,1):
+				boat.mrot[i].angle = self.AnimateValue(boat.mrot[i].angle, self.boatRot[i])
+		else:
+			self.camPos.x = self.cam[0]
+			self.camPos.y = self.cam[1]
+			self.camPos.z = self.cam[2]
+			for i in range(0,3,1):
+				boat.mrot[i].angle = self.boatRot[i] 
 		#print(self.cam)
 
 

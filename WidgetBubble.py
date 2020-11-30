@@ -16,7 +16,7 @@ class WidgetBubble(Widget):
 		super(WidgetBubble, self).__init__(**kwargs)
 		
 		self.pos = [0.0,0.0]
-		self.orgSize = [512.0, 187.0]
+		self.orgSize = [512.0, 160.0]
 		self.size = [self.orgSize[0],self.orgSize[1]]
 		self.scale = 1.0
 		self.rotation = 0.0 
@@ -55,7 +55,8 @@ class WidgetBubble(Widget):
 			self.bubRot.angle = -level
 		
 	def getSize(self):
-		return self.orgSize
+		return [self.orgSize[0],self.orgSize[1], 1.0, -1.0 ]
+		#return self.orgSize
 		
 	def setGui(self, gui):
 		self.gui = gui
@@ -84,7 +85,7 @@ class WidgetBubble(Widget):
 			self.comRot = Rotate(0,0,0,1)
 			self.r = Rotate(0,0,0,1)
 			
-			Translate(-self.orgSize[0]*.5,-90.0,0)
+			Translate(-self.orgSize[0]*.5,-110.0,0)
 			
 			
 			Rectangle(

@@ -53,9 +53,11 @@ while 1:
     time.sleep(1.0/30.0)
     for e in pygame.event.get():
         if e.type == QUIT:
-            sys.exit()
+            #sys.exit()
+            pass
         elif e.type == KEYDOWN and e.key == K_ESCAPE:
-            sys.exit()
+            #sys.exit()
+            pass
         elif e.type == MOUSEBUTTONDOWN:
             if e.button == 4: zpos = max(1, zpos-1)
             elif e.button == 5: zpos += 1

@@ -112,6 +112,12 @@
 				text: "Welcome in ykpilot"
 				
 				
+			TextInput:
+				id: ti_finWidByAdr
+			Button:
+				text: "find widget by adres"
+				on_release: app.on_findWidgetByAdres(app.rl.ids.ti_finWidByAdr.text)
+				
 			Button:
 				text: "build widgets"
 				on_release: app.on_buildWidgets()
