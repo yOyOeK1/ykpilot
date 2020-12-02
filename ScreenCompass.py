@@ -68,7 +68,6 @@ class ScreenCompass(Widget):
 			if v > 180.0:
 				v = -360.0+v
 			
-			
 			Animation.cancel_all(self.rCog,'angle')
 			
 			a = self.rCog.angle

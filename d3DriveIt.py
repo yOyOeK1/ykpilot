@@ -26,7 +26,6 @@ import math as m
 import random,sys
 from kivy.properties import ListProperty, ObjectProperty, NumericProperty
 from D3Helper import D3Helper
-from kivy.animation import Animation
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.floatlayout import FloatLayout

@@ -26,7 +26,6 @@ import math as m
 
 from kivy.properties import ListProperty, ObjectProperty, NumericProperty
 from D3Helper import D3Helper
-from kivy.animation import Animation
 
 d3tex2RunAlone = False
 

@@ -210,15 +210,20 @@ class WidgetsAEDV:
             'rotation' : 0.0,
             'scale': 1.0
             })
-        
+        wi = len(self.sw.wConfig[self.sw.screen])-1
         print("-----------------------------------")
         print(self.sw.wConfig)
         self.sw.saveConfig()
         #sys.exit(9)
         
         #tScreen = self.sw.screen 
-        self.sw.rebuildWs()        
-        #self.sw.gui.screenChange(("Widgets%s"%tScreen))
+        #self.sw.rebuildWs()
+        self.sw.fromWConfigBuildWidget(
+            self.sw.screen,
+            wi, 
+            self.sw.fls[self.sw.screen]
+            )
+        self.sw.gui.screenChange(("Widgets%s"%self.sw.screen))
         
         
     def on_next_setup_widget(self):
@@ -230,12 +235,22 @@ class WidgetsAEDV:
 
     def startEditWizard(self):
         print("startEditWizard")
-        obj = self.sw.getWeObj(
-            self.sw.widgetEdit['screen'],
+        obj = self.sw.wConfig[
+            self.sw.widgetEdit['screen'] 
+            ][
             self.sw.widgetEdit['wi']
-            )
-            
+            ]['obj']
         
+        print("""screen {} wi {} obj{} all wConf{}""".format(
+            self.sw.widgetEdit['screen'],
+            self.sw.widgetEdit['wi'],
+            obj,
+            self.sw.wConfig[
+                self.sw.widgetEdit['screen'] 
+                ][
+                self.sw.widgetEdit['wi']
+                ]
+            ))
         if obj.settingsNeedIt() == False:
             print("no need for more steps ")
             q = QueryPopup()
@@ -253,8 +268,8 @@ class WidgetsAEDV:
         print("on_start_editW")
         si = self.sw.widgetEdit['screen']
         wi = self.sw.widgetEdit['wi']
-        obj = self.sw.getWeObj( si, wi )
         inWConf = self.sw.wConfig[si][wi] 
+        obj = inWConf['obj']
                     
         if inWConf != None:
             print("GOT Widget !",inWConf)

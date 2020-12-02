@@ -106,7 +106,6 @@ class Screen3dtextures:
 
 		tp = '''#:kivy 1.0
 #: import Layout3D kivy3dgui.layout3d
-#: import Animation kivy.animation.Animation
 Layout3D:
     id: par
     size_hint: (1.0, 1.0)

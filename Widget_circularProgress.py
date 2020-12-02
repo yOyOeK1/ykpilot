@@ -18,7 +18,6 @@ from kivy_garden.speedmeter import SpeedMeter
 from kivy.uix.spinner import Spinner
 from WidgetHelper import WidgetHelper
 from MyLabel import MyLabel
-from kivy.animation import Animation
 from kivy.uix.progressbar import ProgressBar
           
           

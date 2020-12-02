@@ -112,6 +112,9 @@ class Widget_cn(WidgetProto,WidgetHelper):
     def updateIt(self, fromWho = '',vals = ''):
         self.update(fromWho, vals)
         
+    def formatValue(self,v ):
+        return str( "%s%s"%( v, self.munit) )
+        
     def update(self, fromWho, vals):
         if self.gui.rl.current[:7] != 'Widgets':
             return 0
@@ -139,7 +142,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
             if self.myValue == None or self.myValue != v:
                 self.myValue = v
             
-                self.l.text = str( "%s%s"%( v, self.munit) )
+                self.l.text = self.formatValue(v)
                 self.l.refresh()
                 self.recL.texture = self.l.texture
                 
@@ -165,6 +168,8 @@ class Widget_cn(WidgetProto,WidgetHelper):
             if self.drawItC == 1:
                 self.drawItC+=1
             
+    def setGuiDoMore(self):
+        pass
         
     def setGui(self, gui):
         self.gui = gui
@@ -175,6 +180,9 @@ class Widget_cn(WidgetProto,WidgetHelper):
             (self.maxnum+len(self.munit))*self.gui.lineH*lsize, 
             self.gui.lineH*lsize
             ]
+        
+        self.setGuiDoMore()
+        
         
         self.title = textLabel(
             text = self.mtitle,
@@ -189,7 +197,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
             self.valEmpty+="0"
 
         self.l = textLabel(
-            text="%s%s"%(self.valEmpty,self.munit),
+            text=self.formatValue(self.valEmpty),
             font_size=(self.gui.lineH*lsize)/self.subPix,
             font_name='Segment7-4Gml.otf',
             )
@@ -224,12 +232,17 @@ class Widget_cn(WidgetProto,WidgetHelper):
             Color(.3,0,0,.1)
             
             
+    def drawItMore(self):
+        pass
+            
     def drawIt(self):
         self.drawItC+=1
             
         with self.canvas:
             PushMatrix()
             self.centPos = Translate( 0.0, 0.0, 0.0 )
+            
+            self.drawItMore()
             
             PushMatrix()
             self.setColor("title")
@@ -244,6 +257,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
                 texture = self.title.texture
                 )
             PopMatrix()
+            
             
             self.setColor('w')
             self.posL = Translate(0,self.size[1]*-0.2,0)

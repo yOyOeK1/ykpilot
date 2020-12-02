@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import kivy
+#import kivy
 from gui import *
 import DataSaveRestore
 import traceback

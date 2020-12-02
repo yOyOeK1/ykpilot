@@ -585,7 +585,7 @@ class gui(App):
 			self.sen.comCal.addCallBack( self.senBoat )
 			#self.gui.senBoat.setRoseta( self.hdg )
 			
-			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+			Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
 			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
 		
