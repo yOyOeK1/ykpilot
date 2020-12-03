@@ -33,6 +33,7 @@ class WidgetBubble(Widget):
 
 	def setValuesFromDic(self,dic):
 		print("setValuesFromDic",dic)
+		self.ImOnScreen = str(dic['screen'])
 		self.wvfh.setParametersFromDict(dic['valHandler'])
 
 	def settingsNeedIt(self):
@@ -116,9 +117,9 @@ class WidgetBubble(Widget):
 			
 				
 	def update(self, fromWho, vals):
-		if self.gui.rl.current[:7] in [ 'Widgets']:
-			pass
-		else:
+		if( self.gui.rl.current[:7] != 'Widgets' or
+			self.ImOnScreen != self.gui.rl.current[7:]
+             ):
 			return 0
 		
 		v = self.wvfh.updateVal(fromWho, vals)

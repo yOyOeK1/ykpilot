@@ -149,7 +149,7 @@ class Widget_niddle(WidgetHelper):
         
     def setValues(self, 
         screen, title, unit, round_ ,maxnum ):
-        self.screen = screen
+        self.screen = str(screen)
         self.mtitle = title
         self.munit = unit
         self.mround = round_
@@ -164,7 +164,7 @@ class Widget_niddle(WidgetHelper):
     def setValuesFromDic(self,dic):
         print("setValuesFromDic",dic)
         self.wvfh.setParametersFromDict(dic['valHandler'])
-
+        self.screen = str(dic['screen'])
         for k in self.smSettings.keys():
             #print("key ",k," in dic is ",dic[k])
             try:
@@ -284,7 +284,9 @@ class Widget_niddle(WidgetHelper):
         self.setRot(self.rotation)
         
     def update(self, fromWho, vals):
-        if self.gui.rl.current[:7] != 'Widgets':
+        if( self.gui.rl.current[:7] != 'Widgets' or 
+            self.screen != self.gui.rl.current[7:]
+             ):
             return 0
         
         if 0:

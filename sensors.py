@@ -137,6 +137,8 @@ class deviceSensors:
         #sys.exit(0)
         
     def iter(self):
+        doGuiUpdate = True if self.gui.rl.current == "Sensors" else False
+        
         self.updateUptime()
         tcb = {
             'app uptime sec.': self.uptime,
@@ -146,7 +148,7 @@ class deviceSensors:
             if self.light['ok']:
                 self.light['val'] = light.illumination
                 tcb['lightLumens'] = self.light['val'] 
-                self.gui.rl.ids.lSenLum.text = str(self.light['val'])
+                if doGuiUpdate: self.gui.rl.ids.lSenLum.text = str(self.light['val'])
                 
             if self.battery['ok']:
                 self.battery['charging'] = battery.status['isCharging']
@@ -154,14 +156,14 @@ class deviceSensors:
                 self.battery['percent'] = battery.status['percentage']
                 tcb['batteryPercentage'] = battery.status['percentage']
                 
-                self.gui.rl.ids.lSenBatCha.text = str(self.battery['charging'])
-                self.gui.rl.ids.lSenBatPer.text = str(self.battery['percent'])
+                if doGuiUpdate: self.gui.rl.ids.lSenBatCha.text = str(self.battery['charging'])
+                if doGuiUpdate: self.gui.rl.ids.lSenBatPer.text = str(self.battery['percent'])
                 
             if self.backlight['ok']:
                 self.backlight['current'] = brightness.current_level()
                 tcb['bgLight'] = brightness.current_level()
-                self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
-                self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
+                if doGuiUpdate: self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
+                if doGuiUpdate: self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
             
             for o in self.callBacksForUpdate:
                 o.update(self.title, tcb)
@@ -295,7 +297,7 @@ class gpsData:
     accur = -1
     updateTime = -1
     iter = 0
-    avgReadings = 0.92
+    avgReadings = 0.95
     avgPos = [None,None]
     oldData = {}
     callBacksForUpdate = []
@@ -365,28 +367,19 @@ class gpsData:
                     )
         if doIt:
             self.lat = val['lat']
-            self.guiObjs['lat'].text = "%s"%self.lat
             self.lon = val['lon']        
-            self.guiObjs['lon'].text = "%s"%self.lon
-            
             self.gpssog = val['speed']
-            self.guiObjs['sog'].text = "%s / %s"%(round(self.gpssog,2), round(self.sog,2))
-            self.guiObjs['lSRacSog'].text = "%s" % round(self.sog,1)
             if self.maxSog < self.sog:
                 self.maxSog = self.sog
-            self.guiObjs['lSRacSogMax'].text = "max: %s" % round(self.maxSog,2)
-            self.avgSog = (self.avgSog*0.998)+(self.sog*0.002)
+            self.avgSog = (self.avgSog*self.avgReadings)+(self.sog*(1.0-self.avgReadings))
             val['avgSog'] = self.avgSog
-            self.guiObjs['lSRacSogAvg'].text = "avg: %s" % round(self.avgSog,2)
             
             
             self.gpscog = val['bearing']
-            self.guiObjs['cog'].text = "%s / %s"%(round(self.gpscog,1), round(self.cog,1))
-            self.avgCog = (self.avgCog*0.998)+(self.gpssog*0.002)
+            self.avgCog = (self.avgCog*self.avgReadings)+(self.gpssog*(1.0-self.avgReadings))
             val['avgCog'] = self.avgCog
             
             self.accur = val['accuracy']        
-            self.guiObjs['accur'].text = "%s"%round(self.accur,0)
             
             self.updateTime = self.th.getTimestamp(True)
             
@@ -399,6 +392,19 @@ class gpsData:
             lonEW = lonRaw[-1]
             msg = ("$YKRMC,,A,%s,%s,%s,%s,%s,%s,,,,A"%(latDM,latNS,lonDM,lonEW,round(self.sog,2),round(self.cog,2)))
             self.gui.sf.sendToAll(msg)
+            
+            
+            if self.gui.rl.current == "Sensors": 
+                self.guiObjs['lat'].text = "%s"%self.lat
+                self.guiObjs['lon'].text = "%s"%self.lon
+                self.guiObjs['accur'].text = "%s"%round(self.accur,0)
+                self.guiObjs['cog'].text = "%s / %s"%(round(self.gpscog,1), round(self.cog,1))
+                self.guiObjs['sog'].text = "%s / %s"%(round(self.gpssog,2), round(self.sog,2))
+            
+            if self.gui.rl.current == "Race":
+                self.guiObjs['lSRacSog'].text = "%s" % round(self.sog,1)
+                self.guiObjs['lSRacSogMax'].text = "max: %s" % round(self.maxSog,2)
+                self.guiObjs['lSRacSogAvg'].text = "avg: %s" % round(self.avgSog,2)
             
             if self.gui.isReady:
                 # callbacks
@@ -436,6 +442,7 @@ class xyzData:
         self.type = type_
         self.title = self.type
         self.iter = 0
+        self.avgFraction = 0.92
         self.guiObjs = debGuiObjcts
         self.history = []
         self.lastVal = None
@@ -695,7 +702,7 @@ class xyzData:
             self.guiUTLast = timeNowInMillis
             
         
-        if updateGui and len(self.guiObjs) == 3 :
+        if updateGui and len(self.guiObjs) == 3 and self.gui.rl.current == "Sensors":
             for i,o in enumerate(self.guiObjs):
                 o.text = "%s"%round(val[i],5)
         
@@ -763,7 +770,9 @@ class xyzData:
                 self.gui.pc.points = self.gui.sen.sinHistoryArrayToGraph(
                     self.axis['x'][-90:])
 
-            self.avgHdg = (self.avgHdg*0.998)+(self.hdg*0.002)
+            self.avgHdg = (self.avgHdg*self.avgFraction)+(self.hdg*(1.0-self.avgFraction))
+            
+            
         # nmea    
         if self.type == "orientation":
             pitch = round( self.y, 2 )
@@ -966,9 +975,9 @@ class sensors:
     def makeSensors(self):
         gui = self.gui
         self.mic = micData(gui)
+        
         self.device = deviceSensors(gui)
         self.sensorsList.append( self.device )
-        self.device.initSensors()
         
         
         self.gpsD = gpsData(gui, {
@@ -1074,6 +1083,9 @@ class sensors:
                 print("    compass calibrated OK")
             except:
                 print("no compass calibrated")
+                
+        
+        
     
     def sinHistoryArrayToGraph(self, a=[],avgSize=90):
         if len(a)>0:
@@ -1485,6 +1497,7 @@ class sensors:
         
         self.device.iter()
         
+        
         try:
             accelVal = accelerometer.acceleration[:3]
             if debPrints: print("accelVal %s    %s    %s"%(accelVal[0],accelVal[1],accelVal[2]))
@@ -1543,6 +1556,8 @@ class sensors:
     def run(self):
         #pass
         #self.mic.runIt()
+        self.device.initSensors()
         iterTime = (1.0/15.0) if self.gui.platform == 'android' else 1.0
         self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
+        
         

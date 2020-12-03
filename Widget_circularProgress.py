@@ -152,6 +152,7 @@ class Widget_circularProgress(WidgetHelper):
     
     def setValuesFromDic(self,dic):
         print("Widget_circularProgress.setValuesFromDic",dic)
+        self.ImOnScreen = str(dic['screen'])
         self.smSettings['title'] = dic['title']
         self.smSettings['min'] = int(dic['min'])
         self.smSettings['max'] = int(dic['max'])
@@ -205,7 +206,10 @@ class Widget_circularProgress(WidgetHelper):
         self.setRot(self.rotation)
         
     def update(self, fromWho, vals):
-        if self.gui.rl.current[:7] != 'Widgets':
+        if ( self.gui.rl.current[:7] != 'Widgets' or
+             self.ImOnScreen != self.gui.rl.current[7:]
+             ):
+            #print("skip")
             return 0
         
         if 0:

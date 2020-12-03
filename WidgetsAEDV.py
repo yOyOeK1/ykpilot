@@ -69,7 +69,8 @@ class WidgetsAEDV:
                 ki = uixImage( 
                     source = ("icons/%s"%w['thumb']),
                     size_hint = [None,None],
-                    size = [cm(3.0),cm(1.0)] 
+                    #width = cm(3.0),
+                    height = cm(1.0)
                     )
                 bv.add_widget(ki)
                 #bv.add_widget(ki)

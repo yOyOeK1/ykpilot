@@ -1,5 +1,8 @@
 #:kivy 1.1.0
 
+<MDDLabel@Label>:
+	abcccc:""
+
 
 <MySpeedMeter@SpeedMeter>:
 	#subtick: 6
@@ -8,10 +11,10 @@
 	tick: 1
 	subtick: 11
 
-<SLabel@Label>:
+<SLabel@MDDLabel>:
 	height:10
 
-<MSLabel@Label>:
+<MSLabel@MDDLabel>:
 	height:app.lineH
 	#size_hint: None, None
 	#size: self.texture_size
@@ -22,7 +25,7 @@
 		id: lwn
 		text: "abc"
 	
-<MSTitLabel@Label>:
+<MSTitLabel@MDDLabel>:
 	height:app.lineH
 	font_size: app.lineH
 	bold: "bold"
@@ -36,7 +39,7 @@
 			size: (self.parent.size[0],self.size[1])
 	
 	
-<MSBoldLabel@Label>:
+<MSBoldLabel@MDDLabel>:
 	height:app.lineH
 	font_size: app.lineH*0.5
 	bold: "bold"

@@ -57,7 +57,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
     
     def setValues(self, 
         screen, title, unit, round_ ,maxnum ):
-        self.screen = screen
+        self.screen = str(screen)
         self.mtitle = title
         self.munit = unit
         self.mround = round_
@@ -116,7 +116,9 @@ class Widget_cn(WidgetProto,WidgetHelper):
         return str( "%s%s"%( v, self.munit) )
         
     def update(self, fromWho, vals):
-        if self.gui.rl.current[:7] != 'Widgets':
+        if( self.gui.rl.current[:7] != 'Widgets' or
+            self.gui.rl.current[7:] != self.screen
+            ):
             return 0
         
         if 0:

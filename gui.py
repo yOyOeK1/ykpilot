@@ -5,6 +5,7 @@ import kivy
 import _thread
 import sys
 
+#from kivymd.app import MDApp as App
 from kivy.app import App
 
 from kivy.support import install_twisted_reactor
