@@ -1,13 +1,13 @@
-import kivy
+import kivymd
 
 #/home/yoyo/.local/share/python-for-android/dists/Aykp7__armeabi-v7a/_python_bundle/_python_bundle/site-packages/kivy/weakmethod.py
 
 import _thread
 import sys
 
-#from kivymd.app import MDApp as App
-from kivy.app import App
-
+from kivymd.app import MDApp as App
+from kivy import platform as kplatform
+from kivy import metrics as kmetrics
 from kivy.support import install_twisted_reactor
 install_twisted_reactor()
 
@@ -58,7 +58,7 @@ from DataSaveRestore import *
 
 #from Screen3dtextures import *
 
-if kivy.platform == 'android':
+if kplatform == 'android':
 
 	from jnius import autoclass, PythonJavaClass, java_method, cast
 	from android import activity
@@ -132,8 +132,8 @@ class gui(App):
 	
 	#npTest = NumericProperty(1)
 	
-	btH = kivy.metrics.cm(1)
-	lineH = kivy.metrics.cm(0.7)
+	btH = kmetrics.cm(1)
+	lineH = kmetrics.cm(0.7)
 	lDynamicLable = ObjectProperty(1)
 	
 	wifiTcpStatusOpts = {
@@ -145,7 +145,7 @@ class gui(App):
 	def __init__(self, *a, **kw):
 		super(gui, self).__init__(*a, **kw)
 		
-		if kivy.platform == 'android':
+		if kplatform == 'android':
 			self.sensorsRemoteTcp = "host:port" 
 		else:
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
@@ -155,6 +155,7 @@ class gui(App):
 		self.windowSize = Window.size
 		self.colorTheme = "day"
 		self.isReady = False
+		self.theme_cls.theme_style = "Dark"
 	
 	def doLocalIp(self):
 		print("- do local ips")
@@ -212,7 +213,7 @@ class gui(App):
 		
 		
 		if self.loaderStep == 1:
-			if kivy.platform == 'android':
+			if kplatform == 'android':
 				self.platform = 'android'
 			else:
 				self.platform = 'pc'
@@ -226,7 +227,10 @@ class gui(App):
 			from FileActions import FileActions
 			self.th = TimeHelper()
 			self.fa = FileActions()
-			self.homeDirPath = self.fa.getHomeDirectoryForApp('ykpilot', kivy.platform)
+			self.homeDirPath = self.fa.getHomeDirectoryForApp(
+				'ykpilot', 
+				kplatform
+				)
 			print("homeDir",self.homeDirPath)
 			#sys.exit(0)
 			self.timeAppStart = self.th.getTimestamp()
@@ -281,7 +285,7 @@ class gui(App):
 		
 		elif self.loaderStep == 10:
 			bS = self.th.benStart()
-			if kivy.platform == 'android':
+			if kplatform == 'android':
 				self.platform = 'android'
 				self.animation = False
 				ipSens = '192.168.43.56'

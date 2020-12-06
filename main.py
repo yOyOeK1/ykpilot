@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 #import kivy
-from gui import *
+from gui import gui
 import DataSaveRestore
 import traceback
 
+from kivy import platform as kplatform
+from DataSaveRestore import DataSR_save
+import sys
+
 if __name__ == "__main__":
-	if kivy.platform == "android":
+	if kplatform == "android":
 
 		g = gui()
 		try:
