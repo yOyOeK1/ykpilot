@@ -27,6 +27,16 @@ class ttc_Client(protocol.Protocol):
         
         self.updatePongTime()
         
+        if msg[2] in [ "<", ">" ] and msg[5] == ":" and msg[6] == "{" and msg[-4] == "}":
+            #print("json?",str(msg[0:-3]))
+            lines = str(msg[0:-3]).split('\\r')
+            for line in lines:
+                if line[0:2] == 'au':
+                    self.factory.gui.sen.arduinoUno.update( line )
+                elif line[0:2] == 'nm':
+                    self.factory.gui.sen.nodeMcu.update( line )
+                    
+        
         if msg == 'O':
             ms = self.th.getTimestamp(microsec=True)
             self.lastPong = ms
@@ -80,23 +90,22 @@ class ttc_Factory(protocol.ClientFactory):
         
     def clientConnectionFailed(self, connector, reason):
         print("Connection failed - goodbye!")
-        self.mreconnect()
+        Clock.schedule_once( self.mreconnect, 5 )
         
     def clientConnectionLost(self, connector, reason):
         print("Connection lost - goodbye!")
-        self.mreconnect()
+        Clock.schedule_once( self.mreconnect, 5 )
      
-    def mreconnect(self):
+    def mreconnect(self,a=0,b=0):
         if True:
-            print("will reconnect ...")
-            time.sleep(1)
             print("connecting ...")
             self.mconnect()
         else:
             reactor.stop()
     
     def mconnect(self):
-        reactor.connectTCP("192.168.4.1", 19999, self)
+        #reactor.connectTCP("192.168.4.1", 19999, self)
+        reactor.connectTCP("localhost", 19999, self)
        
     def getClient(self):
         return self.client

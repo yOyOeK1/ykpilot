@@ -1,1 +1,1 @@
-p4a_builder.py ykpilot /home/yoyo/Apps/ykpilot/icons/ico_sailboat_256_256.png
+p4a_builder.py ykpilotmd /home/yoyo/Apps/ykpilot/icons/ico_sailboat_256_256.png

@@ -29,7 +29,7 @@ class ScreenAutopilot:
 		self.targetHdg = 0
 		self.tilerPos = 0.0
 		self.burstRunning = False
-		self.on_updateSettings()
+		#self.on_updateSettings()
 		
 		self.driverQRL = None
 		
@@ -250,11 +250,15 @@ class ScreenAutopilot:
 				18889
 				)
 		elif self.apCommunicationMode == "wifi tcp":
-			self.tcp = self.gui.tcp4ap
-			if self.tcp.workStatus == False:
-				self.tcp.work()
+			#self.startTcp()
+			pass
 				
-				
+		
+	def startTcp(self):
+		self.tcp = self.gui.tcp4ap
+		if self.tcp.workStatus == False:
+			self.tcp.work()
+						
 		
 	def on_settings(self):
 		print("ap.on_settings")

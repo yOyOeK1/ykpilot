@@ -406,12 +406,8 @@ class gui(App):
 		
 		elif self.loaderStep == 20:
 			bS = self.th.benStart()
-			try:
-				from ScreenAutopilot import ScreenAutopilot
-				self.ap = ScreenAutopilot(self)
-				self.sen.comCal.addCallBack( self.ap )
-			except:
-				print("EE - no audiostream so no ScreenAutopilot")
+			from ScreenAutopilot import ScreenAutopilot
+			self.ap = ScreenAutopilot(self)
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
@@ -586,11 +582,12 @@ class gui(App):
 			self.sen.comCal.addCallBack( self.sCompass )
 			self.sen.comCalAccelGyro.addCallBack( self.sCompass )
 			self.sen.gpsD.addCallBack( self.sRace )
+			self.sen.comCal.addCallBack( self.ap )
 			self.sen.comCal.addCallBack( self.sen )
 			self.sen.comCal.addCallBack( self.senBoat )
 			#self.gui.senBoat.setRoseta( self.hdg )
 			
-			Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
 			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
 		
@@ -606,6 +603,9 @@ class gui(App):
 			self.ll = None
 			print("	DONE")
 			
+			
+			if self.config['apCommunicationMode'] == 'wifi tcp':
+				self.ap.startTcp()
 			
 			print("config",self.config)
 			defScreen = 'ykpilot'
@@ -631,6 +631,8 @@ class gui(App):
 		
 			self.isReady = True
 		
+	def on_gotECPUStr(self,buf):
+		print("on_gotECPUStr",buf)
 		
 	def loaderStep0(self):
 		

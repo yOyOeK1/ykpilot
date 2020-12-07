@@ -319,11 +319,24 @@ class WidgetValFunctionHandler(WidgetHelper):
         
             
         if fromWho == self.callback0:
-            self.val0 = vals[self.valn0]
-            if self.fun == 'direct':
-                return self.val0
+            try:
+                self.val0 = vals[self.valn0]
+                if self.fun == 'direct':
+                    return self.val0
+            except:
+                print("EE - WidgetValFunctionHandler error 00 no callback0[{}] valn0[{}] in vals[{}] ".format(
+                    self.callback0, self.valn0, vals))
+                return None
         
         if self.callback1 != '':    
+            
+            try:
+                self.val1 = vals[self.valn1]
+            except:
+                print("EE - WidgetValFunctionHandler error 01 no callback1[{}] valn1[{}] in vals[{}] ".format(
+                    self.callback1, self.valn1, vals))
+                return None
+            
             #print('got callback1',self.callback1," recive ",fromWho)
             if fromWho == self.callback1 and self.val0 != None:
                 self.val1 = vals[self.valn1]
