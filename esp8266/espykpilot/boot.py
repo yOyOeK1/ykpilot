@@ -1,8 +1,12 @@
 import network
-from machine import Pin, I2C
+from machine import Pin, SOFTUART
 import time
 import socket
 from machine import Timer
+
+
+print('-')
+print("flash time for arduino on uart line...")
 
 
 ap_essid = "svOiysh_ykpilot"
@@ -11,24 +15,35 @@ ap_passwd = "srytyfrytybangbang"
 
 ap = network.WLAN(network.AP_IF) # create access-point interface
 ap.active(True)         # activate the interface
-ap.config(essid=ap_essid)
+ap.config(essid=ap_essid,password=ap_passwd)
+
 
 
 
 tcp_port = 19999
 tcp_ip = "192.168.4.1"
 
-pinInverted = True
-#p0 = Pin(0,Pin.OUT)
-p0 = None
-#p1 = Pin(2,Pin.OUT)
-p1 = None
-#p2 = Pin(4,Pin.OUT)
-p2 = None
-#p3 = Pin(5,Pin.OUT)
-p3 = None
+time.sleep(5)
+print("5..")
+time.sleep(3)
+print("2..")
+time.sleep(2)
+print("delay DONE!")
 
-"""
+pinInverted = True
+p0 = Pin(0,Pin.OUT)
+#p0 = None
+p1 = Pin(2,Pin.OUT)
+#p1 = None
+p2 = Pin(4,Pin.OUT)
+#p2 = None
+p3 = Pin(5,Pin.OUT)
+#p3 = None
+
+print("softuart...")
+s = SOFTUART(tx=12,rx=14,baudrate=115200)   # default tx=14,rx=12,baudrate=115200
+print("DONE")
+
 def setPin( p, status):
     if pinInverted:
         if status:
@@ -97,33 +112,56 @@ def apChk( ):
 
 t = Timer(-1)
 t.init(period=200, mode=Timer.PERIODIC, callback=lambda tt:apChk())
-"""
-    
-    
-    
-def i2cIter():
-    
-    i2c = I2C(scl=Pin(0), sda=Pin(2), freq=50000)
-    print("i2c...")
 
-    ii = 0
-    while True:
-        ii+=1
-        print("iter")
-    
-        i2c.readfrom(0x08, 4)
-        i2c.writeto(0x08, ii) # write '12' to slave device with address 0x3a
-    
-        #buf = bytearray(10)     # create a buffer with 10 bytes
-        #i2c.writeto(0x3a, buf)  #
-        time.sleep(1)
+pubBuf = []
 
-
-""" 
+auBuf = ""
+auIter = 0
+def auChk():
+    #global s
     
+    c = s.getcount()    
+    if c == 0:
+        return None 
+    
+    global auBuf
+    global auIter 
+    #print("auCh...")
+    if auIter > 40000:
+        print("nm>au")
+        s.write('nodeMCU say hello :)\n')
+        auIter = 0
+    
+    
+    if c > 0:
+        while True:
+            res = s.get()
+            if res == 0:
+                break
+            else:
+                auBuf+= chr(res)
+                if len(auBuf)>=64:
+                    auBuf = ""
+        if auBuf[-1] == "\n":
+            auBuf = auBuf[:-1]
+            #print("nm<au:",auBuf)
+            global pubBuf
+            pubBuf.append(("au>nm:%s"%auBuf))
+            auBuf = ""
+           
+    auIter+=1   
+    
+    
+
+t.init(period=1000, mode=Timer.PERIODIC, callback=lambda tt:auChk())
+
+    
+    
+        
 def mLoop():
     global mdeb
     global apDir
+    global pubBuf
     mdeb = 1 
     setupBoard()
     print("board setup")
@@ -151,7 +189,7 @@ def mLoop():
                 data = conn.recv(1)
                 if not data:
                     break
-                #print("got",data)
+                print("got",data)
                 d = str(data)[2:3]
                 #print("d[{}]".format(d))
                 if d == 'R':
@@ -160,14 +198,19 @@ def mLoop():
                     apDir = "L"
                 elif d == 'P':
                     apDir = "P"
-                conn.sendall('O')
+                
+                if len(pubBuf) > 0:   
+                    while len(pubBuf):
+                        conn.sendall(pubBuf[0])
+                        pubBuf.pop()
+                else:
+                    conn.sendall('O')
             #blink()
       
     mdeb = 4
-"""
+
 if __name__ == "__main__":
     mdeb = -1
-    #mLoop()
-    i2cIter()
+    mLoop()
     mdeb = -2
 
