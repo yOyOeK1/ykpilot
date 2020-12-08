@@ -28,6 +28,6 @@ functions (direct value display, different, sum, devide by different sensor \ ch
 
 
 ###Nmea and connectivity.
-![broadcast nmea](./screenshots/sendnmea.png)
+![broadcast nmea](./screenshots/multiplexer_seatalk_ykpilot_phone.jpg)
 so with it you can use phone as a gps reciver and by wifi you can get data in yout opencpn
 sends allso more information then only gps, heel, pitch, hdg ....
