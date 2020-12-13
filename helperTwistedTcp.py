@@ -118,6 +118,8 @@ class MyClient( protocol.Protocol ):
 					self.factory.gui.sen.gyro.setVal( j['data'] )
 				elif j["type"] == "accel":
 					self.factory.gui.sen.accel.setVal( j['data'] )
+				elif j["type"] == "gravity":
+					self.factory.gui.sen.gravity.setVal( j['data'] )
 				elif j["type"] == "comCal":
 					self.factory.gui.sen.comCal.setVal( j['data'] )
 				elif j["type"] == "spacorientation":

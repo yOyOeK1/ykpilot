@@ -8,7 +8,8 @@ from kivy.clock import Clock, mainthread
 from kivy.vector import Vector
 from kivy.uix.spinner import Spinner
 from kivy.properties import NumericProperty,ObjectProperty,StringProperty
-from plyer import gps, accelerometer,compass,gyroscope,spatialorientation
+from plyer import gps,gravity,accelerometer,compass
+from plyer import gyroscope,spatialorientation
 
 from TimeHelper import *
 from FileActions import *
@@ -164,6 +165,9 @@ class sensors:
             ])
         self.sensorsList.append( self.accel )
         
+        self.gravity = xyzData(gui, "gravity" )
+        self.sensorsList.append( self.gravity )
+        
         self.spacialOrientation = xyzData(gui, "spacorientation", [
             self.gui.rl.ids.senLSpaOriX,
             self.gui.rl.ids.senLSpaOriY,
@@ -222,6 +226,7 @@ class sensors:
             except:
                 print("no accelerometers")
                 
+                
             print("trying ... spacial orientation ...")
             try:
                 spatialorientation.enable_listener()
@@ -229,12 +234,21 @@ class sensors:
             except:
                 print("no spacial orientation")
                 
+            print("trying ... gravity ...")    
+            try:
+                gravity.enable()
+                print("    gravity OK")
+            except:
+                print("no gravity")
+                
+                
+                
             print("trying ... gyroscope ...")
             try:
                 gyroscope.enable()
                 print("    gyroscope OK")
             except:
-                print("no accelerometers")
+                print("no gyroscope")
         
             print("trying ... compass calibrated...")
             try:
@@ -551,6 +565,10 @@ class sensors:
                     pass
                 
                 self.gui.sen.gyro.setVal( e['gyro'] )
+                try:
+                    self.gui.sen.gravity.setVal( e['gravity'] )
+                except:
+                    print("EE - replay from file gravity missing..")
                 self.gui.sen.accel.setVal( e['accel'] )
                 self.gui.sen.comCal.setVal( e['comCal'] )
                 self.gui.sen.spacialOrientation.setVal( e['space'] )
@@ -651,7 +669,7 @@ class sensors:
             }
     
     def interval(self,u):
-        debPrints = False
+        debPrints = True
         if debPrints: print("sensors.interval...")
         
         self.device.iter()
@@ -665,6 +683,19 @@ class sensors:
         except Exception:
             if debPrints: print("accelerometer nooo :(")    
             if debPrints: print( traceback.format_exc() )
+        
+        
+        
+        try:
+            gravityVal = gravity.gravity
+            if debPrints: print("gravityVal ",gravityVal)
+            if not gravityVal == (None,None,None):
+                self.gravity.setVal(list(gravityVal))
+        except Exception:
+            if debPrints: print("gravity nooo :(")    
+            if debPrints: print( traceback.format_exc() )
+        
+        
         
         try:
             space = spatialorientation.orientation
@@ -706,6 +737,7 @@ class sensors:
                 "gps": self.gpsD.getVals(),
                 "timeStamp": self.th.getTimestamp(True),
                 "accel": self.accel.getVals(),
+                "gravity": self.gravity.getVals(),
                 "gyro": self.gyro.getVals(),
                 "comCal": self.comCal.getVals(),
                 "space": self.spacialOrientation.getVals()

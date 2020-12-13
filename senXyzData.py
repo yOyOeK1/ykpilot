@@ -96,7 +96,7 @@ class xyzData:
         return self.type
     
     def getValuesOptions(self):
-        if self.type in [ 'gyro', 'gyroFlipt', 'accel', 'accelFlipt', 'spacorientation' ]:
+        if self.type in [ 'gyro', 'gyroFlipt', 'accel', 'gravity', 'accelFlipt', 'spacorientation' ]:
             return { 'list' :
                 ['x', 'y', 'z']
                 }
