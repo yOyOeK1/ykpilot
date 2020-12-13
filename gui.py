@@ -5,6 +5,7 @@ import kivy
 import _thread
 import sys
 
+#kivymd main stream
 from kivymd.app import MDApp as App
 from kivy import platform as kplatform
 from kivy import metrics as kmetrics
