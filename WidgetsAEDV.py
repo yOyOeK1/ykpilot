@@ -15,6 +15,11 @@ from kivy.uix.scrollview import ScrollView
 from MyLabel import MyLabel
 from kivy.clock import Clock
 from QueryPopup import QueryPopup
+from kivymd.uix.list import MDList
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from gui import DLabel
+from kivymd.uix.textfield import MDTextField
 
 class WidgetsAEDV:
     
@@ -33,28 +38,33 @@ class WidgetsAEDV:
         
         if self.actionType == 'start':
             
-            bl = BoxLayout(orientation='vertical')
-            bl.add_widget(MSLabel(text="Widgets wizard"))
+            bl = MDBoxLayout(
+                orientation='vertical',
+                adaptive_height = True,
+                padding = 3,
+                spacing = 3
+                )
+            #bl.add_widget(MDLabel(text="Widgets wizard"))
             #bl.add_widget(Button(
             #    text="rebuild!",
             #    on_release=self.sw.rebuildWs
             #    ))
             bl.add_widget(
-                Label(
+                DLabel(
                     text="Awalable widgets to add to screen:",
                     size_hint_y = None,
-                    height = cm(1)
+                    height = self.gui.btH
                     )
                 )
             wl = self.sw.getWidgetsTypeList()
             for w in wl:
                 print("w",w)
                 
-                bv = BoxLayout(
+                bv = MDBoxLayout(
                     orientation="horizontal",
-                    height = self.gui.btH,
-                    width = bl.width,
-                    size_hint = [None,None]
+                    adaptive_height = True,
+                    padding = 3,
+                    spacing = 3
                     )
                 bl.add_widget(bv)
                 
@@ -70,7 +80,7 @@ class WidgetsAEDV:
                     source = ("icons/%s"%w['thumb']),
                     size_hint = [None,None],
                     #width = cm(3.0),
-                    height = cm(1.0)
+                    height = self.gui.btH
                     )
                 bv.add_widget(ki)
                 #bv.add_widget(ki)
@@ -85,7 +95,7 @@ class WidgetsAEDV:
             self.gui.rl.ids.bl_selWidToAdd.clear_widgets()
             self.gui.rl.ids.bl_selWidToAdd.add_widget(bl) 
             self.gui.screenChange("SelectWidgetToAdd")
-            self.gui.rl.ids.bl_selWidToAdd.size = self.sw.solveScrolSize( self.gui.rl.ids.bl_selWidToAdd )
+            #self.gui.rl.ids.bl_selWidToAdd.size = self.sw.solveScrolSize( self.gui.rl.ids.bl_selWidToAdd )
         
             
         
@@ -123,15 +133,16 @@ class WidgetsAEDV:
             #self.q1.size_hint = [.8,.97]
             
             
-            self.bl = BoxLayout(
-                orientation="vertical"
+            bl = MDBoxLayout(
+                orientation='vertical',
+                adaptive_height = True,
+                padding= 3,
+                spacing= 3,
                 )
             
-            self.bl.add_widget(MSLabel(text="Set it up:")) 
-             
-            l0 = MSLabel(text="Widget settings:")
-            self.bl.add_widget(l0)
-            self.bl = obj.addSettingsDialogPart(self.bl)
+            bl.add_widget(DLabel(text="Set it up:")) 
+            bl.add_widget(DLabel(text="Widget settings:"))
+            bl = obj.addSettingsDialogPart(bl)
             
             srcSett = False
             try:
@@ -140,10 +151,9 @@ class WidgetsAEDV:
             except:
                 pass
             if srcSett:
-                l1 = MSLabel(text="Source settings:")
-                self.bl.add_widget(l1)
-                self.bl = obj.wvfh.makeSourceSettingsPart(
-                    self.bl,
+                bl.add_widget(DLabel(text="Source settings:"))
+                bl = obj.wvfh.makeSourceSettingsPart(
+                    bl,
                     self.gui.sen.sensorsList
                     )
             print("prerun")
@@ -157,9 +167,9 @@ class WidgetsAEDV:
             for c in self.gui.rl.ids.bl_setUpWid.children:
                 self.gui.rl.ids.bl_setUpWid.remove_widget(c)
             self.gui.rl.ids.bl_setUpWid.clear_widgets()
-            self.gui.rl.ids.bl_setUpWid.add_widget(self.bl) 
+            self.gui.rl.ids.bl_setUpWid.add_widget(bl) 
             self.gui.screenChange("SettingUpWidget")
-            self.gui.rl.ids.bl_setUpWid.size = self.sw.solveScrolSize( self.gui.rl.ids.bl_setUpWid )
+            #self.gui.rl.ids.bl_setUpWid.size = self.sw.solveScrolSize( self.gui.rl.ids.bl_setUpWid )
             
                 
     def on_widgetSetUpDone(self,a='',b=''):
@@ -277,11 +287,16 @@ class WidgetsAEDV:
             #obj = inWConf['obj']
 
         
-        bl = BoxLayout(orientation='vertical')
+        bl = MDBoxLayout(
+                orientation='vertical',
+                adaptive_height = True,
+                padding = 3,
+                spacing = 3
+                )
 
-        bl.add_widget(MSLabel(text="Widget edit"))
+        bl.add_widget(DLabel(text="Widget edit"))
         
-        bl.add_widget(MSLabel(text="Widget Settings:"))
+        bl.add_widget(DLabel(text="Widget Settings:"))
         bl = obj.addSettingsDialogPart(bl,inWConf)
         
         #sys.exit()
@@ -292,7 +307,7 @@ class WidgetsAEDV:
         except:
             pass
         if srcSett:
-            l1 = MSLabel(text="Source settings:")
+            l1 = DLabel(text="Source settings:")
             bl.add_widget(l1)
             bl = obj.wvfh.makeSourceSettingsPart(
                 bl,
@@ -306,9 +321,9 @@ class WidgetsAEDV:
         self.gui.rl.ids.bl_EditWid.clear_widgets()
         self.gui.rl.ids.bl_EditWid.add_widget(bl) 
         self.gui.screenChange("EditWidget")
-        self.gui.rl.ids.bl_EditWid.size = self.sw.solveScrolSize( 
-            self.gui.rl.ids.bl_EditWid 
-            )
+        #self.gui.rl.ids.bl_EditWid.size = self.sw.solveScrolSize( 
+        #    self.gui.rl.ids.bl_EditWid 
+        #    )
             
         
     def on_editDoneSaveSettings(self):

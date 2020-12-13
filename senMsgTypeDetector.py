@@ -29,4 +29,6 @@ class senMsgTypeDetector(senSeatalkParser):
                 if keys[0] == 'seatalk':
                     #print("got seatalk ....")
                     return self.seatalkParse(j[keys[0]])
+                if keys[0] == 'dht':
+                    return self.gui.sen.senDTH.update(j[keys[0]])
         

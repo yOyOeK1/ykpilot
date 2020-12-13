@@ -27,10 +27,16 @@ class ttc_Client(protocol.Protocol):
         
         self.updatePongTime()
         
-        if msg[2] in [ "<", ">" ] and msg[5] == ":" and msg[6] == "{" and msg[-4] == "}":
+        if len(msg) > 6 and (
+            msg[2] in [ "<", ">" ] and msg[5] == ":" and msg[6] == "{" and msg[-3] == "}"
+            ):
             #print("json?",str(msg[0:-3]))
-            lines = str(msg[0:-3]).split('\\r')
+            lines = str(msg[0:-2]).replace('\\r\\n','\\r').split('\\r')
+            print("--------------")
+            print("lines",len(lines))
+            
             for line in lines:
+                print("line[",line,"]")
                 if line[0:2] == 'au':
                     self.factory.gui.sen.arduinoUno.update( line )
                 elif line[0:2] == 'nm':
@@ -104,8 +110,8 @@ class ttc_Factory(protocol.ClientFactory):
             reactor.stop()
     
     def mconnect(self):
-        #reactor.connectTCP("192.168.4.1", 19999, self)
-        reactor.connectTCP("localhost", 19999, self)
+        reactor.connectTCP("192.168.4.1", 19999, self)
+        #reactor.connectTCP("localhost", 19999, self)
        
     def getClient(self):
         return self.client

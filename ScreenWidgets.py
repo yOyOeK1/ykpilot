@@ -28,6 +28,7 @@ from kivy.uix.bubble import Bubble
 from Widget_circularProgress import Widget_circularProgress
 from kivy.animation import Animation, AnimationTransition
 from Widget_cnValue import Widget_cnValue
+from Widget_graph import Widget_graph
 
 
 
@@ -131,7 +132,7 @@ class ScreenWidgets:
             
             hs+= c.height
         #self.queryWidget.size = [self.queryWidget.size[0],hs+cm(1)]
-        return [bl.size[0],hs+self.gui.btH]
+        return [bl.size[0],(hs*1.3)+self.gui.btH]
             
         
         
@@ -188,7 +189,7 @@ class ScreenWidgets:
         res = self.fa.pickleMake(wConfig, self.wConfigPath, makeAsList=False)
         if self.deb: print("save config Widgets res:",res)
         
-        print("org wConfig",self.wConfig)
+        #print("org wConfig",self.wConfig)
         
         
         return res
@@ -228,6 +229,11 @@ class ScreenWidgets:
                 'obj' : Widget_circularProgress(),
                 'objName': 'Widget_circularProgress',
                 'thumb': 'widget_niddle_circular.png' 
+                },
+            {   'name': "Graph plot",
+                'obj' : Widget_graph(),
+                'objName': 'Widget_graph',
+                'thumb': 'widget_graph.png' 
                 },
             ]
         

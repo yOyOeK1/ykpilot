@@ -1,9 +1,7 @@
 from TimeHelper import TimeHelper
-from senMsgTypeDetector import senMsgTypeDetector
 
 
-
-class senECPU(senMsgTypeDetector):
+class senDTH:
     
     def __init__(self,gui,type_):
         self.gui = gui
@@ -12,15 +10,15 @@ class senECPU(senMsgTypeDetector):
         self.callBacksForUpdate = []
         self.th = TimeHelper()
         self.lastIter = 0
-        self.maxHistory = 50
         self.history = []
+        self.maxHistory = 50
     
     def getTitle(self):
         return self.title
     
     def getValuesOptions(self):
         tr = { 'dict' : [
-                'uart'
+                'humidity','C','F'
                 ]
             }
         return tr
@@ -36,13 +34,11 @@ class senECPU(senMsgTypeDetector):
                 return True
     
     def update(self, val):
-        #print("sen.",self.type_,".update val",val)
-        self.history.append(val)
-        if len(self.history)> self.maxHistory:
-            self.history.pop(0)
+        print("sen.",self.type_,".update val",val)
         
-        cmds = self.msgDetParse(val)
-        val = { 'uart': val }
+        self.history.append(val)
+        if len(self.history)>self.maxHistory:
+            self.history.pop(0)
         
         for o in self.callBacksForUpdate:
             o.update(self.type_, val)

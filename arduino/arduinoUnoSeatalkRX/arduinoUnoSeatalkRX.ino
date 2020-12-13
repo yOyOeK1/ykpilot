@@ -1,8 +1,13 @@
 
 #include <SoftwareSerial9.h>
+#include <DHT.h>
+#include <MsTimer2.h>
 
 #define SEATALK_RX 6
 #define SEATALK_TX 7
+
+#define DHTPIN 2
+#define DHTTYPE DHT22
 
 
 const int nTx = 9;
@@ -10,13 +15,16 @@ const int nRx = 8;
 const int led = LED_BUILTIN;
 
 SoftwareSerial9 SerialO(SEATALK_RX, SEATALK_TX,true);
-
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
   pinMode(led, OUTPUT);
   SerialO.begin(4800);
   Serial.begin(115200);
+  dht.begin();
+  MsTimer2::set(6789,dhtChk);
   delay(200);
+  MsTimer2::start();
 }
 
 int charN = 0;
@@ -26,7 +34,26 @@ char buf[64];
 uint8_t stBuf[16];
 int stCharN = 0;
 
-
+void dhtChk(){
+	float h = dht.readHumidity();
+	// Read temperature as Celsius (the default)
+	float t = dht.readTemperature();
+	// Read temperature as Fahrenheit (isFahrenheit = true)
+	float f = dht.readTemperature(true);
+	
+	if (isnan(h) || isnan(t) || isnan(f)) {
+		Serial.println(F("DHT error"));
+		return;
+	}
+	Serial.print("{'dht':{'humidity':");
+	Serial.print(h);
+	Serial.print(",'C':");
+	Serial.print(t);
+	Serial.print(",'F':");
+	Serial.print(f);
+	Serial.println("}}");
+	
+}
 /*
 void readUART(){
 
@@ -110,6 +137,7 @@ void readSeatalk(){
 
 long iter = 0;
 long hc = 0;
+
 void loop() {
   iter++;
   

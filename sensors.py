@@ -30,9 +30,12 @@ from senECPU import senECPU
 from senSeatalk import senSeatalk
 from senOdometer import odometer
 from senMicData import micData
-from esp8266.espykpilot.senDeviceSensor import deviceSensors
+from senDeviceSensor import deviceSensors
 from senGpsData import gpsData
 from senXyzData import xyzData
+from senDTH import senDTH
+from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.button import MDFlatButton
 
 
 
@@ -76,9 +79,29 @@ class sensors:
             size_hint = (None,None),
             size = (self.gui.btH*4,self.gui.btH)        
             )
+        
         self.sPlaFroFil.bind(text=self.on_PlaFroFile)
         bl = self.gui.rl.ids.bl_sensorsPlaFroFil
         bl.add_widget(self.sPlaFroFil)
+        
+        '''
+        menu_items = []
+        for i in range(10):
+            menu_items.append({'text':"abc%s"%i,'on_release':self.on_PlaFromFileMD})
+        
+        self.sPlaFroFilMD = MDDropdownMenu(
+            items=menu_items,
+            width_mult=4,
+            )
+        #bl.add_widget(self.sPlaFroFilMD)
+        btt = MDFlatButton(
+            text="press",
+            on_release=self.on_PlaFromFileMDOpen
+            )
+        bl.add_widget(btt)
+        self.sPlaFroFilMD.callback=self.on_PlaFromFileMD
+        self.sPlaFroFilMD.caller = btt
+        '''
         
         print("new Spinner with updated list DONE")
         #self.wHeelBoat = waveCicleHolder(gui,'boat_heel')
@@ -87,10 +110,15 @@ class sensors:
         self.calibrateStep = 0
         self.recordToFile = "ready"
         self.toFileList = []
-        
-        
-        
         #self.mic.runIt()
+        
+        
+    '''    
+    def on_PlaFromFileMDOpen(self,a=0,b=0):
+        self.sPlaFroFilMD.open()
+    def on_PlaFromFileMD(self,a=0):
+        print("on_PlaFromFileMD",a) 
+    '''    
     def makeSensors(self):
         gui = self.gui
         self.mic = micData(gui)
@@ -167,6 +195,9 @@ class sensors:
         
         self.seatalk = senSeatalk(gui,'seatalk')
         self.sensorsList.append(self.seatalk)
+        
+        self.senDTH = senDTH(gui, 'senDTH')
+        self.sensorsList.append(self.senDTH)
     
     
     def askForPermissions(self):

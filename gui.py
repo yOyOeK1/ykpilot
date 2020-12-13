@@ -1,5 +1,5 @@
 import kivymd
-
+import kivy
 #/home/yoyo/.local/share/python-for-android/dists/Aykp7__armeabi-v7a/_python_bundle/_python_bundle/site-packages/kivy/weakmethod.py
 
 import _thread
@@ -9,6 +9,10 @@ from kivymd.app import MDApp as App
 from kivy import platform as kplatform
 from kivy import metrics as kmetrics
 from kivy.support import install_twisted_reactor
+from kivy_garden.graph import Graph, MeshLinePlot, LinePlot, SmoothLinePlot,\
+	ContourPlot, BarPlot, ScatterPlot, PointPlot, VBar, HBar
+from kivymd.uix.label import MDLabel
+from kivymd.uix.textfield import MDTextField
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -82,7 +86,7 @@ if kplatform == 'android':
 
 
 else:
-	Window.size = (411,700)
+	Window.size = (408,680)
 	Window.set_title( "ykpilot" )
 	#pass
 
@@ -91,6 +95,9 @@ class LoaderLayout(GridLayout):
 
 
 class ykpActionBar(ActionBar):
+	pass
+
+class DLabel(MDLabel):
 	pass
 
 class RootLayout(ScreenManager):
@@ -150,7 +157,7 @@ class gui(App):
 		else:
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
-			self.sensorsRemoteTcp = "192.168.43.56:11223"
+			self.sensorsRemoteTcp = "192.168.49.199:11223"
 		
 		self.windowSize = Window.size
 		self.colorTheme = "day"
@@ -240,6 +247,8 @@ class gui(App):
 			self.ll.ids.l_loaHel.text = "DONE"
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
+				
+			
 		
 		elif self.loaderStep == 4:
 			bS = self.th.benStart()
@@ -281,7 +290,6 @@ class gui(App):
 			self.ll.ids.l_loaCon.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			
-		
 		
 		elif self.loaderStep == 10:
 			bS = self.th.benStart()
@@ -587,7 +595,7 @@ class gui(App):
 			self.sen.comCal.addCallBack( self.senBoat )
 			#self.gui.senBoat.setRoseta( self.hdg )
 			
-			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+			Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
 			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
 		
@@ -630,6 +638,7 @@ class gui(App):
 		
 		
 			self.isReady = True
+			
 		
 	def on_gotECPUStr(self,buf):
 		print("on_gotECPUStr",buf)

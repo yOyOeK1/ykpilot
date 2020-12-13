@@ -1,5 +1,10 @@
 #:kivy 1.1.0
 
+<DLabel>:
+	size_hint_y: None
+	height: self.texture_size[1]
+	
+
 <RootLayout>:
 
 	Screen:
@@ -15,14 +20,17 @@
 		BoxLayout:
 			orientation: "vertical"
 
-			ScrollView:
-				pos_hint: {'center_x': .5, 'center_y': 1}
-				do_scroll_x: False
-				height:500
+			#ScrollView:
+			#	pos_hint: {'center_x': .5, 'center_y': 1}
+			#	do_scroll_x: False
+			#	height:500
 			
-				BoxLayout:
-					orientation: "vertical"
-					size_hint_y: None
+			#	BoxLayout:
+			#		orientation: "vertical"
+			#		size_hint_y: None
+			#		id: bl_selWidToAdd
+			ScrollView:
+				MDList:
 					id: bl_selWidToAdd
 
 			Button:
@@ -37,15 +45,19 @@
 		BoxLayout:
 			orientation: "vertical"
 
-			ScrollView:
-				pos_hint: {'center_x': .5, 'center_y': 1}
-				do_scroll_x: False
-				height:500
+			#ScrollView:
+			#	pos_hint: {'center_x': .5, 'center_y': 1}
+			#	do_scroll_x: False
+			#	height:500
 				
-				BoxLayout:
-					orientation: "vertical"
-					size_hint_y: None
+			#	BoxLayout:
+			#		orientation: "vertical"
+			#		size_hint_y: None
+			#		id: bl_setUpWid
+			ScrollView:
+				MDList:
 					id: bl_setUpWid
+			
 
 			BoxLayout:
 				orientation: "horizontal"
@@ -70,14 +82,17 @@
 		BoxLayout:
 			orientation: "vertical"
 
-			ScrollView:
-				pos_hint: {'center_x': .5, 'center_y': 1}
-				do_scroll_x: False
-				height:500
+			#ScrollView:
+			#	pos_hint: {'center_x': .5, 'center_y': 1}
+			#	do_scroll_x: False
+			#	height:500
 				
-				BoxLayout:
-					orientation: "vertical"
-					size_hint_y: None
+			#	BoxLayout:
+			#		orientation: "vertical"
+			#		size_hint_y: None
+			#		id: bl_EditWid
+			ScrollView:
+				MDList:
 					id: bl_EditWid
 
 			BoxLayout:
@@ -107,18 +122,26 @@
 			orientation: "vertical"
 			padding: 5
 			spacing: 5
-		
+			
+			
 			Label:
 				text: "Welcome in ykpilot"
 				
+				
+					
 			MDIconButton:
 				icon: './icons/ico_sailboat_512_512.png'
 				
-			TextInput:
-				id: ti_finWidByAdr
-			Button:
-				text: "find widget by adres"
-				on_release: app.on_findWidgetByAdres(app.rl.ids.ti_finWidByAdr.text)
+			MDBoxLayout:
+				adaptive_height: True
+				
+				MDTextField:
+					id: ti_finWidByAdr
+					hint_text:"search for widget object"
+				
+				MDIconButton:
+					icon: 'icons/ico_find_256_256.png'
+					on_release: app.on_findWidgetByAdres(app.rl.ids.ti_finWidByAdr.text)
 				
 			Button:
 				text: "build widgets"
@@ -703,22 +726,30 @@
 	Screen:
 		name: "Sensors"
 		
-		BoxLayout:
-			orientation: "vertical"
-			padding: 5
-			spacing: 5
-			
-			BoxLayout:
-				id: blSen
-				orientation: "vertical"
+		ScrollView:
+			MDList:	
 				
 				
-				
-				BoxLayout:
-					orientation: "horizontal"
-					height: app.btH
-					size_hint_y: None
+				#BoxLayout:
+				#	orientation: "horizontal"
+				#	height: app.btH
+				#	size_hint_y: None
 						
+					
+				#	CheckBox:
+				#		id: cb_sensorsRemoteTcp
+				#		on_release: app.on_cb_sensorsRemoteTcp(self)
+				#		size: app.btH,app.btH
+				#		size_hint: None,None
+						
+						
+				#	TextInput:
+				#		id: ti_sensorsRemoteTcp
+				#		text: app.sensorsRemoteTcp
+						
+						
+				MDBoxLayout:
+					adaptive_height: True
 					
 					CheckBox:
 						id: cb_sensorsRemoteTcp
@@ -726,14 +757,18 @@
 						size: app.btH,app.btH
 						size_hint: None,None
 						
-						
-					TextInput:
+					MDTextField:
 						id: ti_sensorsRemoteTcp
+						hint_text:"ip:port of remote device sending sensor data:"
 						text: app.sensorsRemoteTcp
 					
-				BoxLayout:
+						
+						
+					
+				MDBoxLayout:
+					adaptive_height: True
 					orientation: "horizontal"
-					height: app.btH
+					#height: app.btH
 					id: bl_sensorsPlaFroFil
 					
 									
@@ -743,6 +778,7 @@
 						size_hint_y: None
 						height: app.btH
 						on_release: app.sen.on_recordToFile()
+						
 
 				MSTitLabel: 
 					text: "Sensors list and values"
@@ -767,53 +803,51 @@
 						size_hint_y: None
 					
 							
-						
-					GridLayout:
-						cols:5
-						
-						Label:
+					
+					MDBoxLayout:	
+						DLabel:
 							text: "Batter:" 
-						Label:
+						DLabel:
 							id: lSenBatPer
 							text: "lSenBatPer"
 						
-						Label:
+						DLabel:
 							text:""
 							
-						Label:
+						DLabel:
 							text:"Charging:"
-						Label:
+						DLabel:
 							id: lSenBatCha
 							text: "lSenBatCha"
 						
-						
-						Label:
+					MDBoxLayout:
+						DLabel:
 							text: "Lumens:" 
-						Label:
+						DLabel:
 							id: lSenLum
 							text: "lSenLum"
 						
-						Label:
+						DLabel:
 							text:""
 							
-						Label:
+						DLabel:
 							text:""
-						Label:
+						DLabel:
 							text: ""
 							
-						
-						Label:
+					MDBoxLayout:
+						DLabel:
 							text: "Backlight org:" 
-						Label:
+						DLabel:
 							id: lSenBacOrg
 							text: "lSenBacOrg"
 						
-						Label:
+						DLabel:
 							text:""
 							
-						Label:
+						DLabel:
 							text:"Backlight current:"
-						Label:
+						DLabel:
 							id: lSenBacCur
 							text: "lSenBacCur"
 						
@@ -824,39 +858,37 @@
 						text: "GPS:"
 						height: app.lineH
 						size_hint_y: None
-					GridLayout:
-						cols:3
-						
-						Label:
+					MDBoxLayout:
+						DLabel:
 							text: "Lat:" 
-						Label:
+						DLabel:
 							text:""
-						Label:
+						DLabel:
 							text:"Lon:"
-						
-						Label:
+					MDBoxLayout:	
+						DLabel:
 							id:senLGpsLat
 							text: "senLGpsLat"							
-						Label:
+						DLabel:
 							text:""							
-						Label:
+						DLabel:
 							id:senLGpsLon
 							text: "senLGpsLon"	
-							
-						Label:
+					MDBoxLayout:		
+						DLabel:
 							text: "GPS / cal. [SOG]"
-						Label:
+						DLabel:
 							text: "GPS / cal. [COG]"
-						Label:
+						DLabel:
 							text: "Accur:"
-							
-						Label:
+					MDBoxLayout:		
+						DLabel:
 							id:senLGpsSog
 							text:"senLGpsSog"
-						Label:
+						DLabel:
 							id:senLGpsCog
 							text:"senLGpsCog"
-						Label:
+						DLabel:
 							id:senLGpsAcc
 							text:"senLGpsAcc"
 						

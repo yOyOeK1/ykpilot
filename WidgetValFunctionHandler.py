@@ -6,6 +6,7 @@ from kivy.uix.checkbox import CheckBox
 from WidgetHelper import WidgetHelper
 from QueryPopup import QueryPopup
 import sys
+from gui import DLabel
 
 
 class WidgetValFunctionHandler(WidgetHelper):
@@ -127,32 +128,32 @@ class WidgetValFunctionHandler(WidgetHelper):
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="source 1:"))
+        bh.add_widget(DLabel(text="source 1:"))
         bh.add_widget( selSource0 )
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="channel 1:"))
+        bh.add_widget(DLabel(text="channel 1:"))
         bh.add_widget( selChannel0 )
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="function:"))
+        bh.add_widget(DLabel(text="function:"))
         bh.add_widget( selFunction )
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="source 2:"))
+        bh.add_widget(DLabel(text="source 2:"))
         bh.add_widget( selSource1 )
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="channel 2:"))
+        bh.add_widget(DLabel(text="channel 2:"))
         bh.add_widget( selChannel1 )
         
         bh = self.getDialogRow()
         bl.add_widget(bh)
-        bh.add_widget(MSLabel(text="normalize angle:"))
+        bh.add_widget(DLabel(text="normalize angle:"))
         self.chkAngleNorm = CheckBox()
         bh.add_widget(self.chkAngleNorm)
         

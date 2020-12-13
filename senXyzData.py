@@ -7,6 +7,8 @@ from fftAnalisy import fftPlotData
 import numpy as np
 import math
 from senTransform import transform90axis
+from MyCalculate import SPoint
+from imuVr import imuVr
 
 class xyzData:
     historyMem = 1010
@@ -59,6 +61,12 @@ class xyzData:
         #for heel slope detection
         self.hsbOld = 0.0
         self.avgHdg = 0.0
+        
+        if self.type == "comCal":
+            self.ccAngStart = None
+            self.ccAng = []
+            self.ccAngHis = 100
+            self.ivr = imuVr(self)
 
         if True:
             listConfig = DataSR_restore(
@@ -73,8 +81,10 @@ class xyzData:
                 print("    no config for %s"%key)
 
             try:
-                self.gui.rl.ids.lModSimGyroHeelHz.text = str(round(listConfig['heelHz'],2))
-                self.gui.rl.ids.lModSimGyroPitchHz.text = str(round(listConfig['pitchHz'],2))
+                
+                if self.gui.rl.current == "Model Screen":
+                    self.gui.rl.ids.lModSimGyroHeelHz.text = str(round(listConfig['heelHz'],2))
+                    self.gui.rl.ids.lModSimGyroPitchHz.text = str(round(listConfig['pitchHz'],2))
             except:
                 pass
 
@@ -90,9 +100,18 @@ class xyzData:
             return { 'list' :
                 ['x', 'y', 'z']
                 }
-        elif self.type in [ 'comCal', 'comCalAccelGyro']:
+        elif self.type in [ 'comCalAccelGyro']:
             return { 'list':
                 ['hdg',  'avgHdg']
+                }
+        elif self.type in [ 'comCal' ]:
+            return { 'list':
+                [
+                    'hdg',  'avgHdg',
+                    'force on x', 'force on y', 'force on z', 'force total',
+                    'angle strat x', 'angle start y', 'angle start z', 'start force',
+                    'angle x', 'angle y', 'angle z', 'force now'
+                 ]
                 }
         elif self.type == 'orientation':
             return { 'list':
@@ -222,30 +241,37 @@ class xyzData:
             else:
                 self.gui.sen.upAxis = "y"
         
-            self.gui.rl.ids.senLUpAxis.text = self.gui.sen.upAxisNames[self.gui.sen.upAxis ]
+            if self.gui.rl.current == "Sensors":
+                self.gui.rl.ids.senLUpAxis.text = self.gui.sen.upAxisNames[self.gui.sen.upAxis ]
             
         if self.type == "gyroFlipt":
             if len(self.history)> 25:
-                
+                if self.gui.rl.current == "Model Screen":
+                    updateGuiGF = True
+                else:
+                    updateGuiGF = False                
                 sufix = sum(self.axis['y'][-10:-1])/9.0
                 aavg = sum(self.axis['y'][-24:])/len(self.axis['y'][-24:])
-                if sufix > aavg:
-                    self.gui.rl.ids.lModSimGyroHeel.text = "S"
-                else:
-                    self.gui.rl.ids.lModSimGyroHeel.text = "P"
-                
+
                 sufix = sum(self.axis['x'][-10:-1])/9.0
                 aavg = sum(self.axis['x'][-24:])/len(self.axis['x'][-24:])
-                if sufix > aavg:
-                    self.gui.rl.ids.lModSimGyroPitch.text = "A"
-                else:
-                    self.gui.rl.ids.lModSimGyroPitch.text = "B"
-                    
                 sufix = sum(self.axis['z'][-10:-1])/9.0
-                if sufix > 0.0:
-                    self.gui.rl.ids.lModSimGyroYaw.text = "S"
-                else:
-                    self.gui.rl.ids.lModSimGyroYaw.text = "P"
+                
+                if updateGuiGF:
+                    if sufix > aavg:
+                        self.gui.rl.ids.lModSimGyroHeel.text = "S"
+                    else:
+                        self.gui.rl.ids.lModSimGyroHeel.text = "P"
+                
+                    if sufix > aavg:
+                        self.gui.rl.ids.lModSimGyroPitch.text = "A"
+                    else:
+                        self.gui.rl.ids.lModSimGyroPitch.text = "B"
+                    
+                    if sufix > 0.0:
+                        self.gui.rl.ids.lModSimGyroYaw.text = "S"
+                    else:
+                        self.gui.rl.ids.lModSimGyroYaw.text = "P"
                 
                 if self.guiGraphGyro:
                     self.gui.pgx.points = self.gui.sen.sinHistoryArrayToGraph(
@@ -362,6 +388,18 @@ class xyzData:
             self.avgHdg = (self.avgHdg*self.avgFraction)+(self.hdg*(1.0-self.avgFraction))
             
             
+            p = SPoint(val)
+            ccAng = self.ivr.getAnglesAndLength(p)
+            self.ccAng.append(ccAng)
+            if len(self.ccAng)>self.ccAngHis:
+                self.ccAng.pop(0)
+                
+            if self.ccAngStart == None:
+                self.ccAngStart = ccAng
+                
+            
+            
+            
         # nmea    
         if self.type == "orientation":
             pitch = round( self.y, 2 )
@@ -382,7 +420,16 @@ class xyzData:
         
         
         if self.type == 'comCal':
-            valToPropagate = [self.hdg,self.avgHdg]
+            
+            cas  = self.ccAngStart
+            ca = self.ccAng[-1]
+            
+            valToPropagate = [
+                self.hdg,self.avgHdg,
+                val[0],val[1],val[2],"lengthTODO",
+                cas[0],cas[1],cas[2],cas[3],
+                ca[0], ca[1], ca[2], ca[3]
+                ]
         elif self.type == 'orientation':
             valToPropagate = [val[0],val[1],val[2],pitch,heel]
         else:
@@ -409,6 +456,7 @@ class xyzData:
                 "type": self.type,
                 "data": val
                 })
+            #print("jMsg:",jMsg)
             self.gui.sf.sendToAll( jMsg )
             
             

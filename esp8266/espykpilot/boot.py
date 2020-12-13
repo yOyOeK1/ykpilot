@@ -114,7 +114,7 @@ t = Timer(-1)
 t.init(period=200, mode=Timer.PERIODIC, callback=lambda tt:apChk())
 
 pubBuf = []
-
+pubBufMax = 10
 auBuf = ""
 auIter = 0
 def auChk():
@@ -146,7 +146,10 @@ def auChk():
             auBuf = auBuf[:-1]
             #print("nm<au:",auBuf)
             global pubBuf
+            global pubBufMax
             pubBuf.append(("au>nm:%s"%auBuf))
+            if len(pubBuf) > pubBufMax:
+                pubBuf.pop(0)
             auBuf = ""
            
     auIter+=1   
