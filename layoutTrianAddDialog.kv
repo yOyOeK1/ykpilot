@@ -1,0 +1,61 @@
+
+<TrianAddDialog>:
+	MDList:
+		id:l_triAddDialog
+		
+		DLabel:
+			id:l_triTitle
+			text:"---"
+		
+		MDTextField:
+			id: tf_triAddName
+			hint_text: "Point name:"
+			text: ""
+				
+			
+		DLabel:
+			text: "Point 1:"
+			
+		MDIconButton:
+			icon: "camera"
+			on_release: root.runDialog.on_useCamera(0)
+			
+		MDTextField:
+			id: tf_triAddP0Bearing
+			hint_text: "Bearing:"
+			text: ""
+		
+		MDTextField:
+			id: tf_triAddP0Lat
+			hint_text: "Latitude:"
+			text: ""
+			
+		MDTextField:
+			id: tf_triAddP0Lon
+			hint_text: "Longtitude:"
+			text: ""
+	
+	
+		DLabel:
+			text: "Point 2:"
+			
+		MDIconButton:
+			icon: "camera"
+			on_release: root.runDialog.on_useCamera(1)
+			
+		MDTextField:
+			id: tf_triAddP1Bearing
+			hint_text: "Bearing:"
+			text: ""
+		
+		MDTextField:
+			id: tf_triAddP1Lat
+			hint_text: "Latitude:"
+			text: ""
+			
+		MDTextField:
+			id: tf_triAddP1Lon
+			hint_text: "Longtitude:"
+			text: ""
+		
+		

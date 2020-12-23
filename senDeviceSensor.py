@@ -87,10 +87,11 @@ class deviceSensors:
             self.battery['ok'] = False
             
         try:
+            brig = brightness.current_level()
             self.backlight = {
                 "ok": True,
-                "org" :brightness.current_level(),
-                "current": brightness.current_level()
+                "org" :brig,
+                "current": brig
                 }
             print("backlight Yes!")
         except Exception:
@@ -124,8 +125,9 @@ class deviceSensors:
                 if doGuiUpdate: self.gui.rl.ids.lSenBatPer.text = str(self.battery['percent'])
                 
             if self.backlight['ok']:
-                self.backlight['current'] = brightness.current_level()
-                tcb['bgLight'] = brightness.current_level()
+                brig = brightness.current_level()
+                self.backlight['current'] = brig
+                tcb['bgLight'] = brig
                 if doGuiUpdate: self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
                 if doGuiUpdate: self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
             

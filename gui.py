@@ -14,6 +14,8 @@ from kivy_garden.graph import Graph, MeshLinePlot, LinePlot, SmoothLinePlot,\
 	ContourPlot, BarPlot, ScatterPlot, PointPlot, VBar, HBar
 from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
+from kivymd.uix.list import ILeftBodyTouch
+from kivymd.uix.button import MDIconButton
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -94,12 +96,14 @@ else:
 class LoaderLayout(GridLayout):
 	pass
 
+class IconLeftSampleWidget(ILeftBodyTouch, MDIconButton):
+	pass
 
 class ykpActionBar(ActionBar):
 	pass
 
 class DLabel(MDLabel):
-	pass
+	color = [1,1,1,1]
 
 class RootLayout(ScreenManager):
 	
@@ -138,6 +142,8 @@ class gui(App):
 	testHDG = 10
 	remotePythonPid = None
 	
+	Builder.load_file('layoutPresets.kv')
+	
 	#npTest = NumericProperty(1)
 	
 	btH = kmetrics.cm(1)
@@ -163,7 +169,11 @@ class gui(App):
 		self.windowSize = Window.size
 		self.colorTheme = "day"
 		self.isReady = False
+		
+		
 		self.theme_cls.theme_style = "Dark"
+		
+		
 	
 	def doLocalIp(self):
 		print("- do local ips")
@@ -207,6 +217,7 @@ class gui(App):
 		Window.bind(on_key_up=self.on_key_up)
 		
 		self.ll = LoaderLayout()
+		
 		
 		#sys.exit(9)
 		
@@ -336,8 +347,7 @@ class gui(App):
 		elif self.loaderStep == 11:
 			self.ll.ids.l_loaPlaChk.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
-		
-		
+			
 		
 		elif self.loaderStep == 12:
 			bS = self.th.benStart()
@@ -370,8 +380,10 @@ class gui(App):
 				self.loaderStep-=1
 			else:
 				self.ll.ids.l_permissions.text = "DONE in %s sec."%self.bE
+				
+				
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
-
+			
 
 
 		elif self.loaderStep == 16:
@@ -550,7 +562,32 @@ class gui(App):
 			self.ll.ids.l_AutoWifiArmTCP.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 		
-		
+	
+	
+		elif self.loaderStep == 36:
+			bS = self.th.benStart()
+			from ScreenTriangulacja import Triangulacja, TrianAddDialog
+			self.triangulacja = Triangulacja(self)
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 37:
+			self.ll.ids.l_Tri.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+	
+	
+		elif self.loaderStep == 38:
+			bS = self.th.benStart()
+			from ScreenTakePhoto import ScreenTakePhoto
+			self.stp = ScreenTakePhoto(self)
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 39:
+			self.ll.ids.l_takPho.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+	
+	
 		
 		
 		
@@ -596,7 +633,7 @@ class gui(App):
 			self.sen.comCal.addCallBack( self.senBoat )
 			#self.gui.senBoat.setRoseta( self.hdg )
 			
-			Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
+			#Clock.schedule_once(self.sen.on_PlayFromFile_play, 1.0)
 			#Clock.schedule_once(self.sWidgets.on_addEditDelButton, 1.0)
 			#Clock.schedule_once(self.sWidgets.rebuildWs, 5.0)
 		
@@ -637,7 +674,9 @@ class gui(App):
 				self.screenChange(defScreen)
 			
 		
-		
+			
+			self.triangulacja.isReady()
+			
 			self.isReady = True
 			
 		
@@ -825,7 +864,8 @@ class gui(App):
 	
 	
 	def on_configSave(self):
-		self.config['screenCurrent'] = self.rl.current
+		if self.rl.current not in ['TriangulateDialogs']:
+			self.config['screenCurrent'] = self.rl.current
 		self.config['totalUptime']+= self.th.getTimestamp()-self.timeAppStart
 		
 		print("save config res", DataSR_save(
@@ -848,6 +888,33 @@ class gui(App):
 			print("EE - trying to save sWidget but it is not there yet !")
 	
 	
+	
+	
+	def on_takePhotoTest(self):
+		print("on_takePhotoTest")
+		d = DLabel(text="abc")
+		self.stp.takePhoto(
+			self.on_takePhotoTestDone,
+			d
+			)
+	
+	def on_takePhotoTestDone(self, status, fileName):
+		print("on_takePhotoTestDone<",status)
+	
+	
+	def on_fullScreen(self, status):
+		if status:
+			self.gui_ab_height = self.ab.height
+			self.ab.height = 0.0
+		else:
+			self.ab.height = self.gui_ab_height
+	
+	def on_toggleFullScreen(self):
+		if self.ab.height > 0.0:
+			self.on_fullScreen(False)
+		else:
+			self.on_fullScreen(True)
+	
 	# Screen: "Welcome"
 	
 	def on_push_udp_msg(self):
@@ -855,6 +922,9 @@ class gui(App):
 		udp.setAsSender()
 		self.testHDG+=1 
 		udp.send("$AAHDG,%s,0,W,0,E"%self.testHDG)
+	
+	def on_triAddPress(self, a=0,b=0):
+		print("on_triAddPress")
 	
 	def on_push_tcp_msg(self):
 		self.testHDG+=1

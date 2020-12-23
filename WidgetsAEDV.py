@@ -50,11 +50,7 @@ class WidgetsAEDV:
             #    on_release=self.sw.rebuildWs
             #    ))
             bl.add_widget(
-                DLabel(
-                    text="Awalable widgets to add to screen:",
-                    size_hint_y = None,
-                    height = self.gui.btH
-                    )
+                DLabel(text="Awalable widgets to add to screen:")
                 )
             wl = self.sw.getWidgetsTypeList()
             for w in wl:

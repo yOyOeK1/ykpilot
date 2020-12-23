@@ -1,11 +1,30 @@
 #:kivy 1.1.0
+<RootLayout>:
 
-<DLabel>:
-	size_hint_y: None
-	height: self.texture_size[1]
+	Screen:
+		name: "Take picture"
+		FloatLayout:
+			id: fl_takPic
 	
 
-<RootLayout>:
+	Screen:
+		name: "TriangulateDialogs"
+		ScrollView:
+			id: bl_triDialog
+
+	Screen:
+		name: "Triangulate"	
+		
+		ScrollView:
+			MDList:
+				id: bl_triList
+				
+		MDFloatingActionButtonSpeedDial:
+			id: tri_addBt
+			rotation_root_button: True
+			
+		
+		
 
 	Screen:
 		name: "Widgets"
@@ -131,6 +150,12 @@
 					
 			MDIconButton:
 				icon: './icons/ico_sailboat_512_512.png'
+				on_release: app.on_takePhotoTest()
+			
+			MDIconButton:
+				icon: './icons/ico_sailboat_512_512.png'
+				on_release: app.rl.current='Take picture'
+				
 				
 			MDBoxLayout:
 				adaptive_height: True

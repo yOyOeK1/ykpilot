@@ -632,7 +632,7 @@ class sensors:
                 
         request_permissions([Permission.ACCESS_COARSE_LOCATION,
                              Permission.ACCESS_FINE_LOCATION,
-                             #Permission.WRITE_SETTINGS,
+                             Permission.CAMERA,
                              Permission.READ_EXTERNAL_STORAGE,
                              Permission.WRITE_EXTERNAL_STORAGE,
                              Permission.WAKE_LOCK        
@@ -669,7 +669,7 @@ class sensors:
             }
     
     def interval(self,u):
-        debPrints = True
+        debPrints = False
         if debPrints: print("sensors.interval...")
         
         self.device.iter()

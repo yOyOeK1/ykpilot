@@ -1,6 +1,6 @@
 from kivy.uix.scatter import Scatter
 from kivy.lang import Builder
-from kivy.uix.label import Label
+
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
@@ -550,12 +550,8 @@ class ScreenWidgets:
         
     def on_toggleFullScreen(self,a='',b=''):
         if self.deb: print("on_toggleFullScreen")
-        if self.gui.ab.height > 0.0:
-            self.gui_ab_height = self.gui.ab.height
-            self.gui.ab.height = 0.0
-        else:
-            self.gui.ab.height = self.gui_ab_height
-        
+        self.gui.on_toggleFullScreen()
+    
     
     def on_editWidget(self, a='',b=''):
         if self.deb: print("on_editWidget")
