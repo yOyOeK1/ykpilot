@@ -433,6 +433,25 @@
 			padding: 5
 			spacing: 5
 			
+			BoxLayout:
+				orientation: "horizontal"
+				TextInput:
+					id: ti_d10_p
+					text: ''
+				TextInput:
+					id: ti_d10_i
+					text: ""
+				TextInput:
+					id: ti_d10_d
+					text: ""
+				TextInput:
+					id: ti_d10_response
+					text: ""
+				Button:
+					text: "PID"
+					on_release: app.driver10.setPidPars()
+				
+			
 			Label:
 				text: ""
 				size_hint_y:None
@@ -523,6 +542,12 @@
 					text: "d9 - drive it"
 					on_release: app.driver9.on_driveIt()
 					
+				Button:
+					text: "d10"
+					on_release: app.driver10.run()
+				Button:
+					text: "plot d10"
+					on_release: app.driver10.plotIt()
 				
 				
 				
@@ -736,43 +761,59 @@
 	Screen:
 		name: "NMEA multiplexer"
 		
-		BoxLayout:
-			orientation: "vertical"
-			padding: 5
-			spacing: 5
+		ScrollView:
+			MDList:	
+									
+				Label:
+					text: "l_nmeMulIp"
+					id: l_nmeMulIp
+
+				MDBoxLayout:
+					adaptive_height: True
 			
-			Label:
-				text: "l_nmeMulIp"
-				id: l_nmeMulIp
-				
+					CheckBox:
+						id: cb_nmeBSensors
+						on_release: app.on_cb_nmeB('sensors',self)
+						size: app.btH,app.btH
+						size_hint: None,None
+					
+					DLabel:
+						text: "broadcast json sensors reading"
+						
+				MDBoxLayout:
+					adaptive_height: True
 			
+					CheckBox:
+						id: cb_nmeBAutopilot
+						on_release: app.on_cb_nmeB('autopilot',self)
+						size: app.btH,app.btH
+						size_hint: None,None
+					
+					DLabel:
+						text: "broadcast json autopilot debug"
+			
+			
+				MDBoxLayout:
+					adaptive_height: True
+			
+					CheckBox:
+						id: cb_nmeBNmea
+						on_release: app.on_cb_nmeB('nmea',self)
+						size: app.btH,app.btH
+						size_hint: None,None
+					
+					DLabel:
+						text: "broadcast nmea data layer"
+					
 			
 	
 	Screen:
 		name: "Sensors"
 		
+		
 		ScrollView:
 			MDList:	
-				
-				
-				#BoxLayout:
-				#	orientation: "horizontal"
-				#	height: app.btH
-				#	size_hint_y: None
-						
-					
-				#	CheckBox:
-				#		id: cb_sensorsRemoteTcp
-				#		on_release: app.on_cb_sensorsRemoteTcp(self)
-				#		size: app.btH,app.btH
-				#		size_hint: None,None
-						
-						
-				#	TextInput:
-				#		id: ti_sensorsRemoteTcp
-				#		text: app.sensorsRemoteTcp
-						
-						
+									
 				MDBoxLayout:
 					adaptive_height: True
 					
@@ -786,6 +827,7 @@
 						id: ti_sensorsRemoteTcp
 						hint_text:"ip:port of remote device sending sensor data:"
 						text: app.sensorsRemoteTcp
+						disabled: True
 					
 						
 						
@@ -803,247 +845,16 @@
 						size_hint_y: None
 						height: app.btH
 						on_release: app.sen.on_recordToFile()
-						
-
-				MSTitLabel: 
-					text: "Sensors list and values"
-					height: app.lineH
-					size_hint_y: None
 					
-					
-				MSBoldLabel:
-					text: "Local ip's: ???"
+				
+				MDTextField:
 					id: l_phoLocIps
-					height: app.lineH
-					size_hint_y: None
-					
-				BoxLayout:
-					orientation: "vertical"
-					height: app.lineH*5
-					size_hint_y: None
-					
-					MSBoldLabel:
-						text: "Phone:"
-						height: app.lineH
-						size_hint_y: None
-					
-							
-					
-					MDBoxLayout:	
-						DLabel:
-							text: "Batter:" 
-						DLabel:
-							id: lSenBatPer
-							text: "lSenBatPer"
-						
-						DLabel:
-							text:""
-							
-						DLabel:
-							text:"Charging:"
-						DLabel:
-							id: lSenBatCha
-							text: "lSenBatCha"
-						
-					MDBoxLayout:
-						DLabel:
-							text: "Lumens:" 
-						DLabel:
-							id: lSenLum
-							text: "lSenLum"
-						
-						DLabel:
-							text:""
-							
-						DLabel:
-							text:""
-						DLabel:
-							text: ""
-							
-					MDBoxLayout:
-						DLabel:
-							text: "Backlight org:" 
-						DLabel:
-							id: lSenBacOrg
-							text: "lSenBacOrg"
-						
-						DLabel:
-							text:""
-							
-						DLabel:
-							text:"Backlight current:"
-						DLabel:
-							id: lSenBacCur
-							text: "lSenBacCur"
-						
-						
-					
-					
-					MSBoldLabel:
-						text: "GPS:"
-						height: app.lineH
-						size_hint_y: None
-					MDBoxLayout:
-						DLabel:
-							text: "Lat:" 
-						DLabel:
-							text:""
-						DLabel:
-							text:"Lon:"
-					MDBoxLayout:	
-						DLabel:
-							id:senLGpsLat
-							text: "senLGpsLat"							
-						DLabel:
-							text:""							
-						DLabel:
-							id:senLGpsLon
-							text: "senLGpsLon"	
-					MDBoxLayout:		
-						DLabel:
-							text: "GPS / cal. [SOG]"
-						DLabel:
-							text: "GPS / cal. [COG]"
-						DLabel:
-							text: "Accur:"
-					MDBoxLayout:		
-						DLabel:
-							id:senLGpsSog
-							text:"senLGpsSog"
-						DLabel:
-							id:senLGpsCog
-							text:"senLGpsCog"
-						DLabel:
-							id:senLGpsAcc
-							text:"senLGpsAcc"
-						
-					
+			        hint_text: "Local ip's:"
+        			text: "- - -"
+        			disabled: True	
 				
-				BoxLayout:
-					orientation: "vertical"
-					MSBoldLabel:
-						text: "Accelerometer:"	
-										
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							id:senLAccX
-							text: "senLAccX"
-						Label:
-							id:senLAccY
-							text: "senLAccY"
-						Label:
-							id:senLAccZ
-							text: "senLAccZ"
-							
-				BoxLayout:
-					orientation: "vertical"
-					MSBoldLabel:
-						text: "Orientation:"	
-										
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							text: "Pitch:"
-						Label:
-							id:senLPitch
-							text: "senLPitch"
-						Label:
-							text: "Heel:"
-						Label:
-							id:senLHeel
-							text: "senLHeel"
-							
-							
-				BoxLayout:
-					orientation: "vertical"
-					MSBoldLabel:
-						text: "Space orientation:"	
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							id:senLSpaOriX
-							text: "senLSpaOriX"
-						Label:
-							id:senLSpaOriY
-							text: "senLSpaOriY"
-						Label:
-							id:senLSpaOriZ
-							text: "senLSpaOriZ"
+				MDList:
+					id:l_sSen
 				
-					
-				BoxLayout:
-					orientation: "vertical"
-					MSBoldLabel:
-						text: "Gyro:"	
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							id:senLGyrX
-							text: "senLGyrX"
-						Label:
-							id:senLGyrY
-							text: "senLGyrY"
-						Label:
-							id:senLGyrZ
-							text: "senLGyrZ"
-							
-					MSBoldLabel:
-						text: "Gyro calibrated and flipt:"	
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							id:senLGyrCalX
-							text: "senLGyrCalX"
-						Label:
-							id:senLGyrCalY
-							text: "senLGyrCalY"
-						Label:
-							id:senLGyrCalZ
-							text: "senLGyrCalZ"
-					
-				BoxLayout:
-					orientation: "vertical"
-					MSBoldLabel:
-						text: "Compass calibrated:"	
-					BoxLayout:
-						orientation: "horizontal"
-						
-						Label:
-							id:senLComCalX
-							text: "senLComCalX"
-						Label:
-							id:senLComCalY
-							text: "senLComCalY"
-						Label:
-							id:senLComCalZ
-							text: "senLComCalZ"
-			
-				BoxLayout:
-					orientation: "vertical"
-					
-					MSBoldLabel:
-						text: "Results:"
-					
-					GridLayout:
-						cols: 2	
-					
-						Label:
-							text: "Phone orientation:"
-						Label:
-							id: senLUpAxis
-							text: "senLUpAxis"
-										
-						Label:
-							text: "Compass direction:"
-						Label:
-							id: senLComDir
-							text: "senLComDir"
-					
-		
+
 		

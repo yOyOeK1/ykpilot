@@ -16,6 +16,9 @@ from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.list import ILeftBodyTouch
 from kivymd.uix.button import MDIconButton
+from kivymd.toast import toast as mdtoast
+
+
 install_twisted_reactor()
 
 from twisted.internet import reactor
@@ -65,6 +68,7 @@ from DataSaveRestore import *
 
 #from Screen3dtextures import *
 
+
 if kplatform == 'android':
 
 	from jnius import autoclass, PythonJavaClass, java_method, cast
@@ -91,6 +95,8 @@ if kplatform == 'android':
 else:
 	Window.size = (408,680)
 	Window.set_title( "ykpilot" )
+	from PCPlot import *
+					
 	#pass
 
 class LoaderLayout(GridLayout):
@@ -104,6 +110,13 @@ class ykpActionBar(ActionBar):
 
 class DLabel(MDLabel):
 	color = [1,1,1,1]
+
+
+class MDDLabel(Label):
+	pass
+	
+class MSTitLabel(MDDLabel):
+	pass
 
 class RootLayout(ScreenManager):
 	
@@ -167,11 +180,9 @@ class gui(App):
 			self.sensorsRemoteTcp = "192.168.49.199:11223"
 		
 		self.windowSize = Window.size
-		self.colorTheme = "day"
 		self.isReady = False
-		
-		
-		self.theme_cls.theme_style = "Dark"
+		self.plt = None
+		self.ips = []
 		
 		
 	
@@ -202,7 +213,7 @@ class gui(App):
 					else:
 						self.ips.append(ip)
 		
-		self.rl.ids.l_phoLocIps.text = "Local ip's: {}".format(", ".join(self.ips))
+		self.rl.ids.l_phoLocIps.text = "{}".format(", ".join(self.ips))
 	
 		#sys.exit(0)
 	
@@ -223,6 +234,10 @@ class gui(App):
 		
 		self.loaderStep = 0
 		Clock.schedule_once( self.loaderNextStep, 0.1 )
+		
+		self.colorTheme = "day"
+		self.theme_cls.theme_style = "Dark"
+
 		
 		return self.ll
 	
@@ -509,6 +524,7 @@ class gui(App):
 			from driver7 import driver7
 			from driver8 import driver8
 			from driver9 import driver9
+			from driver10 import driver10
 
 			self.simRen = simRender()
 			self.simEng = simEngine(self,self.simRen)
@@ -527,6 +543,7 @@ class gui(App):
 			self.driver7 = driver7(self.simEng)
 			self.driver8 = driver8(self.simEng)
 			self.driver9 = driver9(self.simEng)
+			self.driver10 = driver10(self.simEng)
 			
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
@@ -587,7 +604,19 @@ class gui(App):
 			self.ll.ids.l_takPho.text = "DONE in %s sec."%self.bE
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 	
-	
+		
+		elif self.loaderStep == 40:
+			bS = self.th.benStart()
+			from ScreenSensors import ScreenSensors
+			self.sSensors = ScreenSensors()
+			self.sSensors.setGui(self)
+			self.bE = self.th.benDone(bS, "")
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
+		elif self.loaderStep == 41:
+			self.ll.ids.l_screSen.text = "DONE in %s sec."%self.bE
+			Clock.schedule_once( self.loaderNextStep, 0.1 )
+			
 		
 		
 		
@@ -616,6 +645,9 @@ class gui(App):
 		
 		
 		
+			
+		
+		
 			if self.sen.gpsD.androidServiceStatus == False:
 				try:
 					self.sen.gps_start(1000, 0)
@@ -624,9 +656,9 @@ class gui(App):
 			
 			
 			
-			self.sen.gpsD.addCallBack( self.sCompass )
-			self.sen.comCal.addCallBack( self.sCompass )
-			self.sen.comCalAccelGyro.addCallBack( self.sCompass )
+			self.sen.gpsD.addCallBack( self.sCompass,'Compass' )
+			self.sen.comCal.addCallBack( self.sCompass,'Compass' )
+			self.sen.comCalAccelGyro.addCallBack( self.sCompass,'Compass' )
 			self.sen.gpsD.addCallBack( self.sRace )
 			self.sen.comCal.addCallBack( self.ap )
 			self.sen.comCal.addCallBack( self.sen )
@@ -640,6 +672,9 @@ class gui(App):
 			print("starting listener for sensors :) if pc")
 			if self.platform == 'pc':
 				Clock.schedule_once(self.connectToSensorsRemoteTcp, 1 )
+				
+				#if 1:
+				#	self.plt = PCPlot(self)
 				
 		
 			print('flip layouts....')
@@ -674,6 +709,10 @@ class gui(App):
 				self.screenChange(defScreen)
 			
 		
+			#multiplexer screen
+			self.rl.ids.cb_nmeBSensors.active = True if self.config['nmeBSensors'] else False
+			self.rl.ids.cb_nmeBAutopilot.active = True if self.config['nmeBAutopilot'] else False
+			self.rl.ids.cb_nmeBNmea.active = True if self.config['nmeBNmea'] else False
 			
 			self.triangulacja.isReady()
 			
@@ -684,9 +723,6 @@ class gui(App):
 		print("on_gotECPUStr",buf)
 		
 	def loaderStep0(self):
-		
-
-		
 		
 		#self.s3dtextures = Screen3dtextures()
 		#self.s3dtextures.setGui(self)
@@ -699,7 +735,10 @@ class gui(App):
 			'apDirectionReverse': 0,
 			'apDriver': 'driver9',
 			'apCommunicationMode': "audio jack",
-			'apWifiIp': '192.168.4.1'
+			'apWifiIp': '192.168.4.1',
+			'nmeBSensors': 0,
+			'nmeBAutopilot': 0,
+			'nmeBNmea': 1
 			}
 		
 		for k in self.cDefVals.keys():
@@ -888,7 +927,8 @@ class gui(App):
 			print("EE - trying to save sWidget but it is not there yet !")
 	
 	
-	
+	def on_makeToast(self, msg):
+		mdtoast(msg)
 	
 	def on_takePhotoTest(self):
 		print("on_takePhotoTest")
@@ -903,6 +943,7 @@ class gui(App):
 	
 	
 	def on_fullScreen(self, status):
+		print("on_fullScreen status",status)
 		if status:
 			self.gui_ab_height = self.ab.height
 			self.ab.height = 0.0
@@ -910,10 +951,11 @@ class gui(App):
 			self.ab.height = self.gui_ab_height
 	
 	def on_toggleFullScreen(self):
+		print("on_toggleFullScreen",self.ab.height)
 		if self.ab.height > 0.0:
-			self.on_fullScreen(False)
-		else:
 			self.on_fullScreen(True)
+		else:
+			self.on_fullScreen(False)
 	
 	# Screen: "Welcome"
 	
@@ -982,6 +1024,17 @@ class gui(App):
 		self.doBranch(self.rootLayout, 0, text)
 		
 		
+	def on_cb_nmeB(self, what, obj):
+		status = 1 if obj.active else 0
+		print("on_cb_nmeB",what," - >",status)
+		if what == 'sensors':
+			self.config['nmeBSensors'] = status
+		elif what == 'autopilot':
+			self.config['nmeBAutopilot'] = status
+		elif what == 'nmea':
+			self.config['nmeBNmea'] = status
+			
+		self.on_configSave()
 		
 		
 	def on_cb_remotePython(self,checkbox):

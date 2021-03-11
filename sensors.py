@@ -128,51 +128,26 @@ class sensors:
         self.sensorsList.append( self.device )
         
         
-        self.gpsD = gpsData(gui, {
-            'lat': self.gui.rl.ids.senLGpsLat,
-            'lon': self.gui.rl.ids.senLGpsLon,
-            'sog': self.gui.rl.ids.senLGpsSog,
-            'lSRacSog': self.gui.rl.ids.lSRacSog,
-            'lSRacSogMax': self.gui.rl.ids.lSRacSogMax,
-            'lSRacSogAvg': self.gui.rl.ids.lSRacSogAvg,
-            'cog': self.gui.rl.ids.senLGpsCog,
-            'accur': self.gui.rl.ids.senLGpsAcc
-            })
+        self.gpsD = gpsData(gui,icon='ico_sensors_64_64.png')
         self.sensorsList.append( self.gpsD )
         
         self.odometer = odometer( gui, 'odometer')
         self.sensorsList.append( self.odometer )
         self.gpsD.addCallBack(self.odometer)
         
-        self.gyro = xyzData(gui, "gyro", [
-            self.gui.rl.ids.senLGyrX,
-            self.gui.rl.ids.senLGyrY,
-            self.gui.rl.ids.senLGyrZ
-            ])
+        self.gyro = xyzData(gui, "gyro")
         self.sensorsList.append( self.gyro )
         
-        self.gyroFlipt = xyzData(gui, "gyroFlipt",[
-            self.gui.rl.ids.senLGyrCalX,
-            self.gui.rl.ids.senLGyrCalY,
-            self.gui.rl.ids.senLGyrCalZ
-            ])
+        self.gyroFlipt = xyzData(gui, "gyroFlipt")
         self.sensorsList.append( self.gyroFlipt )
         
-        self.accel = xyzData(gui, "accel", [
-            self.gui.rl.ids.senLAccX,
-            self.gui.rl.ids.senLAccY,
-            self.gui.rl.ids.senLAccZ
-            ])
+        self.accel = xyzData(gui, "accel")
         self.sensorsList.append( self.accel )
         
         self.gravity = xyzData(gui, "gravity" )
         self.sensorsList.append( self.gravity )
         
-        self.spacialOrientation = xyzData(gui, "spacorientation", [
-            self.gui.rl.ids.senLSpaOriX,
-            self.gui.rl.ids.senLSpaOriY,
-            self.gui.rl.ids.senLSpaOriZ
-            ])
+        self.spacialOrientation = xyzData(gui, "spacorientation")
         self.sensorsList.append( self.spacialOrientation )
         
         self.accelFlipt = xyzData(gui, "accelFlipt")
@@ -181,11 +156,7 @@ class sensors:
         self.orientation = xyzData(gui, "orientation")
         self.sensorsList.append( self.orientation )
         
-        self.comCal = xyzData(gui, "comCal", [
-            self.gui.rl.ids.senLComCalX,
-            self.gui.rl.ids.senLComCalY,
-            self.gui.rl.ids.senLComCalZ
-            ])
+        self.comCal = xyzData(gui, "comCal")
         self.sensorsList.append( self.comCal )
         
         self.comCalAccelGyro = xyzData(gui, "comCalAccelGyro")

@@ -2,6 +2,7 @@ import math
 from kivy.clock import Clock
 import random
 import sys
+from TimeHelper import *
 
 class waveObj:	
 	def __init__(self, fps, direction=90, height=2, waveEverySec=15):
@@ -79,14 +80,15 @@ class simEngine:
 	def __init__(self, gui, render):
 		self.gui = gui
 		self.renderEngine = render
+		self.th = TimeHelper()
 		self.reset()
 	
 	def reset(self):
 		self.waves = [
-			waveObj(self.fps, 45,0.5,12),
+			#waveObj(self.fps, 45,0.5,12),
 			#waveObj(self.fps, 270,5,30),
 			#waveObj(self.fps, 45,0.7,9),
-			waveObj(self.fps, 0,1,10)
+			#waveObj(self.fps, 0,1,10)
 			]
 		self.boat= {
 			'weight': 6.5,	#tons
@@ -100,7 +102,7 @@ class simEngine:
 			'gY': 0.0,
 			'gZ': 0.0,
 	
-			'sog': 7.00,	#kts
+			'sog': 8.00,	#kts
 			'cog': 0.01,	#magnetic deg
 			'cogError': 0.0,
 			
@@ -129,7 +131,7 @@ class simEngine:
 		ruderStart  = 0.0001
 		self.boat['ruderPos'] = (-ruderStart/2.0) + random.random()*ruderStart
 		  
-		self.boat['sog'] = 0.2
+		#self.boat['sog'] = 0.2
 		#self.boat['sog'] += (random.random()*5.0)-5.0
 		self.runTime = 0.0
 		self.xte = 0.0
@@ -165,6 +167,25 @@ class simEngine:
 	def iter(self, action=0):
 		intRunTime = int(self.runTime)
 		intRunTime = 1
+		
+		
+		if self.gui.platform == 'pc' and self.gui.plt != None:
+			try:
+				b = self.boat
+				plt = self.gui.plt
+				t = self.th.getTimestamp(True)
+				plt.simHDG[0].append(t)
+				plt.simHDG[1].append(b['cog'])
+				plt.simHDGTarget[0].append(t)
+				plt.simHDGTarget[1].append(self.targetCog)
+				plt.simRud[0].append(t)
+				plt.simRud[1].append(b['ruderPos'])
+				plt.simError[0].append(t)
+				plt.simError[1].append(b['cogError'])
+			except:
+				print("EE - plt 002")
+				pass
+		
 		
 		for w in self.waves:
 			w.tik()
@@ -208,11 +229,11 @@ class simEngine:
 		
 		#print("action [%s]"% action)
 		if action == -1:
-			b['ruderPos']-= 10.0/self.fps
+			b['ruderPos']-= 7.0/self.fps
 			if b['ruderPos']<-45.0:
 				b['ruderPos'] = -45.0
 		elif action == 1:
-			b['ruderPos']+= 10.0/self.fps
+			b['ruderPos']+= 7.0/self.fps
 			if b['ruderPos']>45.0:
 				b['ruderPos'] = 45.0
 			

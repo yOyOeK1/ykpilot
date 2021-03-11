@@ -1,13 +1,15 @@
 from TimeHelper import TimeHelper
+from senProto import senProto
 
 
-class senDTH:
+class senDTH(senProto):
     
     def __init__(self,gui,type_):
+        super(senDTH,self).__init__()
         self.gui = gui
         self.type_ = type_
+        self.type = self.type_
         self.title = type_
-        self.callBacksForUpdate = []
         self.th = TimeHelper()
         self.lastIter = 0
         self.history = []
@@ -23,16 +25,6 @@ class senDTH:
             }
         return tr
     
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
-    
     def update(self, val):
         print("sen.",self.type_,".update val",val)
         
@@ -40,8 +32,9 @@ class senDTH:
         if len(self.history)>self.maxHistory:
             self.history.pop(0)
         
-        for o in self.callBacksForUpdate:
-            o.update(self.type_, val)
+        #for o in self.callBacksForUpdate:
+        #    o.update(self.type_, val)
+        self.broadcastCallBack(self.gui, self.type, vals)
     
     
     

@@ -3,14 +3,16 @@ from plyer import light
 from plyer import battery
 from plyer import brightness
 import traceback
+from senProto import senProto
 
 
-class deviceSensors:
+class deviceSensors(senProto):
     def __init__(self,gui):
+        super(deviceSensors, self).__init__()
         self.gui = gui
         self.th = TimeHelper()
         self.title = 'device'
-        self.callBacksForUpdate = []
+        self.type = self.title
         
         self.upTimeStart = self.th.getTimestamp()
         
@@ -51,15 +53,6 @@ class deviceSensors:
     def getTitle(self):
         return self.title
     
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-        
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
         
     def initSensors(self):
         try:
@@ -113,7 +106,6 @@ class deviceSensors:
             if self.light['ok']:
                 self.light['val'] = light.illumination
                 tcb['lightLumens'] = self.light['val'] 
-                if doGuiUpdate: self.gui.rl.ids.lSenLum.text = str(self.light['val'])
                 
             if self.battery['ok']:
                 self.battery['charging'] = battery.status['isCharging']
@@ -121,18 +113,15 @@ class deviceSensors:
                 self.battery['percent'] = battery.status['percentage']
                 tcb['batteryPercentage'] = battery.status['percentage']
                 
-                if doGuiUpdate: self.gui.rl.ids.lSenBatCha.text = str(self.battery['charging'])
-                if doGuiUpdate: self.gui.rl.ids.lSenBatPer.text = str(self.battery['percent'])
                 
             if self.backlight['ok']:
                 brig = brightness.current_level()
                 self.backlight['current'] = brig
                 tcb['bgLight'] = brig
-                if doGuiUpdate: self.gui.rl.ids.lSenBacOrg.text = str(self.backlight['org'])
-                if doGuiUpdate: self.gui.rl.ids.lSenBacCur.text = str(self.backlight['current'])
-            
-            for o in self.callBacksForUpdate:
-                o.update(self.title, tcb)
+                
+            #for o in self.callBacksForUpdate:
+            #    o.update(self.title, tcb)
+            self.broadcastCallBack(self.gui, self.title, tcb)
                 
         self.iterCount+= 1
         

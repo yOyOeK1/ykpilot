@@ -43,3 +43,14 @@ if __name__ == "__main__":
 
 print("------------ trackback ------------")
 print( traceback.format_exc() )
+
+
+'''
+TODO
+[] - vfb load in kivy
+[] - load page on add widget list of widgets
+[] - load page on add widget form
+
+[+] - screen sensors on load page
+'''
+

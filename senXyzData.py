@@ -9,8 +9,9 @@ import math
 from senTransform import transform90axis
 from MyCalculate import SPoint
 from imuVr import imuVr
+from senProto import senProto
 
-class xyzData:
+class xyzData(senProto):
     historyMem = 1010
     
     uSEvery = 5.0
@@ -26,9 +27,9 @@ class xyzData:
     
     
     def __init__(self, gui, type_, debGuiObjcts=[]):
+        super(xyzData,self).__init__()
         self.th = TimeHelper()
         self.fa = FileActions()
-        self.callBacksForUpdate = []
         self.gui = gui
         self.type = type_
         self.title = self.type
@@ -80,13 +81,13 @@ class xyzData:
             except:
                 print("    no config for %s"%key)
 
-            try:
-                
-                if self.gui.rl.current == "Model Screen":
-                    self.gui.rl.ids.lModSimGyroHeelHz.text = str(round(listConfig['heelHz'],2))
-                    self.gui.rl.ids.lModSimGyroPitchHz.text = str(round(listConfig['pitchHz'],2))
-            except:
-                pass
+            #try:
+            #    
+            #    if self.gui.rl.current == "Model Screen":
+            #        self.gui.rl.ids.lModSimGyroHeelHz.text = str(round(listConfig['heelHz'],2))
+            #        self.gui.rl.ids.lModSimGyroPitchHz.text = str(round(listConfig['pitchHz'],2))
+            #except:
+            #    pass
 
 
         else:
@@ -123,16 +124,6 @@ class xyzData:
         return None
     
     
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
-        
     def getVals(self):
         return [ self.x, self.y, self.z ]
     
@@ -241,8 +232,8 @@ class xyzData:
             else:
                 self.gui.sen.upAxis = "y"
         
-            if self.gui.rl.current == "Sensors":
-                self.gui.rl.ids.senLUpAxis.text = self.gui.sen.upAxisNames[self.gui.sen.upAxis ]
+            #if self.gui.rl.current == "Sensors":
+            #    self.gui.rl.ids.senLUpAxis.text = self.gui.sen.upAxisNames[self.gui.sen.upAxis ]
             
         if self.type == "gyroFlipt":
             if len(self.history)> 25:
@@ -335,9 +326,9 @@ class xyzData:
             self.history[-1] = [pitch,heel,0]
             self.axis['x'][-1] = pitch
             self.axis['y'][-1] = heel
-            if updateGui:
-                self.gui.rl.ids.senLPitch.text = str( pitch )
-                self.gui.rl.ids.senLHeel.text = str( heel )
+            #if updateGui:
+            #    self.gui.rl.ids.senLPitch.text = str( pitch )
+            #    self.gui.rl.ids.senLHeel.text = str( heel )
             try:
                 self.gui.senBoat.setHeel(self.x)
                 self.gui.senBoat.setPitch(self.y)
@@ -378,8 +369,8 @@ class xyzData:
             #print("TOFIX52352")
             
             
-            if updateGui:
-                self.gui.rl.ids.senLComDir.text = str(round(self.hdg,1))
+            #if updateGui:
+            #    self.gui.rl.ids.senLComDir.text = str(round(self.hdg,1))
             
             if self.guiGraphCompas:
                 self.gui.pc.points = self.gui.sen.sinHistoryArrayToGraph(
@@ -405,18 +396,20 @@ class xyzData:
             pitch = round( self.y, 2 )
             heel = round( self.x, 2 )
             nmea = "$YKXDR,A,%s,,PTCH,A,%s,,ROLL,"%(-pitch, heel)
-            self.gui.sf.sendToAll( nmea )
+            #self.gui.sf.sendToAll( nmea )
+            self.broadcastByTCPNmea(self.gui, nmea)
             
         elif self.type == "comCalAccelGyro":
             nmea = "$YKHDG,%s,W,0,E" % round(self.z,1)
-            self.gui.sf.sendToAll(nmea)
+            #self.gui.sf.sendToAll(nmea)
+            self.broadcastByTCPNmea(self.gui, nmea)
             
         elif self.type == 'comCal':
             ms = self.updateTime        
             if ( self.gui.sen.comCalAccelGyro.lastTimeIter + 5000000.0 ) < ms:
                 nmea = "$YKHDG,%s,W,0,E" % round(self.hdg,1)
-                self.gui.sf.sendToAll(nmea)
-            
+                #self.gui.sf.sendToAll(nmea)
+                self.broadcastByTCPNmea(self.gui, nmea)
         
         
         if self.type == 'comCal':
@@ -446,8 +439,9 @@ class xyzData:
         
         if self.propagateVal:
             # callbacks
-            for o in self.callBacksForUpdate:
-                o.update(self.type, valToPropagate)
+            #for o in self.callBacksForUpdate:
+            #    o.update(self.type, valToPropagate)
+            self.broadcastCallBack(self.gui, self.type, valToPropagate)
             
             self.lastVal = valToPropagate
             
@@ -457,7 +451,7 @@ class xyzData:
                 "data": val
                 })
             #print("jMsg:",jMsg)
-            self.gui.sf.sendToAll( jMsg )
+            self.broadcastByTCPJson( self.gui, jMsg )
             
             
             

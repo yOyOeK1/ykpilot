@@ -1,7 +1,8 @@
+from senProto import senProto
 
 
 
-class senSeatalkParser:
+class senSeatalkParser(senProto):
     
     def toTwo(self, a):
         if len(a) == 0:
@@ -31,7 +32,8 @@ class senSeatalkParser:
                 feet = round((val*0.1),1),
                 meters = round((val*0.03048),1)
                 ))
-            self.gui.sf.sendToAll(msg)
+            #self.gui.sf.sendToAll(msg)
+            self.broadcastByTCPNmea(self.gui, msg)
             
             return True
         
@@ -45,7 +47,8 @@ class senSeatalkParser:
                 feet = round((val*0.1),1),
                 meters = round((val*0.03048),1)
                 ))
-            self.gui.sf.sendToAll(msg)
+            #self.gui.sf.sendToAll(msg)
+            self.broadcastByTCPNmea(self.gui, msg)
             
             return True
         

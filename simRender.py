@@ -28,7 +28,7 @@ class simRender(Widget):
 		self.useWavas = True
 		
 		if self.useWavas:
-			self.waveSize = [15,20,2.5]
+			self.waveSize = [7,7,2.5]
 			self.wave = []
 			for c in range(0,self.waveSize[0]*self.waveSize[1],1):
 				self.wave.append(self.scene.objects['Cube'])

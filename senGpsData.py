@@ -1,12 +1,14 @@
 from TimeHelper import TimeHelper
 from pygeodesy.ellipsoidalVincenty import LatLon
 from pygeodesy import dms
+from senProto import senProto
 
-class gpsData:
+class gpsData(senProto):
     status = "---"
     androidServiceStatus = False
     lat = 0.0
     lon = 0.0
+    
     avgSog = 0.0
     avgCog = 0.0
     maxSog = 0.0
@@ -20,14 +22,18 @@ class gpsData:
     avgReadings = 0.95
     avgPos = [None,None]
     oldData = {}
-    callBacksForUpdate = []
     llOld = [None, None]
     
-    def __init__(self,gui,debGuiObjts={}):
+    def __init__(self,gui,debGuiObjts={},icon=None):
+        
+        super(gpsData, self).__init__()
+        
         self.gui = gui
         self.guiObjs = debGuiObjts
         self.th = TimeHelper()
         self.title = "gps"
+        self.type = self.title
+        self.icon = icon
     
     def getTitle(self):
         return self.title
@@ -43,15 +49,6 @@ class gpsData:
     def getVals(self):
         return [ self.lat, self.lon, self.cog, self.sog ]
     
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
     
     def update(self, val):
         self.iter+= 1
@@ -111,15 +108,8 @@ class gpsData:
             lonDM = lonRaw[:-1]
             lonEW = lonRaw[-1]
             msg = ("$YKRMC,,A,%s,%s,%s,%s,%s,%s,,,,A"%(latDM,latNS,lonDM,lonEW,round(self.sog,2),round(self.cog,2)))
-            self.gui.sf.sendToAll(msg)
-            
-            
-            if self.gui.rl.current == "Sensors": 
-                self.guiObjs['lat'].text = "%s"%self.lat
-                self.guiObjs['lon'].text = "%s"%self.lon
-                self.guiObjs['accur'].text = "%s"%round(self.accur,0)
-                self.guiObjs['cog'].text = "%s / %s"%(round(self.gpscog,1), round(self.cog,1))
-                self.guiObjs['sog'].text = "%s / %s"%(round(self.gpssog,2), round(self.sog,2))
+            #self.gui.sf.sendToAll(msg)
+            self.broadcastByTCPNmea(self.gui, msg)
             
             if self.gui.rl.current == "Race":
                 self.guiObjs['lSRacSog'].text = "%s" % round(self.sog,1)
@@ -128,15 +118,16 @@ class gpsData:
             
             if self.gui.isReady:
                 # callbacks
-                for o in self.callBacksForUpdate:
-                    o.update('gps', val)
+                #for o in self.callBacksForUpdate:
+                #    o.update('gps', val)
+                self.broadcastCallBack(self.gui, 'gps', val)
                 
                 # json
                 jMsg = str({
                     "type": "gps",
                     "data": val
                     })
-                self.gui.sf.sendToAll( jMsg )
-        
+                #self.gui.sf.sendToAll( jMsg )
+                self.broadcastByTCPJSon( self.gui, jMsg )
 
 

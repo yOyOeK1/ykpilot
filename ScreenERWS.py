@@ -18,6 +18,102 @@ from shapely.geometry.multipoint import MultiPoint
 from DataSaveRestore import DataSR_save, DataSR_restore
 from shapely.geometry import polygon
 from shapely.geometry.polygon import Polygon
+import _thread
+
+
+class WeatherHelpers:
+    
+    def __init__(self, 
+            weatherIterEveryMin,
+            weatherFullPath, 
+            weatherAdress
+            ):
+        self.th = TimeHelper()
+        self.fa = FileActions()
+        
+        self.weatherIterEveryMin = weatherIterEveryMin
+        self.weatherFullPath = weatherFullPath
+        self.weatherAdress = weatherAdress
+        
+        self.eMin = []
+        for m in range (0,60*61, weatherIterEveryMin*60):
+            self.eMin.append(m)
+        print("every:",self.eMin)
+        self.iterClock = None
+    
+    def getSleepTimeToNext(self):
+        tNow = self.th.getDate(resAsDic=True)
+        sNow = (tNow['M']*60)+(tNow['S'])
+        
+        nextIn = -1
+        for m in self.eMin:
+            if sNow < m:
+                nextIn = m - sNow 
+                break
+        if nextIn == -1:
+            nextIn = 0
+            
+        print("next is in: [",nextIn,"] sec. in:",self.th.getNiceHowMuchTimeItsTaking(nextIn))
+        print("    it will be at:",self.th.getNiceDateFromTimestamp(self.th.getTimestamp()+nextIn))
+        return nextIn
+
+
+    def getFilesInWorkDir(self):
+        f = {}
+        for file in self.fa.getFileList(self.weatherFullPath):
+            #print("file",file)
+            if file[-4:] == '.gif':
+                tmp = file.split('_')
+                dateStr = '{}/{}/{} {}{}{}'.format(
+                    tmp[1],tmp[2],tmp[3],
+                    tmp[4],tmp[5],tmp[6][0:-4]
+                    ) 
+                ts = self.th.getTimestampFromStr(dateStr)
+                
+                f[ts] = {
+                    'file': file
+                    }
+                
+            pathCasch = self.fa.join(
+                self.weatherFullPath, 
+                ("%s_casch__meshs"%file)
+                )
+            if self.fa.isFile(pathCasch):
+                f[ts]['cascheFile'] = pathCasch
+                f[ts]['casche'] = 1
+            else:
+                f[ts]['casche'] = 0  
+                
+        #print("------------------")
+        #print(f)
+        return f
+
+
+    def runDownloadThread(self, callbackOnDownloadDone = None):
+        print("runDownloadThread")
+        self.callbackOnDownloadDone = callbackOnDownloadDone
+        _thread.start_new(self.downloadIter, ())
+        
+    def downloadIter(self,a=0,b=0,c=0):
+        while True:
+            fileName = "%s/wRadar_%s.gif" % (
+                self.weatherFullPath,
+                self.th.getNiceFileNameFromTimestamp()
+                )
+            DownloadFile( self.weatherAdress, fileName )
+            
+            fSize = self.fa.getSizeNice( fileName )
+            print("service Download done !")
+            print("service file [",fileName,"]")
+            print("service        file size is:",fSize)
+            print("service is done going to sleep")
+            
+            if self.callbackOnDownloadDone:
+                self.callbackOnDownloadDone(fileName)
+            
+            
+            sleep = self.getSleepTimeToNext()
+            time.sleep(sleep)
 
 
 class ScreenERWS:

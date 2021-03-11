@@ -1,15 +1,17 @@
 from TimeHelper import TimeHelper
 from senMsgTypeDetector import senMsgTypeDetector
+from senProto import senProto
 
 
 
-class senECPU(senMsgTypeDetector):
+class senECPU(senMsgTypeDetector,senProto):
     
     def __init__(self,gui,type_):
+        super(senECPU,self).__init__()
         self.gui = gui
         self.type_ = type_
+        self.type = self.type_
         self.title = type_
-        self.callBacksForUpdate = []
         self.th = TimeHelper()
         self.lastIter = 0
         self.maxHistory = 50
@@ -25,16 +27,6 @@ class senECPU(senMsgTypeDetector):
             }
         return tr
     
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
-    
     def update(self, val):
         #print("sen.",self.type_,".update val",val)
         self.history.append(val)
@@ -44,8 +36,9 @@ class senECPU(senMsgTypeDetector):
         cmds = self.msgDetParse(val)
         val = { 'uart': val }
         
-        for o in self.callBacksForUpdate:
-            o.update(self.type_, val)
+        #for o in self.callBacksForUpdate:
+        #    o.update(self.type_, val)
+        self.broadcastCallBack(self.gui, self.type, val)
     
     
     

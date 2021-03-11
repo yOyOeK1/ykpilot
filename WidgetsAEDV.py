@@ -29,7 +29,7 @@ class WidgetsAEDV:
         
         self.actionType = ""
         
-    def startWizard(self):
+    def startWizard(self,*a):
         self.actionType = 'start'
         self.buildGuiForAction()
         
@@ -110,6 +110,13 @@ class WidgetsAEDV:
     
     def on_start_addW(self,w):
         print("on_start_addW",w.text)
+        self.worikiOnWidgetObj = w
+        
+        self.gui.on_makeToast("building form ...")
+        Clock.schedule_once(self.on_start_addWBuildIt,0.01)
+        
+    def on_start_addWBuildIt(self,*a):
+        w = self.worikiOnWidgetObj
         wName = w.text
         self.actionType = "addW %s"%wName
         

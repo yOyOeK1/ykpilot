@@ -700,7 +700,7 @@ class ScreenWidgets:
                     if self.deb: print("changing gps to gpsD")
                     c = 'gpsD'
                 if self.deb: print("add it ....")
-                eval("self.gui.sen.%s.addCallBack(o)"%(
+                eval("self.gui.sen.%s.addCallBack(o,'Widgets')"%(
                     c
                     ))
                 if self.deb: print("    DONE")
@@ -731,7 +731,8 @@ class ScreenWidgets:
     def startAddWidgetDialog(self,a=''):
         if self.deb: print("ScreenWidgets.on_screenLeft")
         #self.WAEDV = WidgetsAEDV(self)
-        self.WAEDV.startWizard()
+        self.gui.on_makeToast("building list ...")
+        Clock.schedule_once(self.WAEDV.startWizard,0.01)
             
     
     def addNavBts(self, w):

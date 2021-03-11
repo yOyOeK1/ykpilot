@@ -2,13 +2,14 @@ from TimeHelper import TimeHelper
 from FileActions import FileActions
 from DataSaveRestore import DataSR_restore, DataSR_save
 from pygeodesy.ellipsoidalVincenty import LatLon
+from senProto import senProto
 
-class odometer:
+class odometer(senProto):
     
     def __init__(self, gui, type_):
+        super(odometer,self).__init__()
         self.th = TimeHelper()
         self.fa = FileActions()
-        self.callBacksForUpdate = []
         self.gui = gui
         self.type = type_
         self.title = self.type
@@ -51,16 +52,6 @@ class odometer:
                     ]
                 }
         
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
-        
     def getVals(self):
         return self.data
     
@@ -88,11 +79,11 @@ class odometer:
                 self.lastVal = val
                 self.lastLL = ll
                 
-                if self.gui.isReady:
-                    # callbacks
-                    for o in self.callBacksForUpdate:
-                        o.update(self.type, self.data) 
-                
+                #if self.gui.isReady:
+                #    # callbacks
+                #    for o in self.callBacksForUpdate:
+                #        o.update(self.type, self.data) 
+                self.broadcastCallBack(self.gui, self.type, self.data)
         
             self.iter+=1
     

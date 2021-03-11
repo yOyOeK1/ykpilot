@@ -37,15 +37,21 @@ class ScreenAutopilot:
 		self.cPlus = 0.0
 		self.clickSize = 0.15
 		
-		self.Kp = 0.025
-		self.Ki = 0.01
-		self.Kd = 0.1
-		self.pid = PID( self.Kp, self.Ki, self.Kd, setpoint=0,auto_mode=True )
+		self.Kp = 0.023
+		self.Ki = 0.009
+		self.Kd = 0.0018
+		self.response = 0.0008
+		self.pid = PID( self.Kp, self.Ki, self.Kd )
 		self.pid.proportional_on_measurement = True
+		self.pidLast = None
+		self.lastValue = 0
+		
+		self.pid2 = PID( self.Kp, self.Ki, self.Kd)
+		self.p2Last = None
 		
 		self.driverType = self.gui.config['apDriver']
 		self.sDriTyp = Spinner(
-			values = ['driver9 3kts', 'driver9 11kts', 'PID'],
+			values = ['driver9 3kts', 'driver9 11kts', 'PID', 'PID2'],
 			text = self.driverType,
 			)
 		self.gui.rl.ids.blAutDri.add_widget(self.sDriTyp)
@@ -75,6 +81,7 @@ class ScreenAutopilot:
 			self.setupDriver()
 		
 		while self.status == 'on':
+			pidVal = 0.0
 			boat = self.gui.sen.boat
 			boat['sog'] = 11.0
 			boat['cog'] = boat['hdg']
@@ -92,23 +99,60 @@ class ScreenAutopilot:
 				ds = self.driverQRL.get_discrete_state( boat )
 				aa = max(self.driverQRL.q_table[ds])
 				action = self.driverQRL.q_table[ds].index(aa)-1
-			if self.driverType == 'driver9 3kts':
+			
+			elif self.driverType == 'driver9 3kts':
 				boat['sog'] = 3.0
 				ds = self.driverQRL.get_discrete_state( boat )
 				aa = max(self.driverQRL.q_table[ds])
 				action = self.driverQRL.q_table[ds].index(aa)-1			
+			
 			elif self.driverType == 'PID':
 				c = self.pid( boat['cogError'] )
-				print('pid cogError',boat['cogError']," c",c)
-				pidError = 0.75
-				if c < -pidError:# and boat['ruderPos'] > -20.00:
+				pidVal = c
+				if self.pidLast == None:
+					self.pidLast = c
+				
+				if m.fabs( c-self.pidLast ) >= self.response:
+					if c > self.lastValue:
+						action = -1
+					elif c < self.lastValue:
+						action = 1 
+				
+				self.pidLast = c
+				print("PID action ",action," c",c)
+					
+			elif self.driverType == 'PID2':
+				c = int(self.pid2( boat['cogError'] )*500)/500.00
+				pidVal = c
+				if self.p2Last == None:
+					self.p2Last = c
+				
+				if self.p2Last < c:
 					action = -1
-				elif c > pidError:# and boat['ruderPos'] < 20.00:
+				elif self.p2Last > c:
 					action = 1 
+				
+				self.p2Last = c
+				print("PID2 action",action)
+				
 					
 			#print("driver",self.driverType,' action ',action)
 				
 			self.apAction(action)
+			
+			self.gui.rl.ids.pbAutRud.value = self.tilerPos+45.0
+			if self.gui.config['nmeBAutopilot']:
+				self.gui.sf.sendToAll( str({
+                    "type": "autopilot",
+                    "data": {
+						'hdg': boat['hdg'],
+						'pid': pidVal,
+						'cogError': boat['cogError'],
+						'targetCOG': self.targetHdg,
+						'tilerPos': self.tilerPos,
+						'action': action
+						}
+                    }) )	
 				
 			time.sleep(1.0/15.0)
 			
@@ -125,6 +169,8 @@ class ScreenAutopilot:
 			self.initSine()
 			
 		while True:
+			
+			
 			
 			if 0:
 				print('min', round(self.cMin,1), 
@@ -184,8 +230,7 @@ class ScreenAutopilot:
 					elif self.apCommunicationMode == 'wifi tcp':
 						self.tcp.send(self.apWifiCmdPing)
 				
-						
-			
+				
 				
 			time.sleep(sleepTime)
 			
@@ -268,8 +313,13 @@ class ScreenAutopilot:
 		
 	def on_pressMin(self):
 		self.cMin+= self.clickSize
+		self.tilerPos-=0.25
+		self.gui.rl.ids.pbAutRud.value = self.tilerPos+45.0
+		
 	def on_pressPlus(self):
 		self.cPlus+= self.clickSize
+		self.tilerPos+=0.25
+		self.gui.rl.ids.pbAutRud.value = self.tilerPos+45.0
 		
 	def on_curseAdjustBy(self, val):
 		print("on_curseAdjustBy",val)
@@ -291,6 +341,7 @@ class ScreenAutopilot:
 			self.targetHdg = self.gui.sen.comCal.hdg
 		except:
 			self.on_standby()
+			
 			return None
 		
 		self.status = "on"
@@ -302,9 +353,11 @@ class ScreenAutopilot:
 		if self.status == "off":
 			return None
 		self.status = "off"
+		self.tilerPos = 0.0
 		self.updateGui()
 		
 	def on_onOff(self, obj):
+		self.tilerPos = 0.0
 		if self.status == "off":
 			self.on_auto()	
 		elif self.status == "on":

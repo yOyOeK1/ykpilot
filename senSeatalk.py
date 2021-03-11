@@ -1,13 +1,15 @@
 from TimeHelper import TimeHelper
+from senProto import senProto
 
 
-class senSeatalk:
+class senSeatalk(senProto):
     
     def __init__(self,gui,type_):
+        super(senSeatalk,self).__init__()
         self.gui = gui
         self.type_ = type_
+        self.type = self.type_
         self.title = type_
-        self.callBacksForUpdate = []
         self.th = TimeHelper()
         self.lastIter = 0
         self.valReturnDesc = { 'dict' : [] }
@@ -21,16 +23,6 @@ class senSeatalk:
     
     def getValuesOptions(self):
         return self.valReturnDesc
-    
-    def addCallBack(self, obj):
-        print("addCallBack to [",self.title,"] obj ",obj)
-        self.callBacksForUpdate.append( obj ) 
-    
-    def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
-            if o == obj:
-                self.callBacksForUpdate.pop(i)
-                return True
     
     def update(self, val):
         #print("sen.",self.type_,".update val",val)
@@ -49,8 +41,9 @@ class senSeatalk:
             
         print("senSeatalk vals",self.vals)
         
-        for o in self.callBacksForUpdate:
-            o.update(self.type_, self.vals)
+        #for o in self.callBacksForUpdate:
+        #    o.update(self.type_, self.vals)
+        self.broadcastCallBack(self.gui, self.type, self.vals)
            
         
         
