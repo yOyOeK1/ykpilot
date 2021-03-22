@@ -65,6 +65,7 @@ class sensors:
 
         self.permissonsStatus = False
         self.sensorsList = []
+        self.sensorsListStr = []
 
         self.th = TimeHelper()
         self.fa = FileActions()
@@ -126,53 +127,70 @@ class sensors:
         
         self.device = deviceSensors(gui)
         self.sensorsList.append( self.device )
+        self.sensorsListStr.append('device')
         
         
-        self.gpsD = gpsData(gui,icon='ico_sensors_64_64.png')
+        self.gpsD = gpsData(gui, icon='ico_sensors_64_64.png')
         self.sensorsList.append( self.gpsD )
+        self.sensorsListStr.append('gpsD')
         
         self.odometer = odometer( gui, 'odometer')
         self.sensorsList.append( self.odometer )
+        self.sensorsListStr.append('odometer')
         self.gpsD.addCallBack(self.odometer)
+        
         
         self.gyro = xyzData(gui, "gyro")
         self.sensorsList.append( self.gyro )
+        self.sensorsListStr.append('gyro')
         
         self.gyroFlipt = xyzData(gui, "gyroFlipt")
         self.sensorsList.append( self.gyroFlipt )
+        self.sensorsListStr.append('gyroFlipt')
         
         self.accel = xyzData(gui, "accel")
         self.sensorsList.append( self.accel )
+        self.sensorsListStr.append('accel')
         
         self.gravity = xyzData(gui, "gravity" )
         self.sensorsList.append( self.gravity )
+        self.sensorsListStr.append('gravity')
         
         self.spacialOrientation = xyzData(gui, "spacorientation")
         self.sensorsList.append( self.spacialOrientation )
+        self.sensorsListStr.append('spacialOrientation')
         
         self.accelFlipt = xyzData(gui, "accelFlipt")
         self.sensorsList.append( self.accelFlipt )
+        self.sensorsListStr.append('accelFlipt')
         
         self.orientation = xyzData(gui, "orientation")
         self.sensorsList.append( self.orientation )
+        self.sensorsListStr.append('orientation')
         
         self.comCal = xyzData(gui, "comCal")
         self.sensorsList.append( self.comCal )
+        self.sensorsListStr.append('comCal')
         
         self.comCalAccelGyro = xyzData(gui, "comCalAccelGyro")
         self.sensorsList.append( self.comCalAccelGyro )
+        self.sensorsListStr.append('comCalAccelGyro')
     
         self.nodeMcu = senECPU(gui, 'nodeMcu')
         self.sensorsList.append(self.nodeMcu)
+        self.sensorsListStr.append('nodeMcu')
         
         self.arduinoUno = senECPU(gui, 'arduinoUno')
         self.sensorsList.append(self.arduinoUno)
+        self.sensorsListStr.append('arduinoUno')
         
         self.seatalk = senSeatalk(gui,'seatalk')
         self.sensorsList.append(self.seatalk)
+        self.sensorsListStr.append('seatalk')
         
         self.senDTH = senDTH(gui, 'senDTH')
         self.sensorsList.append(self.senDTH)
+        self.sensorsListStr.append('senDTH')
     
     
     def askForPermissions(self):

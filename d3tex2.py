@@ -34,6 +34,7 @@ class d3tex2(Widget):
 	def __init__(self, **kwargs):
 		self.gui = None
 		
+		
 		self.canvas = RenderContext(compute_normal_mat=True)
 		self.canvas.shader.source = resource_find('simple.glsl')
 		

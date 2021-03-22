@@ -1,6 +1,15 @@
 #:kivy 1.1.0
-<RootLayout>:
 
+
+<RootLayout>:
+	canvas.before:
+		Color: 
+			rgba : (0,0,0,1)
+		Rectangle:
+			pos: self.pos
+			size: self.size
+
+	
 	Screen:
 		name: "Take picture"
 		FloatLayout:
@@ -23,7 +32,6 @@
 			id: tri_addBt
 			rotation_root_button: True
 			
-		
 		
 
 	Screen:
@@ -142,7 +150,11 @@
 			padding: 5
 			spacing: 5
 			
-			
+			BoxLayout:
+				orientation: "vertical"
+				id: l_forMfd
+				
+				
 			Label:
 				text: "Welcome in ykpilot"
 				

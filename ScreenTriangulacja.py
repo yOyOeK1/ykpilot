@@ -12,7 +12,6 @@ from kivymd.uix.button import MDFlatButton, MDRaisedButton,\
     MDRectangleFlatIconButton, MDIconButton
 from kivy.properties import StringProperty
 from kivy.clock import Clock
-from kivymd.toast import toast
 from _functools import partial
 from plyer import camera
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -195,9 +194,12 @@ class TrianRunAddDialog:
      
     def on_useCamera(self, pointNo):
         print("on_useCamera",pointNo)
+        self.gui.on_makeToast("building cammera view ....")
+        Clock.schedule_once( partial(self.on_useCameraStep2,pointNo), 0.01)
+        
+    def on_useCameraStep2(self,pointNo,*a):
+        print("on_useCameraStep2 No",pointNo)
         self.dialogPiontEdit = pointNo
-        
-        
         self.gui.stp.takePhoto(
             self.on_useCameraDone,
             self.camOSD
@@ -377,7 +379,8 @@ class Triangulacja:
         print("on_select",a.icon," b",b)
         self.gui.rl.ids.tri_addBt.close_stack()
         if a.icon == 'flag-triangle':
-            self.on_startAddDialog()
+            self.gui.on_makeToast("building form ...")
+            Clock.schedule_once(self.on_startAddDialog,0.01)
         elif a.icon == 'cube-send':
             self.aisBroadcastStart()
         
@@ -386,12 +389,12 @@ class Triangulacja:
         if self.aisBroadcasting:
             self.aisBroadcasting = False
             Clock.unschedule( self.aisBroadcasClock )
-            toast("stop ais points broadcast")
+            self.gui.on_makeToast("stop ais points broadcast")
             
         else:
             self.aisBroadcasting = True
             self.aisBroadcasClock = Clock.schedule_interval( self.aisBroadcastPoints, 2.01 )
-            toast("start ais points broadcas")
+            self.gui.on_makeToast("start ais points broadcas")
             
     def aisBroadcastPoints(self,a=0,b=0):
         if len(self.triaItems) > 0:
@@ -413,7 +416,7 @@ class Triangulacja:
             'edit' 
             )
         
-    def on_startAddDialog(self):
+    def on_startAddDialog(self,*a):
         print("on_startAddDialog")
         self.addDialog = TrianRunAddDialog( 
             self.gui,

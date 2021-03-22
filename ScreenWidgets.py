@@ -641,15 +641,30 @@ class ScreenWidgets:
             if self.deb: print("unbind scatter")
             self.unbindScatter(p)
             
-            
             if self.deb: print("remove callbacks...")
             for cal in w['callback']:
                 if self.deb: print("sensor",cal)
-                unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
+                
+                ob = None
+                for sofli,sofl in enumerate(self.gui.sen.sensorsListStr):
+                    if cal == sofl:
+                        ob = self.gui.sen.sensorsList[sofli]
+                        break
+                if ob:
+                    ob.removeCallBack(obj)
+                else:
+                    print("EE - screen widgets error 0932")
+                    self.gui.on_makeToast("error rebuilding screen widgets")
+                    sys.exit(0)
+                #unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
                 #if self.deb: print("go with:",unSub)
-                exec(unSub)
+                #try:
+                #    exec(unSub)
+                #except:
+                #    print("EE - on 023 command [",unSub,"]")
+                #sys.exit(0)
             w['obj'] = None
-        
+            
             
     
     def fromWConfigBuildWidget(self, si, wi, parentWidget ):

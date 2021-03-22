@@ -10,13 +10,14 @@ from kivymd.app import MDApp as App
 from kivy import platform as kplatform
 from kivy import metrics as kmetrics
 from kivy.support import install_twisted_reactor
-from kivy_garden.graph import Graph, MeshLinePlot, LinePlot, SmoothLinePlot,\
-	ContourPlot, BarPlot, ScatterPlot, PointPlot, VBar, HBar
+#from kivy_garden.graph import Graph, MeshLinePlot, LinePlot, SmoothLinePlot,\
+#	ContourPlot, BarPlot, ScatterPlot, PointPlot, VBar, HBar
 from kivymd.uix.label import MDLabel
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.list import ILeftBodyTouch
 from kivymd.uix.button import MDIconButton
 from kivymd.toast import toast as mdtoast
+from kivy.uix.image import Image
 
 
 install_twisted_reactor()
@@ -42,6 +43,7 @@ from kivy.graphics.instructions import RenderContext
 mkservice = False
 
 
+from kivy.core.image import Image as CoreImage
 
 #from shaderTree import ShaderWidget
 from shadersDefinition import *
@@ -118,6 +120,8 @@ class MDDLabel(Label):
 class MSTitLabel(MDDLabel):
 	pass
 
+
+
 class RootLayout(ScreenManager):
 	
 	fs = StringProperty(None)
@@ -148,6 +152,27 @@ class RootLayout(ScreenManager):
 
 
 	
+class ImageFromTexture(BoxLayout):
+	
+	
+	def __init__(self, **kwargs):
+		self.myCanvas = self.canvas
+		
+		super(ImageFromTexture, self).__init__(**kwargs)
+		self.imgTexture = Image(source='./icons/ico_find_64_64.png')
+		self.canvas.add(Color(1,.5,1))
+		self.r = Rectangle(
+			size=self.size, 
+			pos = self.pos
+			)
+		self.canvas.add(self.r)
+		self.imgTexture.bind(texture=self.update_texture)
+		
+	
+	def update_texture(self, instance, value):
+		print("update_texture",instance," value ",value)
+		self.r.texture = value
+		#sys.exit(1)
 
 
 class gui(App):
@@ -155,7 +180,6 @@ class gui(App):
 	testHDG = 10
 	remotePythonPid = None
 	
-	Builder.load_file('layoutPresets.kv')
 	
 	#npTest = NumericProperty(1)
 	
@@ -169,8 +193,10 @@ class gui(App):
 		}
 	wifiTcpStatus = StringProperty("icons/ico_manZle_256_256.png")
 		
+		
 	def __init__(self, *a, **kw):
 		super(gui, self).__init__(*a, **kw)
+		Builder.load_file('layoutPresets.kv')
 		
 		if kplatform == 'android':
 			self.sensorsRemoteTcp = "host:port" 
@@ -183,6 +209,7 @@ class gui(App):
 		self.isReady = False
 		self.plt = None
 		self.ips = []
+		
 		
 		
 	
@@ -237,9 +264,37 @@ class gui(App):
 		
 		self.colorTheme = "day"
 		self.theme_cls.theme_style = "Dark"
+		
 
 		
+		
 		return self.ll
+	
+	def makeIFT(self,a=1):
+		self.ift = ImageFromTexture()
+		self.iftii = 0
+		self.iftI = [
+			'/home/yoyo/Pictures/IMG_20200927_084635.jpg',
+			'/home/yoyo/Pictures/filamentChopt.jpg',
+			#'/tmp/fig.png'
+			]
+		self.rl.ids.l_forMfd.add_widget(self.ift)
+		
+		self.iftIter()
+
+	def iftIter(self,a=0):
+		if self.iftii >= 2:
+			self.iftii = 0
+		
+		print("iftIter", self.iftii)
+		data = BytesIO(open(self.iftI[self.iftii], "rb").read())
+		im = CoreImage(data, ext="jpg", filename="image.jpg")
+		#self.ift.canvas.clear()
+		self.ift.imgTexture = CoreImage( im, ext='jpg', filename='yy.jpg' )
+		self.iftii+=1
+	
+		Clock.schedule_once(self.iftIter, 1.0)
+	
 	
 	def loaderNextStep(self,a=0,b=0):
 		self.loaderStep+=1 
@@ -714,10 +769,14 @@ class gui(App):
 			self.rl.ids.cb_nmeBAutopilot.active = True if self.config['nmeBAutopilot'] else False
 			self.rl.ids.cb_nmeBNmea.active = True if self.config['nmeBNmea'] else False
 			
-			self.triangulacja.isReady()
+			self.triangulacja.isReady()	
+			
+			
+			#self.makeIFT()
 			
 			self.isReady = True
 			
+		
 		
 	def on_gotECPUStr(self,buf):
 		print("on_gotECPUStr",buf)

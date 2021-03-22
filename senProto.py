@@ -1,5 +1,7 @@
 import sys
 from TimeHelper import *
+from _functools import partial
+from kivy.clock import Clock
 
 
 class senProto:
@@ -29,9 +31,9 @@ class senProto:
         self.callEvery.append(maxUpdateEvery*1000000)
         
     def removeCallBack(self, obj):
-        for i,o in enumerate(self.callBacksForUpdate):
+        for i,o in enumerate(self.callBackForUpdate):
             if o == obj:
-                self.callBacksForUpdate.pop(i)
+                self.callBackForUpdate.pop(i)
                 self.callOnScreen.pop(i)
                 self.callLastTime.pop(i)
                 self.callEvery.pop(i)
@@ -63,6 +65,7 @@ class senProto:
                     if self.callEvery[ii] == 0 or (t-self.callLastTime[ii])>=self.callEvery[ii]:
                         #print("send... ",self.type," to ",self.callBackForUpdate[ii])
                         self.callBackForUpdate[ii].update(fromWho,vals)
+                        #Clock.schedule_once( lambda x : self.callBackForUpdate[ii].update(fromWho, vals), 0.01 )
                         self.callLastTime[ii] = t
                     
                         

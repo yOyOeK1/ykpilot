@@ -6,6 +6,7 @@ from simple_pid import PID
 import simEngine
 from TimeHelper import TimeHelper
 from kivy.properties import NumericProperty,ObjectProperty
+from kivy.uix.widget import Widget
 try:
 	from PCPlot import PCPlot
 except:
@@ -23,14 +24,18 @@ class driver10:
 		self.gui = self.sim.gui
 		self.th = TimeHelper()
 		self.actionHistory = [0]
+		self.plt = None
 		
 		#self.Kp = 0.023
+		self.pidValues = Widget()
+		
 		self.pidP = 0.023
 		self.pidI = 0.009
 		self.pidD = 0.0018
 		self.p = PID( self.pidP, self.pidI, self.pidD)#, setpoint=0,auto_mode=True )
 		self.p.proportional_on_measurement = True
-		self.resp = 0.0005
+		
+		self.resp = 0.0002
 		#self.p.output_limits = (-1,1)
 		
 	def plotIt(self):
@@ -86,10 +91,10 @@ class driver10:
 		control = self.p(b['cogError'])
 		action = 0
 		
-		if self.gui.platform == 'pc':
+		if self.gui.platform == 'pc' and self.plt != None:
 			t = self.th.getTimestamp(True)
 			self.plt.simPID[0].append(t)
-			self.plt.simPID[1].append(control*10.0)
+			self.plt.simPID[1].append((control*10.0)%360.00)
 			if 1:
 				try:
 					print("target from phone ",self.gui.sen.comCal.hdg)
@@ -112,13 +117,14 @@ class driver10:
 		#print("control %s for cogError %s"%(control, b['cogError']))
 		
 		if 1:
+			print("resp",self.resp,' fab',m.fabs( control-self.lastValue ))
 			if m.fabs( control-self.lastValue ) >= self.resp:
 				if control > self.lastValue:
 					action = -1
-					#print("-")
+					print("-")
 				elif control < self.lastValue:
 					action = 1 
-					#print("+")
+					print("+")
 			
 			
 		elif 0:
@@ -134,7 +140,8 @@ class driver10:
 			elif -control > 0.2  and b['gRot']<gRot:
 				action = 1
 		
-		self.lastValue = control
+		if control != 0 or ( control !=0 and self.actionHistory[-1] != 0 ):
+			self.lastValue = control
 		
 		#print(" pid return {}	{}	{}".format(action,control, b['cogError']))
 

@@ -10,6 +10,7 @@ from senTransform import transform90axis
 from MyCalculate import SPoint
 from imuVr import imuVr
 from senProto import senProto
+from numpy import arange
 
 class xyzData(senProto):
     historyMem = 1010
@@ -36,7 +37,13 @@ class xyzData(senProto):
         self.iter = 0
         self.avgFraction = 0.92
         self.guiObjs = debGuiObjcts
+        
+        self.benTotal = 0
+        self.benSum = 0.0
+        self.benSensor = True
+        
         self.history = []
+        self.historyEntryDate = []        
         self.lastVal = None
         self.propagateVal = True
         self.axis = {
@@ -69,6 +76,8 @@ class xyzData(senProto):
             self.ccAngHis = 100
             self.ivr = imuVr(self)
 
+
+        
         if True:
             listConfig = DataSR_restore(
                 self.fa.join( self.gui.homeDirPath,"ykpilot_calibration.conf" )
@@ -133,45 +142,49 @@ class xyzData(senProto):
     def setVal(self, val):
         #print("%s got setValue"%self.type)
         timeNowInMillis = self.th.getTimestamp(True)
+        if self.benSensor:
+            bKey = self.th.benStart()
         
         
         self.uSCount+= 1
+        updateGui = False
         if (timeNowInMillis - self.uSTLast ) > (self.uSEvery*1000000):
             self.uSTLast = timeNowInMillis
             print("UPS    [",self.type,'] ',round(self.uSCount/(self.uSEvery),1))
             self.uSCount = 0
+            updateGui = True
+            self.guiUTLast = timeNowInMillis
         
         
         self.iter+=1
-        if self.type == "orientation" and len(self.axis['y']) > 50:
+        if self.type == "orientation" and self.guiGraphDbHeelPitch and len(self.axis['y']) > 50:
 
-            if self.guiGraphDbHeelPitch:
-                da = []
-                vL = None
-                for i,v in enumerate(self.axis['y'][-400:]):
-                    if vL == None:
-                        vL = v
-                    vL = vL*0.95 + v*0.05
-                    da.append( v )
-                fftPlotData(self.gui.pFFTHeel, np.array(da))
-                
-                da = []
-                vL = None
-                for i,v in enumerate(self.axis['x'][-400:]):
-                    if vL == None:
-                        vL = v
-                    vL = vL*0.95 + v*0.05
-                    da.append( v )
-                fftPlotData(self.gui.pFFTPitch, np.array(da))
-                
-                da = []
-                vL = None
-                for i,v in enumerate(self.gui.sen.accel.axis['z'][-400:]):
-                    if vL == None:
-                        vL = v
-                    vL = vL*0.95 + v*0.05
-                    da.append( v )
-                fftPlotData(self.gui.pFFTUD, np.array(da))
+            da = []
+            vL = None
+            for i,v in enumerate(self.axis['y'][-400:]):
+                if vL == None:
+                    vL = v
+                vL = vL*0.95 + v*0.05
+                da.append( v )
+            fftPlotData(self.gui.pFFTHeel, np.array(da))
+            
+            da = []
+            vL = None
+            for i,v in enumerate(self.axis['x'][-400:]):
+                if vL == None:
+                    vL = v
+                vL = vL*0.95 + v*0.05
+                da.append( v )
+            fftPlotData(self.gui.pFFTPitch, np.array(da))
+            
+            da = []
+            vL = None
+            for i,v in enumerate(self.gui.sen.accel.axis['z'][-400:]):
+                if vL == None:
+                    vL = v
+                vL = vL*0.95 + v*0.05
+                da.append( v )
+            fftPlotData(self.gui.pFFTUD, np.array(da))
                 
         
         
@@ -214,11 +227,14 @@ class xyzData(senProto):
         self.z = float(val[2])
         
         self.history.append([self.x,self.y,self.z])
+        self.historyEntryDate.append(timeNowInMillis)
         self.axis['x'].append( self.x )
         self.axis['y'].append( self.y )
         self.axis['z'].append( self.z )
+        
         if len(self.history)>self.historyMem:
             self.history.pop(0)
+            self.historyEntryDate.pop(0)
             self.axis['x'].pop(0)
             self.axis['y'].pop(0)
             self.axis['z'].pop(0)
@@ -240,15 +256,16 @@ class xyzData(senProto):
                 if self.gui.rl.current == "Model Screen":
                     updateGuiGF = True
                 else:
-                    updateGuiGF = False                
-                sufix = sum(self.axis['y'][-10:-1])/9.0
-                aavg = sum(self.axis['y'][-24:])/len(self.axis['y'][-24:])
-
-                sufix = sum(self.axis['x'][-10:-1])/9.0
-                aavg = sum(self.axis['x'][-24:])/len(self.axis['x'][-24:])
-                sufix = sum(self.axis['z'][-10:-1])/9.0
-                
+                    updateGuiGF = False  
+                                  
                 if updateGuiGF:
+                    sufix = sum(self.axis['y'][-10:-1])/9.0
+                    aavg = sum(self.axis['y'][-24:])/len(self.axis['y'][-24:])
+    
+                    sufix = sum(self.axis['x'][-10:-1])/9.0
+                    aavg = sum(self.axis['x'][-24:])/len(self.axis['x'][-24:])
+                    sufix = sum(self.axis['z'][-10:-1])/9.0
+                
                     if sufix > aavg:
                         self.gui.rl.ids.lModSimGyroHeel.text = "S"
                     else:
@@ -264,16 +281,16 @@ class xyzData(senProto):
                     else:
                         self.gui.rl.ids.lModSimGyroYaw.text = "P"
                 
-                if self.guiGraphGyro:
-                    self.gui.pgx.points = self.gui.sen.sinHistoryArrayToGraph(
-                        self.axis['x'][-90:], 30
-                        )
-                    self.gui.pgy.points = self.gui.sen.sinHistoryArrayToGraph(
-                        self.axis['y'][-90:], 30
-                        )
-                    self.gui.pgz.points = self.gui.sen.sinHistoryArrayToGraph(
-                        self.axis['z'][-90:], 90
-                        )
+                #if self.guiGraphGyro:
+                #    self.gui.pgx.points = self.gui.sen.sinHistoryArrayToGraph(
+                #        self.axis['x'][-90:], 30
+                #        )
+                #    self.gui.pgy.points = self.gui.sen.sinHistoryArrayToGraph(
+                #        self.axis['y'][-90:], 30
+                #        )
+                #    self.gui.pgz.points = self.gui.sen.sinHistoryArrayToGraph(
+                #        self.axis['z'][-90:], 90
+                #        )
                     
             t = self.lastTimeIter-timeNowInMillis
             m = math.degrees(self.axis['z'][-1])
@@ -296,21 +313,16 @@ class xyzData(senProto):
                     ])
                 #print("gyro to hdg ",self.axis['z'][-1],"time",t,"mov",mov)
             except:
-                print("corecting hdg by gyro error")    
+                print("EE - corecting hdg by gyro error")    
                 #print( "- %s %s %s \n"%(self.axis['x'][-1], self.axis['y'][-1], self.axis['z'][-1] ))
                 
             #self.gui.sen.wHeelBoat.update(self.axis['y'][-1])
-                
-        # gui update
-        updateGui = False
-        if (timeNowInMillis - self.guiUTLast ) > (self.guiUpdateEvery*1000000):
-            updateGui = True
-            self.guiUTLast = timeNowInMillis
+        
             
         
-        if updateGui and len(self.guiObjs) == 3 and self.gui.rl.current == "Sensors":
-            for i,o in enumerate(self.guiObjs):
-                o.text = "%s"%round(val[i],5)
+        #if updateGui and len(self.guiObjs) == 3 and self.gui.rl.current == "Sensors":
+        #    for i,o in enumerate(self.guiObjs):
+        #        o.text = "%s"%round(val[i],5)
         
         if self.type == "accel":
             if self.guiArrowsAccel:
@@ -347,7 +359,7 @@ class xyzData(senProto):
             #print(fgh)
             
             if len(self.history)> 25:
-                if updateGui:
+                if updateGui and self.gui.rl.current == 'Model Screen':
                     if sum(self.axis['x'][-10:-1])/9.0 > sum(self.axis['x'])/len(self.axis['x']):
                         self.gui.rl.ids.lModSimHeelSlope.text = "S"
                     else:
@@ -364,6 +376,7 @@ class xyzData(senProto):
                 self.hdg = 180.0 + (180.0 + self.hdg)
 
             self.axis['x'][-1] = self.hdg
+            self.avgHdg = (self.avgHdg*self.avgFraction)+(self.hdg*(1.0-self.avgFraction))
             
             #self.gui.senBoat.setRoseta( self.hdg )
             #print("TOFIX52352")
@@ -376,7 +389,6 @@ class xyzData(senProto):
                 self.gui.pc.points = self.gui.sen.sinHistoryArrayToGraph(
                     self.axis['x'][-90:])
 
-            self.avgHdg = (self.avgHdg*self.avgFraction)+(self.hdg*(1.0-self.avgFraction))
             
             
             p = SPoint(val)
@@ -413,7 +425,6 @@ class xyzData(senProto):
         
         
         if self.type == 'comCal':
-            
             cas  = self.ccAngStart
             ca = self.ccAng[-1]
             
@@ -425,6 +436,7 @@ class xyzData(senProto):
                 ]
         elif self.type == 'orientation':
             valToPropagate = [val[0],val[1],val[2],pitch,heel]
+            
         else:
             valToPropagate = val
         
@@ -456,4 +468,10 @@ class xyzData(senProto):
             
             
         self.lastTimeIter = timeNowInMillis
-
+        
+        if self.benSensor:
+            self.benSum+= self.th.benDone(bKey, onlyTime=True)
+            self.benTotal+=1
+            if ( self.benTotal%100 ) == 0:
+                print("ben avg for ",self.type," (",self.benTotal,") ",(self.benSum/self.benTotal),"sec.")
+        

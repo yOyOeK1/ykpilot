@@ -6,17 +6,20 @@ from kivy.uix.label import Label
 from kivy import metrics as kmetrics
 from kivymd.uix.textfield import MDTextField
 from kivy.clock import Clock
+from kivymd.uix.expansionpanel import MDExpansionPanel
 
 
 class ScreenSensors:
     
     def __init__(self):
-        Clock.schedule_interval(self.updateIpsOnScreen, 2.)
+        Clock.schedule_once(self.updateIpsOnScreen, 0.5)
+    
     
     def setGui(self, gui):
         self.gui = gui
         self.initDone = False
         self.wObjs = {}
+        
         self.initSensorsWidgets()
         
         
@@ -87,6 +90,7 @@ class ScreenSensors:
             print("buildind sensor view for ",s.type,
                   " [",sDescType,"]->",sDesc[sDescType]
                   )
+            
             
             mb = MDBoxLayout(
                 orientation='vertical',
