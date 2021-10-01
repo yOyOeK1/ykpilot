@@ -301,13 +301,21 @@ class TrianRunAddDialog:
 class Triangulacja:
     
     def __init__(self, gui):
-        self.gui = gui
+        if gui:
+            self.gui = gui
+        else:
+            class guiTmp:
+                homeDirPath = '/tmp'
+            self.gui = guiTmp()
+        
         self.fa = FileActions()
         self.triaItems = []
         self.fileStoragePath = self.fa.join(self.gui.homeDirPath, 'triangulation.data')#self.fa.join(self.gui.homeDirPath, 'triangulation.data')
-        Builder.load_file('layoutTrianAddDialog.kv')
-        self.loadTriaItems()
-        self.listBuild()
+        if gui:
+            Builder.load_file('layoutTrianAddDialog.kv')
+            self.loadTriaItems()
+            self.listBuild()
+        
         self.aisBroadcasting = False
         self.hdg = 0.0
         self.lat = 0.0

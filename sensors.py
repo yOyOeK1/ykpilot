@@ -37,6 +37,7 @@ from senXyzData import xyzData
 from senDTH import senDTH
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.button import MDFlatButton
+#from senVHeelAnalitics import senVHeelAnalitics
 
 
 
@@ -127,12 +128,13 @@ class sensors:
         
         self.device = deviceSensors(gui)
         self.sensorsList.append( self.device )
-        self.sensorsListStr.append('device')
+        self.sensorsListStr.append('device')        
         
         
         self.gpsD = gpsData(gui, icon='ico_sensors_64_64.png')
         self.sensorsList.append( self.gpsD )
         self.sensorsListStr.append('gpsD')
+        
         
         self.odometer = odometer( gui, 'odometer')
         self.sensorsList.append( self.odometer )
@@ -144,17 +146,21 @@ class sensors:
         self.sensorsList.append( self.gyro )
         self.sensorsListStr.append('gyro')
         
+        
         self.gyroFlipt = xyzData(gui, "gyroFlipt")
         self.sensorsList.append( self.gyroFlipt )
         self.sensorsListStr.append('gyroFlipt')
+        
         
         self.accel = xyzData(gui, "accel")
         self.sensorsList.append( self.accel )
         self.sensorsListStr.append('accel')
         
+        
         self.gravity = xyzData(gui, "gravity" )
         self.sensorsList.append( self.gravity )
         self.sensorsListStr.append('gravity')
+        
         
         self.spacialOrientation = xyzData(gui, "spacorientation")
         self.sensorsList.append( self.spacialOrientation )
@@ -167,6 +173,11 @@ class sensors:
         self.orientation = xyzData(gui, "orientation")
         self.sensorsList.append( self.orientation )
         self.sensorsListStr.append('orientation')
+        
+        #self.vHeeAna = senVHeelAnalitics(gui, "VHeelAnalitics")
+        #self.sensorsList.append( self.vHeeAna )
+        #self.sensorsListStr.append('VHeelAnalitics')
+        #self.orientation.addCallBack(self.vHeeAna)
         
         self.comCal = xyzData(gui, "comCal")
         self.sensorsList.append( self.comCal )
@@ -737,7 +748,7 @@ class sensors:
         #pass
         #self.mic.runIt()
         self.device.initSensors()
-        iterTime = (1.0/15.0) if self.gui.platform == 'android' else 1.0
+        iterTime = (1.0/6.0) if self.gui.platform == 'android' else 1.0
         self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
         
         

@@ -4,6 +4,7 @@ from plyer import battery
 from plyer import brightness
 import traceback
 from senProto import senProto
+import psutil
 
 
 class deviceSensors(senProto):
@@ -48,7 +49,14 @@ class deviceSensors(senProto):
             'batteryPercentage', 
             'bgLight',
             'app uptime sec.',
-            'app uptime nice']}
+            'app uptime nice',
+            'cpu percent',
+            'mem total',
+            'mem percent use',
+            'cpu avg 1',
+            'cpu avg 2',
+            'cpu avg 3'
+            ]}
         
     def getTitle(self):
         return self.title
@@ -67,6 +75,9 @@ class deviceSensors(senProto):
             print("light NO")
             self.light['ok'] = False
             
+            
+        
+        
         try:
             self.battery = {
                 "ok": True,
@@ -102,6 +113,22 @@ class deviceSensors(senProto):
             'app uptime sec.': self.uptime,
             'app uptime nice': self.uptimeNice
             }
+        
+        tcb['cpu percent'] = int(psutil.cpu_percent())
+        memS = psutil.virtual_memory()
+        memSplit = str(memS).replace("(", " ").replace(")", " ").replace(",", "").split(" ")
+        tcb['mem total'] = int(memSplit[1][6:])
+        tcb['mem percent use'] = float(memSplit[3][8:])
+        loadA = list(psutil.getloadavg())
+        tcb['cpu avg 1'] = loadA[0]
+        tcb['cpu avg 2'] = loadA[1]
+        tcb['cpu avg 3'] = loadA[2]
+        try:
+            aoe =1
+        except:
+            print("EE - senDeviceSensor psutil ")
+            
+        
         if not self.iterCount % self.updateEvery:        
             if self.light['ok']:
                 self.light['val'] = light.illumination
@@ -122,6 +149,15 @@ class deviceSensors(senProto):
             #for o in self.callBacksForUpdate:
             #    o.update(self.title, tcb)
             self.broadcastCallBack(self.gui, self.title, tcb)
+            
+            for k in tcb.keys():
+                v = tcb[k]
+                self.broadcastByMqtt(
+                    self.gui, 
+                    "/ykpilot/device/{}".format(k.replace(" ","_")), 
+                    str(v)
+                    )    
+            
                 
         self.iterCount+= 1
         

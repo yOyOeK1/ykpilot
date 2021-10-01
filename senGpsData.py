@@ -111,6 +111,13 @@ class gpsData(senProto):
             #self.gui.sf.sendToAll(msg)
             self.broadcastByTCPNmea(self.gui, msg)
             
+            self.broadcastByMqtt(self.gui, "sensors/gps/lat", latRaw)
+            self.broadcastByMqtt(self.gui, "sensors/gps/lon", lonRaw)
+            self.broadcastByMqtt(self.gui, "sensors/gps/cog", self.gpscog)
+            self.broadcastByMqtt(self.gui, "sensors/gps/sog", self.gpssog)
+            self.broadcastByMqtt(self.gui, "sensors/gps/accuracy", self.accur)
+            
+            
             if self.gui.rl.current == "Race":
                 self.guiObjs['lSRacSog'].text = "%s" % round(self.sog,1)
                 self.guiObjs['lSRacSogMax'].text = "max: %s" % round(self.maxSog,2)

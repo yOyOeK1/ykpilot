@@ -39,6 +39,10 @@ class senProto:
                 self.callEvery.pop(i)
                 
     
+    def broadcastByMqtt(self, gui, topic, msg):
+        if gui.config['nmeBMqtt'] == True:
+            gui.hbc.pub(topic,msg)
+        
     def broadcastByTCPNmea(self, gui, msg):
         if gui.config['nmeBNmea']:
             gui.sf.sendToAll(msg)

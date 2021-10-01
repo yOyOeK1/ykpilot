@@ -48,25 +48,20 @@ class ScreenSensors:
     def update(self, fromWho, vals):
         if self.gui.rl.current != "Sensors":
             return 0
-        #print('update',fromWho,'->',vals)
         
         wObj = self.wObjs[fromWho]
-        #print("wObj",wObj)
         objs = wObj['objs']
         for ii, o in enumerate(objs):
-            #print("making ii",ii,' o',o)
             ok = list(o.keys())[0]
-            #print("ok",ok)
             if wObj['vType'] == 'list':
-                #print("list val",vals[ii])
                 objs[ii][ok].text = str(vals[ii])
             if wObj['vType'] == 'dict':
                 try:
-                    #print("dict val",vals[ok])
                     objs[ii][ok].text = str(vals[ok])    
                 except:
                     print("EE - 0032 val key",ok," not pressent :(")
                     objs[ii][ok].text = 'NaN'
+                
                 
     def initSensorsWidgets(self):
         if self.initDone == True:

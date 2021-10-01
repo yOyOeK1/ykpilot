@@ -10,7 +10,7 @@ class ScreenNMEAMultiplexer:
     def setUpGuiToValues(self):
         ip = self.gui.rl.ids.l_nmeMulIp
         ip.text = "Multiplexer ip: {}:{}".format(
-            self.gui.senderIp, self.gui.senderPort
+            (", ".join(self.gui.ips)), self.gui.senderPort
             )
         
         

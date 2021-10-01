@@ -410,11 +410,14 @@ class xyzData(senProto):
             nmea = "$YKXDR,A,%s,,PTCH,A,%s,,ROLL,"%(-pitch, heel)
             #self.gui.sf.sendToAll( nmea )
             self.broadcastByTCPNmea(self.gui, nmea)
+            self.broadcastByMqtt(self.gui, "sensors/orientation/pitch", round(-pitch,1))
+            self.broadcastByMqtt(self.gui, "sensors/orientation/heel", round(heel,1))
             
         elif self.type == "comCalAccelGyro":
             nmea = "$YKHDG,%s,W,0,E" % round(self.z,1)
             #self.gui.sf.sendToAll(nmea)
             self.broadcastByTCPNmea(self.gui, nmea)
+            self.broadcastByMqtt(self.gui, "sensors/hdgm", round((self.z%360.00),1))
             
         elif self.type == 'comCal':
             ms = self.updateTime        
@@ -422,7 +425,8 @@ class xyzData(senProto):
                 nmea = "$YKHDG,%s,W,0,E" % round(self.hdg,1)
                 #self.gui.sf.sendToAll(nmea)
                 self.broadcastByTCPNmea(self.gui, nmea)
-        
+                self.broadcastByMqtt(self.gui, "sensors/comCal/hdgm", round(self.hdg))
+            
         
         if self.type == 'comCal':
             cas  = self.ccAngStart
@@ -463,6 +467,7 @@ class xyzData(senProto):
                 "data": val
                 })
             #print("jMsg:",jMsg)
+            #self.broadcastByMqtt(self.gui, "sensors/jsons", jMsg)
             self.broadcastByTCPJson( self.gui, jMsg )
             
             

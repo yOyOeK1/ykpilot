@@ -1,3 +1,4 @@
+import asyncio
 import kivymd
 import kivy
 #/home/yoyo/.local/share/python-for-android/dists/Aykp7__armeabi-v7a/_python_bundle/_python_bundle/site-packages/kivy/weakmethod.py
@@ -18,6 +19,9 @@ from kivymd.uix.list import ILeftBodyTouch
 from kivymd.uix.button import MDIconButton
 from kivymd.toast import toast as mdtoast
 from kivy.uix.image import Image
+from hbmqttBroker import hbmqttBroker
+from hbMqttClient import hbMqttClient
+#from PCPlotSinAnalitics import PCPlotSinAnalitics
 
 
 install_twisted_reactor()
@@ -40,7 +44,7 @@ from kivy.core.window import Window
 #from kivy.core.image import Image
 #from kivy_garden.graph import Graph, MeshLinePlot
 from kivy.graphics.instructions import RenderContext
-mkservice = False
+mkservice = True
 
 
 from kivy.core.image import Image as CoreImage
@@ -175,6 +179,8 @@ class ImageFromTexture(BoxLayout):
 		#sys.exit(1)
 
 
+	
+
 class gui(App):
 	
 	testHDG = 10
@@ -192,7 +198,11 @@ class gui(App):
 		'off': "icons/ico_armR_256_256.png"
 		}
 	wifiTcpStatus = StringProperty("icons/ico_manZle_256_256.png")
-		
+	
+	hb_task = None
+	watchdog_task = None
+	watchdogTick = 0
+	hbc = None 
 		
 	def __init__(self, *a, **kw):
 		super(gui, self).__init__(*a, **kw)
@@ -203,15 +213,42 @@ class gui(App):
 		else:
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
 			#self.sensorsRemoteTcp = "192.168.43.208:11223"
-			self.sensorsRemoteTcp = "192.168.49.199:11223"
+			#self.sensorsRemoteTcp = "192.168.49.199:11223"
+			self.sensorsRemoteTcp = "192.168.44.1:11223"
 		
 		self.windowSize = Window.size
 		self.isReady = False
 		self.plt = None
 		self.ips = []
+		self.hb = hbmqttBroker(self)
+		self.watchdogTick_iter = 0
+		self.hbc = hbMqttClient(self)
 		
+	
 		
+	def startHbAndWatchTick(self, a = None):
+		print("startHbAndWatchTick1")
+		self.hb.runIt()
+		print("startHbAndWatchTick2")
+		self.watchdogTick()
+		print("startHbAndWatchTick3")
 		
+			
+	
+	async def watchdogTick(self):
+		print("watchdogTick",self.watchdogTick_iter)
+		try:
+			while True:
+				print("watchdogTick iter:",self.watchdogTick_iter)
+				
+				await asyncio.sleep(2)
+				self.watchdogTick_iter+=1
+		
+		except asyncio.CancelledError as e:
+			print('Wasting time was canceled', e)
+		finally:
+			print('Done wasting time')
+
 	
 	def doLocalIp(self):
 		print("- do local ips")
@@ -699,7 +736,7 @@ class gui(App):
 			self.sen.run()
 		
 		
-		
+			Clock.schedule_once(self.hbc.runIt,0.1)
 			
 		
 		
@@ -768,15 +805,36 @@ class gui(App):
 			self.rl.ids.cb_nmeBSensors.active = True if self.config['nmeBSensors'] else False
 			self.rl.ids.cb_nmeBAutopilot.active = True if self.config['nmeBAutopilot'] else False
 			self.rl.ids.cb_nmeBNmea.active = True if self.config['nmeBNmea'] else False
+			self.rl.ids.cb_nmeBMqtt.active = True if self.config['nmeBMqtt'] else False
+			self.rl.ids.cb_nmeBmqHDG.active = True if self.config['nmeBmqHDG'] else False
+			
 			
 			self.triangulacja.isReady()	
 			
 			
 			#self.makeIFT()
 			
+			
+			#self.on_makePLTTest()
+			
 			self.isReady = True
 			
+			
+			
+	def on_makePLTTest(self):
+		self.pltBuff = myFastPlot(
+			[self.on_pltIterData0],
+			inBuffer = True)
+		#self.pltBuff.runBuffMode(self.rl.ids.l_pltSpot)
 		
+		
+	def on_pltIterData0(self):
+		x = []
+		y = []
+		for i in range(100):
+			x.append(i)
+			y.append(random.randrange(-10,10))
+		return x,y
 		
 	def on_gotECPUStr(self,buf):
 		print("on_gotECPUStr",buf)
@@ -797,7 +855,9 @@ class gui(App):
 			'apWifiIp': '192.168.4.1',
 			'nmeBSensors': 0,
 			'nmeBAutopilot': 0,
-			'nmeBNmea': 1
+			'nmeBNmea': 1,
+			'nmeBMqtt': 1,
+			'nmeBmqHDG':1
 			}
 		
 		for k in self.cDefVals.keys():
@@ -1092,6 +1152,10 @@ class gui(App):
 			self.config['nmeBAutopilot'] = status
 		elif what == 'nmea':
 			self.config['nmeBNmea'] = status
+		elif what == 'mqtt':
+			self.config['nmeBMqtt'] = status
+		elif what == 'mqHDG':
+			self.config['nmeBmqHDG'] = status
 			
 		self.on_configSave()
 		

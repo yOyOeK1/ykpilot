@@ -154,6 +154,19 @@
 				orientation: "vertical"
 				id: l_forMfd
 				
+			BoxLayout:
+				orientation: "vertical"
+				id: l_pltSpot
+				size_hint: [None,None]
+				size:640,480
+				canvas.before:
+					Color: 
+						rgba : (1,0,0,1)
+					Rectangle:
+						pos: self.pos
+						size: self.size
+	            
+				
 				
 			Label:
 				text: "Welcome in ykpilot"
@@ -815,10 +828,41 @@
 						size_hint: None,None
 					
 					DLabel:
-						text: "broadcast nmea data layer"
-					
+						text: "broadcast data on nmea layer (port 11225)"
+						
+				MDBoxLayout:
+					adaptive_height: True
 			
-	
+					CheckBox:
+						id: cb_nmeBMqtt
+						on_release: app.on_cb_nmeB('mqtt',self)
+						size: app.btH,app.btH
+						size_hint: None,None
+					
+					DLabel:
+						text: "broadcast data on mqtt layer (port 12883)"
+						
+				MDBoxLayout:
+					adaptive_height: True
+			
+					CheckBox:
+						id: cb_nmeBmqHDG
+						on_release: app.on_cb_nmeB('mqHDG',self)
+						size: app.btH,app.btH
+						size_hint: None,None
+					
+					DLabel:
+						text: "TODO HDG on mqtt"
+					
+
+				Button:
+					text: "push"
+					size_hint_y: None
+					height: app.btH
+					on_release: app.hbc.pub("sensors/hdgm","1")
+				
+
+
 	Screen:
 		name: "Sensors"
 		
@@ -839,7 +883,7 @@
 						id: ti_sensorsRemoteTcp
 						hint_text:"ip:port of remote device sending sensor data:"
 						text: app.sensorsRemoteTcp
-						disabled: True
+						#disabled: True
 					
 						
 						
