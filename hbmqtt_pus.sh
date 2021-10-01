@@ -1,0 +1,1 @@
+hbmqtt_pub --url "mqtt://localhost:12883" -t "ttest" -m "hello ?232"

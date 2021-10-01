@@ -1,0 +1,1 @@
+hbmqtt_sub --url "mqtt://localhost:12883" -t "ttest"

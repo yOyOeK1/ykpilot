@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+#import kivy
+
+from gui import gui
+import DataSaveRestore
+import traceback
+
+from kivy import platform as kplatform
+from DataSaveRestore import DataSR_save
+import sys
+
+if __name__ == "__main__":
+
+	g = gui()
+	
+	if kplatform == "android":
+		try:
+			g.run()
+		except:
+			print("EE - there is a big error")
+			print("------------ trackback ------------")
+			print( traceback.format_exc() )
+			print("------------ trackback ------------")
+			print("-------------print_exc")
+			traceback.print_exc(limit=100, file=sys.stdout)
+			print("-------------print_exc")
+			
+		
+	# not android
+	else: 
+		print("not android host")
+		g.run()
+
+		print("force to save config for ykpilot")
+		g.on_pause()
+		
+		print("end process trying to save qrl status to file")
+		data = g.driver9.qa.q_table
+		file = "./qs_q_table_test2.zip"
+		res = DataSR_save(data, file, True)
+		print("saved ? res",res)
+
+print("------------ trackback ------------")
+print( traceback.format_exc() )
+
+
+'''
+TODO
+[] - vfb load in kivy
+[] - load page on add widget list of widgets
+[] - load page on add widget form
+
+[+] - screen sensors on load page
+'''
+
