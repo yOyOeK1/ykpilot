@@ -89,7 +89,7 @@ void t3Callback();
 Task t4();
 Task t_dummy(200, 3, &dummyRaport);
 Task t_serial(188, TASK_FOREVER, &serialAction);
-Task t_nice(5000, TASK_FOREVER, &niceRaport);
+Task t_nice(10000, TASK_FOREVER, &niceRaport);
 Task t_dht(10000, TASK_FOREVER, &dhtIter);
 Task t_batMux(1000, TASK_FOREVER, &batMux);
 //Task t2(3000, TASK_FOREVER, &t2Callback);
@@ -161,13 +161,11 @@ void dhtIter(){
     Serial.println(F("{'dht': 'error'}"));
     return;
   }
-  Serial.print("{'dht':{'humidity':");
-  Serial.print(h);
-  Serial.print(",'C':");
-  Serial.print(t);
-  Serial.print(",'F':");
-  Serial.print(f);
-  Serial.println("}}");
+  
+  p("{'dht':{'humidity':"+String(h)+","\
+		  "'C':"+String(t)+","\
+		  "'F':"+String(f)+\
+		  "}}");
   
 }
 
@@ -225,12 +223,14 @@ void bmRaportSta(){
 				"'hh':"+String(bmOnHH)+","
 				"'mm':"+String(bmOnMM)+","
 				"'ss':"+String(bmOnSS)+\
-			"},"
+			"}}}");
+	p("{'batMuxSta':{"\
 			"'left':{"
-							"'hh':"+String(bmOnHHl)+","
-							"'mm':"+String(bmOnMMl)+","
-							"'ss':"+String(bmOnSSl)+\
-						"},"
+				"'hh':"+String(bmOnHHl)+","
+				"'mm':"+String(bmOnMMl)+","
+				"'ss':"+String(bmOnSSl)+\
+			"}}}");
+	p( "{'batMuxSta':{"\	
 			"'batSel':"+String(bmBatSel)+","
 			"'outStage1':"+String(bmOutStage1)+","
 			"'arb0g':"+String(arb0g)+","
@@ -399,13 +399,10 @@ int adcReadAvg( int apin ){
     )/3;
 }
 
-void adcToH( int ap ){
+String adcToH( int ap ){
   int a = analogRead( ap );
-  Serial.print("{");
-  Serial.print("'raw':");
-  Serial.print(a);
-  Serial.print(",");
-  //Serial.print("____");
+  String tr = "{'raw':"+String(a)+",";
+  
   if( ap == b0g ){
     a-= offsets[5];
   }else if( ap == b01 ){
@@ -417,32 +414,23 @@ void adcToH( int ap ){
   }else if( ap == outStage2 ){
     a-= offsets[1];
   }
-  Serial.print("'now':");
-  Serial.print(a);
-  Serial.print(",");
+  tr+= "'now':"+String(a)+",";
   float res = (1200.000/1024.000)*(float(a))-600.000;
   //Serial.print( ap );
-  Serial.print("'volts':");
-  Serial.print( res );
-  Serial.print("}");
+  tr+="'volts':"+String(res)+"}";
+ 
+  return tr;
   
 }
 
 void adcRaw(){
-  Serial.print("{'adcRaw':{");
-  Serial.print("'a0':");
-  adcToH( A0 );
-  Serial.print(",'a1':");
-  adcToH( A1 );
-  Serial.print(",'a2':");
-  adcToH( A2 );
-  Serial.print(",'a3':");
-  adcToH( A3 );
-  Serial.print(",'a4':");
-  adcToH( A4 );
-  Serial.print(",'a5':");
-  adcToH( A5 );
-  Serial.println("}}");
+  p("{'adcRaw':{'a0':"+adcToH( A0 )+"}}");
+  p("{'adcRaw':{'a1':"+adcToH( A1 )+"}}");
+  p("{'adcRaw':{'a2':"+adcToH( A2 )+"}}");
+  p("{'adcRaw':{'a3':"+adcToH( A3 )+"}}");
+  p("{'adcRaw':{'a4':"+adcToH( A4 )+"}}");
+  p("{'adcRaw':{'a5':"+adcToH( A5 )+"}}");
+    
   
 }
 
@@ -517,7 +505,7 @@ void b0b1Test(){
 
 void niceRaport(){
   adcRaw();
-  adcNice();
+  //adcNice();
   
 }
 
@@ -641,7 +629,16 @@ bool cmdLed(String cmd){
 			digitalWrite(LED_BUILTIN, LOW);
 			return true;
 		}
+	}else if(cmd.substring(0,4) == "ping"){
+		p("#ping");
+		p("pong");
+	
+	}else if(cmd.substring(0,4) == "echo"){
+		p("#echo");
+		p(String(cmd.substring(5)));
+				
 	}
+	
 	return false;
 }
 
