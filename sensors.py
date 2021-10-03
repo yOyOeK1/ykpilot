@@ -37,6 +37,7 @@ from senXyzData import xyzData
 from senDTH import senDTH
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.button import MDFlatButton
+from senMqttClient import senMqttClient
 #from senVHeelAnalitics import senVHeelAnalitics
 
 
@@ -129,6 +130,11 @@ class sensors:
         self.device = deviceSensors(gui)
         self.sensorsList.append( self.device )
         self.sensorsListStr.append('device')        
+        
+        self.hbmq = senMqttClient(gui)
+        self.sensorsList.append( self.hbmq )
+        self.sensorsListStr.append('hbmq')
+        self.hbmq.restoreFromFile(gui)
         
         
         self.gpsD = gpsData(gui, icon='ico_sensors_64_64.png')
@@ -673,7 +679,7 @@ class sensors:
         if debPrints: print("sensors.interval...")
         
         self.device.iter()
-        
+        self.hbmq.iter()
         
         try:
             accelVal = accelerometer.acceleration[:3]
@@ -748,6 +754,8 @@ class sensors:
         #pass
         #self.mic.runIt()
         self.device.initSensors()
+        Clock.schedule_once(self.hbmq.runIt, 0.1)
+        
         iterTime = (1.0/6.0) if self.gui.platform == 'android' else 1.0
         self.intervalEvent = Clock.schedule_interval( self.interval, iterTime )
         

@@ -2,10 +2,10 @@ from TimeHelper import TimeHelper
 from senProto import senProto
 
 
-class senDTH(senProto):
+class senMqttTopic(senProto):
     
     def __init__(self,gui,type_):
-        super(senDTH,self).__init__()
+        super(senMqttTopic,self).__init__()
         self.gui = gui
         self.type_ = type_
         self.type = self.type_
@@ -20,21 +20,26 @@ class senDTH(senProto):
     
     def getValuesOptions(self):
         tr = { 'dict' : [
-                'humidity','C','F'
+                'v',
+                'tUpdate'
                 ]
             }
         return tr
     
     def update(self, val):
-        print("sen.",self.type_,".update val",val)
-        
+        try:
+            val = val.decode('UTF-8')
+            #print("sen.",self.type_,".update val[",val,"]")
+        except:
+            print("EE - senMqttToic.update val",val)
+        val = {
+            'v':val,
+            'tUpdate':self.th.getTimestamp(True)
+            }
         self.history.append(val)
         if len(self.history)>self.maxHistory:
             self.history.pop(0)
         
-        #for o in self.callBacksForUpdate:
-        #    o.update(self.type_, val)
         self.broadcastCallBack(self.gui, self.type, val)
-    
     
     

@@ -1,8 +1,13 @@
 import json
 from FileActions import *
 from zipfile import ZipFile as zf
+import sys
 
 def DataSR_save(data,file, zip=False):
+	print("DataSR_save",file)
+	print("TODO - check if there is a directory!")
+	sys.exit(1)
+	
 	
 	if zip:
 		try:
@@ -21,6 +26,7 @@ def DataSR_save(data,file, zip=False):
 			return 0
 	
 def DataSR_restore(file,zip=False):
+	print("DataSR_restore",file)
 	if zip:
 		try:
 			z = zf(file,mode="r")

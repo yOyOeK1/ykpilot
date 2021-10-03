@@ -132,7 +132,7 @@ class Widget_cn(WidgetProto,WidgetHelper):
         if v != None:
             vAsInt = True
             try:
-                vi = int(v)
+                v = float(v)
             except:
                 vAsInt = False
             

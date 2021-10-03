@@ -618,6 +618,13 @@ class ScreenWidgets:
         #self.updateWidgetFromScatter()
         self.deb = False
     
+    def getSenObj(self,nameOfSen):
+        ob = None
+        for sofli,sofl in enumerate(self.gui.sen.sensorsListStr):
+            if nameOfSen == sofl:
+                ob = self.gui.sen.sensorsList[sofli]
+                break
+        return [ob,sofli]
     
     def fromWConfigRemoweWidget(self,si, wi):
         print("fromWConfigRemoweWidget si",si," wi",wi)
@@ -645,17 +652,24 @@ class ScreenWidgets:
             for cal in w['callback']:
                 if self.deb: print("sensor",cal)
                 
-                ob = None
-                for sofli,sofl in enumerate(self.gui.sen.sensorsListStr):
-                    if cal == sofl:
-                        ob = self.gui.sen.sensorsList[sofli]
-                        break
+                ob,sofli = self.getSenObj(cal)
+                
                 if ob:
-                    ob.removeCallBack(obj)
+                    try:
+                        ob.removeCallBack(obj)
+                    except:
+                        print("EE - sw 0423 \nob{} \nobj{}".format(
+                            ob,obj
+                            ))
+                        pass
                 else:
                     print("EE - screen widgets error 0932")
+                    print("EE - sw 0423 \nob{} \nobj{} \nsofli{} \ncal{}".format(
+                            ob,obj,sofli,cal
+                            ))
                     self.gui.on_makeToast("error rebuilding screen widgets")
-                    sys.exit(0)
+                    if cal[0] != '/':
+                        sys.exit(0)
                 #unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
                 #if self.deb: print("go with:",unSub)
                 #try:
@@ -715,9 +729,15 @@ class ScreenWidgets:
                     if self.deb: print("changing gps to gpsD")
                     c = 'gpsD'
                 if self.deb: print("add it ....")
-                eval("self.gui.sen.%s.addCallBack(o,'Widgets')"%(
-                    c
-                    ))
+                
+                objByC,aaaabc = self.getSenObj(c)
+                if objByC == None:
+                    print("EE - adding widget to None widget :/ hyyymmm")
+                else:
+                    objByC.addCallBack(o,'Widgets')
+                #eval("self.gui.sen.%s.addCallBack(o,'Widgets')"%(
+                #    c
+                #    ))
                 if self.deb: print("    DONE")
                 #if self.deb: print("o",o)
                 #if self.deb: print("widgets[i]['obj']",widgets[i]['obj'])

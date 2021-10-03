@@ -20,7 +20,6 @@ from kivymd.uix.button import MDIconButton
 from kivymd.toast import toast as mdtoast
 from kivy.uix.image import Image
 from hbmqttBroker import hbmqttBroker
-from hbMqttClient import hbMqttClient
 #from PCPlotSinAnalitics import PCPlotSinAnalitics
 
 
@@ -202,7 +201,7 @@ class gui(App):
 	hb_task = None
 	watchdog_task = None
 	watchdogTick = 0
-	hbc = None 
+	hbc = None
 		
 	def __init__(self, *a, **kw):
 		super(gui, self).__init__(*a, **kw)
@@ -222,7 +221,7 @@ class gui(App):
 		self.ips = []
 		self.hb = hbmqttBroker(self)
 		self.watchdogTick_iter = 0
-		self.hbc = hbMqttClient(self)
+		#self.hbc = hbMqttClient(self)
 		
 	
 		
@@ -497,6 +496,7 @@ class gui(App):
 			bS = self.th.benStart()
 			
 			self.sen.makeSensors()
+			#sys.exit(9)
 			p = self.rl.parent
 			p.remove_widget(self.rl)
 			rl = self.sen.buidPlayer(self.rl)
@@ -734,9 +734,10 @@ class gui(App):
 				
 			print(" starting main loop for sensors ")
 			self.sen.run()
+			self.hbc = self.sen.hbmq
 		
 		
-			Clock.schedule_once(self.hbc.runIt,0.1)
+			#Clock.schedule_once(self.hbc.runIt,0.1)
 			
 		
 		
@@ -1009,6 +1010,7 @@ class gui(App):
 				pass
 				
 			self.on_configSave()
+			self.sen.hbmq.configSave(self)
 		
 		return True
 	

@@ -17,14 +17,13 @@ guiTask = None
 
 if __name__ == "__main__":
 
+	g = gui()
 
 	if kplatform == "android":
-		g = gui()
 		g.run()
 		g.on_pouse()
 		sys.exit(0)
 
-	g = gui()
 
 	async def guiStarter():
 		print("guiStarter")
@@ -83,8 +82,10 @@ if __name__ == "__main__":
 	def allStart():
 		hbTask = asyncio.ensure_future(hbStarter())
 		async def run_wrapper():
-			await g.async_run(async_lib='asyncio')
 			print('App done')
+			await g.async_run(async_lib='asyncio')
+			print("run_wrapper")
+			g.on_pause() # force to save configs
 			hbTask.cancel()
 		
 		return asyncio.gather(run_wrapper(), hbTask)

@@ -396,7 +396,7 @@ class Widget_graph(WidgetHelper):
             
             vAsInt = True
             try:
-                vi = int(v)
+                v = float(v)
             except:
                 vAsInt = False
             
@@ -434,8 +434,9 @@ class Widget_graph(WidgetHelper):
                 
                         
                 if ymin != None and ymax != None:
-                    ymin = round(ymin,2)
-                    ymax = round(ymax,2)
+                    print(ymin,",,",ymax)
+                    ymin = round(float(ymin),2)
+                    ymax = round(float(ymax),2)
                     #print("y min max ",ymin, " max ",ymax)
                     #print("gObj x min max", self.gObj.xmin," x ",self.gObj.xmax)
                     if ymax == ymin and ymax == 0.0:

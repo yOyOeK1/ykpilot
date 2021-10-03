@@ -4,7 +4,7 @@ from plyer import battery
 from plyer import brightness
 import traceback
 from senProto import senProto
-import psutil
+#import psutil
 
 
 class deviceSensors(senProto):
@@ -114,15 +114,15 @@ class deviceSensors(senProto):
             'app uptime nice': self.uptimeNice
             }
         
-        tcb['cpu percent'] = int(psutil.cpu_percent())
-        memS = psutil.virtual_memory()
-        memSplit = str(memS).replace("(", " ").replace(")", " ").replace(",", "").split(" ")
-        tcb['mem total'] = int(memSplit[1][6:])
-        tcb['mem percent use'] = float(memSplit[3][8:])
-        loadA = list(psutil.getloadavg())
-        tcb['cpu avg 1'] = loadA[0]
-        tcb['cpu avg 2'] = loadA[1]
-        tcb['cpu avg 3'] = loadA[2]
+        #tcb['cpu percent'] = int(psutil.cpu_percent())
+        #memS = psutil.virtual_memory()
+        #memSplit = str(memS).replace("(", " ").replace(")", " ").replace(",", "").split(" ")
+        #tcb['mem total'] = int(memSplit[1][6:])
+        #tcb['mem percent use'] = float(memSplit[3][8:])
+        #loadA = list(psutil.getloadavg())
+        #tcb['cpu avg 1'] = loadA[0]
+        #tcb['cpu avg 2'] = loadA[1]
+        #tcb['cpu avg 3'] = loadA[2]
         try:
             aoe =1
         except:
