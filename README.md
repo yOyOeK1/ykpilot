@@ -1,6 +1,8 @@
 # ykpilot
 Monohull sailboat / monohull powerboat autopilot base on android device :)
 
+o.O
+
 #Screeenshots of the app in action:
 
 ###Sensors screen.
