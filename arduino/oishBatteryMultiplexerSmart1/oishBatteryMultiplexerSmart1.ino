@@ -3,6 +3,11 @@
 
 #include <DHT.h>
 
+
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
+
+
 int swb0 = 7;
 int swb1 = 6;
 int swdcdc = 5;
@@ -127,6 +132,9 @@ void setup() {
 
   dht.begin();
 
+  SSerial.begin(9600);
+  SSerial.println("arduino01 on softSerial 9600");
+  
   
   runner.init();
   //runner.addTask(t_dummy);
@@ -158,7 +166,7 @@ void dhtIter(){
   float f = dht.readTemperature(true);
   
   if (isnan(h) || isnan(t) || isnan(f)) {
-    Serial.println(F("{'dht': 'error'}"));
+    p("{'dht': 'error'}");
     return;
   }
   
@@ -171,6 +179,7 @@ void dhtIter(){
 
 
 void p(String n){
+	SSerial.println(n);
 	Serial.println(n);
 }
 
@@ -376,7 +385,7 @@ void batMux(){
 
 
 void swTest(){
-  Serial.println("swTest ----------------");
+  p("swTest ----------------");
   digitalWrite( swb0, swOn);
   digitalWrite( swb1, swOn);
   digitalWrite( swdcdc, swOn);
@@ -435,23 +444,21 @@ void adcRaw(){
 }
 
 void adcNice(){
-  Serial.print("{'adcNice':{");
-  Serial.print("'b0g':  ");
-  adcToH( b0g );
+  p("{'adcNice':{"\
+	"'b0g':  "+adcToH( b0g )+"}}");
   
-  Serial.print(",'b01':  ");
-  adcToH( b01 );
+  p("{'adcNice':{"\
+  	"'b01':  "+adcToH( b01 )+"}}");
   
-  Serial.print(",'b1p':  ");
-  adcToH( b1p );
+  p("{'adcNice':{"\
+  	"'b1p':  "+adcToH( b1p )+"}}");
   
-  Serial.print(",'outStage1':  ");
-  adcToH( outStage1 );
+  p("{'adcNice':{"\
+  	"'outStage1':  "+adcToH( outStage1 )+"}}");
   
-  Serial.print(",'outStage2':  ");
-  adcToH( outStage2 );
-  
-  Serial.println("}}");
+  p("{'adcNice':{"\
+  	"'outStage2':  "+adcToH( outStage2 )+"}}");
+    
 }
 
 
@@ -510,114 +517,6 @@ void niceRaport(){
 }
 
 int bmpiter = 0;
-void basicMultiplexer(){
-  int onFor = 2;// min
-  long w = 1000;
-  
-
-  //Serial.print("o.O basic multiplexer iter: ");
-  Serial.println(bmpiter++);
-  \ 
-
-  //Serial.println("- battery test...");
-  
-  digitalWrite( swb0, swOff);
-  digitalWrite( swb1, swOff);
-  batteryNow = 0;
- 
-  
-  delay(w);
-  int a = analogRead(outStage1);
-  digitalWrite( swb0, swOn);
-  digitalWrite( swb1, swOn);
-  batteryNow = 1;
-
-
- 
-  delay(w);
-  int b = analogRead(outStage1);
-
-  //Serial.println("  - results from test:");
-  //Serial.print("    - battery 0: ");
-  //Serial.println(a);
-  
-  //Serial.print("    - battery 1: ");
-  //Serial.println(b);
-
-  //Serial.print("- setting multiplexer to battery: ");
-  clickTimesIn( 3, 6 );
-  if( a >= b ){
-    Serial.println(0);    
-    digitalWrite( swb0, swOff);
-    digitalWrite( swb1, swOff);
-    batteryNow = 0;
-    clickTimesIn( 1, 2 );
-  }else{
-     Serial.println(1);    
-    digitalWrite( swb0, swOn);
-    digitalWrite( swb1, swOn);
-    batteryNow = 1;
-    clickTimesIn( 2, 2 );
-  }
-  
-  delay(w);
-
-  digitalWrite( swdcdc, swOn);
-  swOutNow = 1;
-
-  
-
-
-  delay(w);
-  Serial.println("- reading adc values for reference ...");
-  delay(w);
-  b0g_ = analogRead( b0g );
-  delay(w);
-  b01_ = analogRead( b01 );
-  delay(w);
-  b1p_ = analogRead( b1p );
-  Serial.println("  readings are: ");
-  Serial.println( b0g_ );
-  Serial.println( b01_ );
-  Serial.println( b1p_ );
-
-  int adcSame = 0; 
-  while( true ){
-    Serial.print("- goind waint now for ");
-    Serial.println(onFor);
-    waitMinutes(onFor);
-
-    Serial.println("- waining done ! chk status on adc ");
-    adcSame = 0;
-    
-    if( analogRead( b0g ) == b0g_ ){
-      Serial.println("b0g ok !");
-      adcSame++;  
-    } 
-    if( analogRead( b01) == b01_ ){
-      Serial.println("b01 ok !");
-      adcSame++;
-    }
-    if( analogRead( b1p ) == b1p_ ){
-      Serial.println("b1p ok !");
-      adcSame++;
-    }
-    if( adcSame != 3) {
-      Serial.println("- buuu no optimalization loop  :( klik :(");
-      break;
-    }
-
-  }
-
-
-  
-  
-  digitalWrite( swdcdc, swOff);
-  swOutNow = 0;
-  delay(w);
-
-  Serial.println("Iter done...");
-}
 
 
 bool cmdLed(String cmd){
@@ -649,15 +548,12 @@ char buf[33];
 int charN = 0;
 
 int serialGot(){
-	Serial.print("serialGot:");
-	Serial.print(buf);
-	Serial.println("<<");
+	p("serialGot:"+String(buf)+"<<");
 
 	if( buf[0] == '$' ){
-		Serial.println("got command, processing ...");
-		Serial.print("command:");
+		p("got command, processing ...");
 		cmd = String(buf).substring(1);
-		Serial.println(cmd);
+		p("command:"+String(cmd));
 		
 		if( cmdLed(cmd) )
 			return 0;
