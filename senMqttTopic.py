@@ -28,10 +28,24 @@ class senMqttTopic(senProto):
     
     def update(self, val):
         try:
-            val = val.decode('UTF-8')
-            #print("sen.",self.type_,".update val[",val,"]")
+            val = val.decode()
         except:
-            print("EE - senMqttToic.update val",val)
+            #print("sen.",self.type_,".update val[",val,"]",
+            #    "val type",type(val))
+            #print("EE - senMqttToic.update val",val)
+            
+            if val == "True":
+                val = 1
+            elif val == "False":
+                val = 0
+            
+            
+            '''try:
+                val = float(val)
+                print("II - try as float? out",val)
+            except:
+                print("II - as a string then")
+            '''
         val = {
             'v':val,
             'tUpdate':self.th.getTimestamp(True)

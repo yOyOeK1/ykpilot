@@ -299,39 +299,40 @@ class Widget_niddle(WidgetHelper):
         v = self.wvfh.updateVal(fromWho, vals)
         if v != None:
             
-            vAsInt = True
-            try:
-                vi = int(v)
-            except:
-                vAsInt = False
-            
-            if vAsInt:
-                self.valueToDisplay =  round( v, self.mround ) if self.mround > 0 else int( v )
-            else:
-                self.valueToDisplay = v
-            
-            
-             
             if self.smSettings['title'] != '':
                 self.sm.label = "{}\n{}".format(
                     self.smSettings['title'], self.valueToDisplay)
             else: 
                 self.sm.label = str(self.valueToDisplay)
+
             
+            vAsInt = True
+            try:
+                vi = int(v)
+                
+            except:
+                vAsInt = False
             
-            if self.valueToDisplay > self.smSettings['max']:
-                self.valueToDisplay = self.smSettings['max']
-            if self.valueToDisplay < self.smSettings['min']:
-                self.valueToDisplay = self.smSettings['min']
+            if vAsInt:
+                self.valueToDisplay =  round( v, self.mround ) if self.mround > 0 else int( v )
+                
+                if self.valueToDisplay > self.smSettings['max']:
+                    self.valueToDisplay = self.smSettings['max']
+                if self.valueToDisplay < self.smSettings['min']:
+                    self.valueToDisplay = self.smSettings['min']
+                
             
-            
-            if self.gui.animation:            
-                Animation.cancel_all(self.sm,'angle')
-                anim = Animation(value=self.valueToDisplay, t='out_quad' )
-                anim.start( self.sm )
-            
+                if self.gui.animation:            
+                    Animation.cancel_all(self.sm,'angle')
+                    anim = Animation(value=self.valueToDisplay, t='out_quad' )
+                    anim.start( self.sm )
+                
             else:
-                self.sm.value = self.valueToDisplay
+                self.valueToDisplay = v
+            
+            
+            
+            self.sm.value = self.valueToDisplay
             
                 
         

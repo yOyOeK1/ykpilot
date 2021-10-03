@@ -312,7 +312,7 @@ class WidgetValFunctionHandler(WidgetHelper):
             print('''updateVal in WVFH[{}] 
     from:[{}] gotvals:[{}] fun:[{}] 
     c0[{}] vn0[{}] 
-    c1[{}] vn1[{}]'''.format(
+    c1[{}] valn1[{}]'''.format(
                 "widgetValFunHand", fromWho, vals, self.fun,
                 self.callback0, self.valn0, self.callback1, self.valn1
                 ))

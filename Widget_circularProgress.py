@@ -222,6 +222,10 @@ update from widget_circularProgress[{}]
                 ))
             
         v = self.wvfh.updateVal(fromWho, vals)
+        try:
+            v = float(v)
+        except:
+            v = None
         if v != None:
             self.valueToDisplay = round( v, self.smSettings['round'] ) if self.smSettings['round'] > 0 else int( v ) 
             self.sm.set_value(self.valueToDisplay,self.smSettings['title'],self.smSettings['unit'])

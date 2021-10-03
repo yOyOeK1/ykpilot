@@ -619,8 +619,11 @@ class ScreenWidgets:
         self.deb = False
     
     def getSenObj(self,nameOfSen):
+        print("getSenObj looking for [{}]".format(nameOfSen))
         ob = None
+        sofli = None
         for sofli,sofl in enumerate(self.gui.sen.sensorsListStr):
+            print("->",sofl)
             if nameOfSen == sofl:
                 ob = self.gui.sen.sensorsList[sofli]
                 break
@@ -628,6 +631,7 @@ class ScreenWidgets:
     
     def fromWConfigRemoweWidget(self,si, wi):
         print("fromWConfigRemoweWidget si",si," wi",wi)
+        self.deb = True
         w = self.wConfig[si][wi]
         obj = w['obj']
                 
@@ -648,28 +652,28 @@ class ScreenWidgets:
             if self.deb: print("unbind scatter")
             self.unbindScatter(p)
             
-            if self.deb: print("remove callbacks...")
+            if self.deb: print("remove callbacks...",w['callback'])
             for cal in w['callback']:
                 if self.deb: print("sensor",cal)
                 
                 ob,sofli = self.getSenObj(cal)
                 
-                if ob:
+                if ob != None:
                     try:
                         ob.removeCallBack(obj)
                     except:
-                        print("EE - sw 0423 \nob{} \nobj{}".format(
+                        print("EE - sw 04231 \nob{} \nobj{}".format(
                             ob,obj
                             ))
                         pass
                 else:
                     print("EE - screen widgets error 0932")
-                    print("EE - sw 0423 \nob{} \nobj{} \nsofli{} \ncal{}".format(
+                    print("EE - sw 04223 \nob:{} \nobj:{} \nsofli:{} \ncal:{}\n-------------".format(
                             ob,obj,sofli,cal
                             ))
                     self.gui.on_makeToast("error rebuilding screen widgets")
-                    if cal[0] != '/':
-                        sys.exit(0)
+                    #if cal[0] != '/':
+                    #    sys.exit(0)
                 #unSub = "self.gui.sen.{}.removeCallBack(obj)".format(cal)
                 #if self.deb: print("go with:",unSub)
                 #try:
@@ -732,7 +736,7 @@ class ScreenWidgets:
                 
                 objByC,aaaabc = self.getSenObj(c)
                 if objByC == None:
-                    print("EE - adding widget to None widget :/ hyyymmm")
+                    print("EE - adding callback widget to None sensor :/ hyyymmm")
                 else:
                     objByC.addCallBack(o,'Widgets')
                 #eval("self.gui.sen.%s.addCallBack(o,'Widgets')"%(

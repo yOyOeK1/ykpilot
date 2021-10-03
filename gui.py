@@ -2,6 +2,15 @@ import asyncio
 import kivymd
 import kivy
 #/home/yoyo/.local/share/python-for-android/dists/Aykp7__armeabi-v7a/_python_bundle/_python_bundle/site-packages/kivy/weakmethod.py
+'''
+
+Exception ignored in thread started by: <bound method ScreenAutopilot.sinWatchDog of <ScreenAutopilot.ScreenAutopilot object at 0x9d16e778>>
+10-03 12:22:05.959 17602 18020 I python  :  Traceback (most recent call last):
+10-03 12:22:05.968 17602 18020 I python  :    File "/tmp/ykpilot/ScreenAutopilot.py", line 166, in sinWatchDog
+10-03 12:22:05.971 17602 18020 I python  :  AttributeError: 'ScreenAutopilot' object has no attribute 'apCommunicationMode'
+10-03 12:22:05.987 17602 17848 I python  : l
+
+'''
 
 import _thread
 import sys
@@ -422,9 +431,10 @@ class gui(App):
 				self.senderPort = 11223
 				makeRender = True
 				print("- setting up a sensor server at ",ipSens,":",self.senderPort)
-				
+		
 				# android service
 				if mkservice:
+					#/home/yoyo/.local/share/python-for-android/build/other_builds/android-sdl2/x86_64__ndk_target_21/android/android
 					from android import AndroidService
 					service = AndroidService("ykpilot background","running ....")
 					service.start("service started")
@@ -1046,6 +1056,18 @@ class gui(App):
 			print("	res",self.sWidgets.saveConfig())
 		except:
 			print("EE - trying to save sWidget but it is not there yet !")
+	
+	
+	def tryToStopService(self, fromWho):
+		print("tryToStopService fromWho:",fromWho)
+		try:
+			print("grabing service...")
+			ser = self.service
+			print("stoping it...")
+			ser.stop()
+			print("service stopt ! DONE")
+		except:
+			print("EE - no good with stoping service")
 	
 	
 	def on_makeToast(self, msg):

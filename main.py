@@ -21,7 +21,8 @@ if __name__ == "__main__":
 
 	if kplatform == "android":
 		g.run()
-		g.on_pouse()
+		g.on_pause()
+		g.tryToStopService("main")
 		sys.exit(0)
 
 
@@ -78,6 +79,7 @@ if __name__ == "__main__":
 		guiTask.async_run()
 		print('App done')
 		hbTask.cancel()
+		return 0
 		
 	def allStart():
 		hbTask = asyncio.ensure_future(hbStarter())
@@ -86,7 +88,12 @@ if __name__ == "__main__":
 			await g.async_run(async_lib='asyncio')
 			print("run_wrapper")
 			g.on_pause() # force to save configs
-			hbTask.cancel()
+			print("stoping hbTask...")
+			tres = hbTask.cancel()
+			print("	got result:",tres)
+			print("go sleep for 10...")
+			time.sleep(1)
+			return 0
 		
 		return asyncio.gather(run_wrapper(), hbTask)
 
@@ -95,6 +102,8 @@ if __name__ == "__main__":
 	loop.run_until_complete(allStart())
 	#loop.run_until_complete(guiStarter())
 	loop.close()
+	print("main after loop")
+	sys.exit(0)
 
 '''
 TODO

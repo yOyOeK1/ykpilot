@@ -434,7 +434,7 @@ class Widget_graph(WidgetHelper):
                 
                         
                 if ymin != None and ymax != None:
-                    print(ymin,",,",ymax)
+                    #print(ymin,",,",ymax)
                     ymin = round(float(ymin),2)
                     ymax = round(float(ymax),2)
                     #print("y min max ",ymin, " max ",ymax)

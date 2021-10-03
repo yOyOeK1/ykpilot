@@ -14,6 +14,15 @@ class hbMqttClient:
     ready = False
     cli = None
     ff = None
+    gui = None
+    
+    fpsLimitUpdate = 1.0
+    
+    stackWorkerIn = 0
+    stackWorkerOut = 0
+    stackWorkerOEvent = None
+    stackWorkerIEvent = None
+    
     def __init__(self):
         print("hbMqttClient init gui")
         print("----------------------------------------\n"*100)
@@ -22,6 +31,11 @@ class hbMqttClient:
         self.outBuf = []
         self.makeCli()
         self.th = TimeHelper()
+        
+        self.stackWorkerIn = 0
+        self.stackWorkerOut = 0
+        self.stackWorkerOEvent = None
+        self.stackWorkerIEvent = None
         
         
     def makeCli(self):
@@ -40,6 +54,13 @@ class hbMqttClient:
         #print("on_message")
         #print(msg.topic+" "+str(msg.payload))
         self.inBuf.append([msg.topic,msg.payload])
+        
+        #print("II - force update on load")
+        if self.gui != None:
+            #print("    yes")
+            self.gui.sen.hbmq.iter()
+            #print("    DONE")
+        
         return 0
     
     def pub(self, topic, msg):
@@ -47,42 +68,49 @@ class hbMqttClient:
         self.ready = False
         self.outBuf.append([topic,msg])
         self.ready = True
+        self.hbStackMkOut()
         '''print("mqc.pub on stack: out({}) in({}) self.cli{}".format(
             len(self.outBuf),
             len(self.inBuf),
             self.cli
             ))
         '''
-    def hbmakeStacks(self,gui, onlyAdd = False):
-        if onlyAdd == False:
-            isCon = self.cli.is_connected()
-            print("hbmakeStacks out({}) in({}) connect{}".format(
-                len(self.outBuf),
-                len(self.inBuf),
-                isCon
-                ))
+        
+    def hbStackMkOut(self,aa='',bb='',cc=''):
+        if self.stackWorkerOut == 0:
+            self.stackWorkerOut = 1
             
-            if isCon:
-                while len(self.outBuf)>0:
-                    m = self.outBuf[0]
-                    #print("mqc.pub to broker m:",m)
-                    self.cli.publish(m[0],m[1])
-                    self.outBuf.pop(0)
+            #print("    OUT from clock")
+            while len(self.outBuf)>0:
+                m = self.outBuf[0]
+                self.outBuf.pop(0)
+                #print("mqc.pub to broker m:",m)
+                self.cli.publish(m[0],m[1])
+            
+            self.stackWorkerOut = 0
+            #print("    OUT DONE")
+    
+    def hbStackMkIn(self,gui, aa='',bb='',cc=''):
+        
+        if self.stackWorkerIn == 0:
+            self.stackWorkerIn = 1
+            #print("    IN from clock")
+        
+            if self.gui != None:
+                gui = self.gui
             else:
-                print("hbc not connected")
-                
+                return 0
             
-        if len(self.inBuf)>0:
-            print("inBuf \nlen:{}\n[0]:{}".format(
-                len(self.inBuf),
-                self.inBuf[0]
-                ))
-            while len(self.inBuf):
+            while len(self.inBuf)>0:
                 m = self.inBuf[0]
+                self.inBuf.pop(0)
                 topic = m[0]
                 sTopic = topic.replace("/","o").replace(".","o").replace(" ","o").replace("_","o")
-                msg = m[1]
-                
+                try:
+                    msg = m[1].decode("ascii")
+                except:
+                    print("EE - IN hbMqttClient msg decode 134")
+                    msg = m[1]
                 
                 hbmq = gui.sen.hbmq
                 item = hbmq.values.get(sTopic)
@@ -94,12 +122,12 @@ class hbMqttClient:
                         'tim': self.th.getTimestamp(True),
                         'obj':obj
                         }
+                    item = hbmq.values[sTopic]
                     gui.sen.sensorsList.append( obj )
                     gui.sen.sensorsListStr.append(sTopic)
                     
-                    print("new topic DONE"*2000)
+                    print("new topic DONE topic:{}\n\t\tmsg:{}".format(topic,msg))
                 
-                item = hbmq.values.get(sTopic)
                 if item != None:
                     #print("update topic")
                     hbmq.values[sTopic]['msg'] = msg
@@ -108,7 +136,25 @@ class hbMqttClient:
                     
                     #print("update topic DONE")
                 
-                self.inBuf.pop(0)
+            self.stackWorkerIn = 0
+            #print("    IN DONE")
+        
+        
+    def hbmakeStacks(self,gui, onlyAdd = False):
+        self.gui = gui
+        if 0:
+            print("hbmakeStacks o({}) i({}) od:{}".format(
+                len(self.outBuf),
+                len(self.inBuf),
+                onlyAdd
+                ))
+            print("o:",self.outBuf)
+            print("\ni:",self.inBuf)
+        if onlyAdd == False:
+            self.hbStackMkOut()
+            
+        self.hbStackMkIn(gui)        
+        
             
         
     def runIt(self,a=0,b=0):
@@ -131,15 +177,19 @@ class hbMqttClient:
         conRes = self.cli.connect('localhost',12883,60)
         print("con:",conRes)
         self.cli.loop_start()
-        while True:
-            time.sleep(1)
-            print("i")
+        print("hbMqttClient inRunIt DONE")
         
-    def mqClientStats(self):
-        print("mqClientStats out({}) in({})".format(
-            len(self.outBuf),
-            len(self.inBuf)
-            ))
+    def hbClientStats(self):
+        #print("hbClientStats")
+        try:
+            isCon = self.cli.is_connected()
+            if isCon == False:
+                print("EE - hbClientStats cli is not connected !")
+            return True
+        except:
+            isCon = "no Client obj"
+            return False
+        
             
 if __name__=="__main__":
     sys.exit(1)

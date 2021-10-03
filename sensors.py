@@ -679,7 +679,7 @@ class sensors:
         if debPrints: print("sensors.interval...")
         
         self.device.iter()
-        self.hbmq.iter()
+        #self.hbmq.iter()
         
         try:
             accelVal = accelerometer.acceleration[:3]

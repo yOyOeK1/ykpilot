@@ -5,25 +5,28 @@ import sys
 
 def DataSR_save(data,file, zip=False):
 	print("DataSR_save",file)
-	print("TODO - check if there is a directory!")
-	sys.exit(1)
 	
+	try:
+		d = json.dumps(data)
+	except:
+		print("EE - DataSR_save error 356")
+		
 	
 	if zip:
 		try:
 			z = zf(file,mode="w",compression=0)
-			z.writestr('myData',str(data))
+			z.writestr('myData',d)
 			z.close()
-			return 1
+			return 'ok'
 		except:
-			return 0
+			return 'error'
 	else:	
 		try:
 			fa = FileActions()
-			fa.writeFile(file,str(data))
-			return 1
+			fa.writeFile(file,d)
+			return 'ok'
 		except:
-			return 0
+			return 'error'
 	
 def DataSR_restore(file,zip=False):
 	print("DataSR_restore",file)
@@ -32,7 +35,7 @@ def DataSR_restore(file,zip=False):
 			z = zf(file,mode="r")
 			s = str(z.read("myData"))[2:-1]
 			#print("data from file[",s,"]")
-			forJson = str(str(s).replace("'",'"') )
+			forJson = s#str(str(s).replace("'",'"') )
 			j = json.loads(forJson)
 			#print("---------j----------\n",j)
 			return j 

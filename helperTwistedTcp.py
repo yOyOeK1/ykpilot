@@ -31,6 +31,39 @@ class Nmea:
 	def __init__(self,factory):
 		self.factory = factory
 		
+	def parseFromOut(self, msg):
+		
+		print("NMEA.parseFromOut msg",msg)
+		#self.gui = factory.gui
+		
+		b ='''
+$ECRMB,A,0.000,L,001,002,0936.788,N,07935.680,W,0.624,270.788,0.012,V,A*67
+$ECRMC,175116,A,0936.780,N,07935.046,W,0.030,336.820,031021,5.028,W,A*07
+$ECAPB,A,A,0.0000,L,N,V,V,270.7884,T,002,270.7883,T,270.7883,T*37
+$ECXTE,A,A,0.000,L,N*4F
+'''
+		key = msg[3:6]
+		
+		if key== 'RMB':
+			print("	got RMB")
+			#return 0
+			# navigate to target way point
+			v = msg.split(',')
+			onHeading = None
+			try:
+				onHeading = float(v[11])
+			except:
+				print("EE - conversion problem 9843")
+			try:
+				if onHeading != None:
+					self.factory.gui.sen.hbmq.pub("/nmea/targetWP/onHeading",onHeading)
+					print("	DONE")
+			except:
+				print("EE - sending error 773")
+				pass
+				
+		
+		
 	def messageParse(self,msg,client):
 		print("messageParse",msg)
 		
@@ -40,8 +73,10 @@ class Nmea:
 		if len(msgs)>0:
 			print("more then one message!",len(msgs))
 			for m in msgs:
+				self.parseFromOut(m)
 				self.factory.sendToAll(m, skipClient=[client])
 		else:
+			self.parseFromOut(msg)
 			self.factory.sendToAll(msg)
 		return False
 			

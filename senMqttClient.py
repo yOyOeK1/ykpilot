@@ -71,8 +71,10 @@ class senMqttClient(senProto,hbMqttClient):
             gui.sen.hbmq.inBuf.append([i['top'],i['msg']])
         print("build used sensors ...")
         gui.sen.hbmq.hbmakeStacks(gui,True)
+        gui.sen.hbmq.iter()
         print("--------------------")
         print("list of sensors",gui.sen.sensorsListStr)
+        print("senMqttClient.restoreFromFile DONE")
         
         
     def getTitle(self):
@@ -81,13 +83,13 @@ class senMqttClient(senProto,hbMqttClient):
         
     def initSensors(self):
         print("initSensors")
-        sys.exit(0)
+        #sys.exit(0)
         
     def iter(self):
         
-        self.hbmakeStacks(self.gui)
+        if 1:#self.hbClientStats()
+            self.hbmakeStacks(self.gui)
         
-        self.mqClientStats()
         doGuiUpdate = True if self.gui.rl.current == "Sensors" else False
         
         self.iterCount+= 1
