@@ -5,6 +5,7 @@ import network
 import json
 import select
 
+
 poll = select.poll()
 
 time.sleep(2)
@@ -17,7 +18,7 @@ time.sleep(1)
 print("gogogo")
 
 print("SoftUart")
-s1 = SoftUART(Pin(2), Pin(4), baudrate=57600, timeout=0)  # tx=2 rx=4
+s1 = SoftUART(Pin(2), Pin(4), baudrate=9600, timeout=0)  # tx=2 rx=4
 
 
 
@@ -57,20 +58,28 @@ def gotIp():
 
 
 mqStack = []
+mqIsConnected = False
 def mqConnect(client_id,ip, port, callback):
-    global c
+    global c,mqIsConnected
     print("mqConnect1")
     try:
+        print("making instance...")
         c = MQTTClient(client_id, ip, port)
-        print("mqConnect2")
-        res = c.connect()
-        print("mqConnect3")
+        print("connecting ...")
+        try:
+            res = c.connect()
+            mqIsConnected = True
+        except:
+            mqIsConnected = False
+            
+        print("setting callbacks")
         c.set_callback(callback)
         c.subscribe("esp01/in")
         c.subscribe("esp01/led/in")
-        print("mq connect results:",res)
+        print("DONE mq connect results:",res)
     except:
         print("EE - mqConnect error :(")
+        
  
     
 def mqCon():
@@ -113,9 +122,9 @@ def mqChkStack():
             
 def mqChk():
     global c,mqStack
-    c.check_msg()    
     
     try:
+        c.check_msg()    
         return True
     except:
         return False
@@ -179,18 +188,24 @@ def uParse( buf ):
     #print("uParse: len({}) [0]){}) newList{} [-2]({}) [-1]({})".format(
     #    len(buf),buf[0],buf.count("\n"),buf[-2],buf[-1]        
     #    ))
-    
+    #print("buf t",type(buf))
+    if isinstance(buf, (bytes)):
+        print("EE - xxx",buf)
+        return 0
     for l in buf.split("\r\n"):
-        if len(l)>1:
-            if l[0] == '{' and l[-1] == '}':
+        uParseLine( l )
+        
+def uParseLine( line ):
+        if len(line)>1:
+            if line[0] == '{' and line[-1] == '}':
                 try:
-                    j = json.loads(l.replace("'",'"'))
+                    j = json.loads(line.replace("'",'"'))
                     #print("jOK")
                     mqBroadJson(j)
                     #print("json YES stackSize:",len(mqStack))
                     
                 except:
-                    print("json NO :(",l)
+                    print("json NO :(",line)
             else:
                 #print("uartNaN:",l)
                 abbbe = 0
@@ -207,32 +222,46 @@ while True:
 print( "my ifconfig ",getIp() )
 
 time.sleep(1)
-mqConnect("esp01","192.168.49.220",12883,mqCB)
+
+doMqtt = False
+doSUartToMqtt = False
+doSoftUart = False
+
+
+#mqConnect("esp01","192.168.49.220",12883,mqCB)
 
 
 uart = None
-mIter = 0
+mIter = -1
+buf = ""
+
+
+
+
 while True:
     if (mIter%100) == 0:
         uart = s1.readline()
         if uart != None:
+            buf = None
             try:
-                buf = uart.decode('UTF-8')
-                uParse(buf)
+                buf = uart.decode('ascii')
             except:
-                print("EE - ua")
-                try:
-                    mqAts("esp01/uart/parseE","err41:{}".format(uart))
-                except:
-                    pass
+                buf = uart
+            
+            if buf != None : 
+                uParse(buf)
+            else:
+                mqAts("esp01/uart/parseE","err41:{}".format(uart))
+                
    
-    if (mIter%100) == 0:
-        if mqChk() == False:
-            print("EE - mqChk error :(")
+    if mqIsConnected:
+        if (mIter%100) == 0:
+            if mqChk() == False:
+                print("EE - mqChk error :(")
+            
         
-    
-    if (mIter%10) == 0:
-        mqChkStack()
+        if (mIter%10) == 0:
+            mqChkStack()
     
     
     

@@ -123,7 +123,7 @@ void setup() {
   digitalWrite( swNaN, swOff);
 
 
-  Serial.begin(57600);
+  Serial.begin(9600);
 
   dht.begin();
 
