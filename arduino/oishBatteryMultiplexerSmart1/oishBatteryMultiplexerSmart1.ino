@@ -80,30 +80,37 @@ int arouts12 = 0;
 DHT dht( DHTPIN, DHTTYPE );
 
 
-#include <TaskScheduler.h>
+//#include <TaskScheduler.h>
 void dummyRaport();
 void niceRaport();
 void serialAction();
 void dhtIter();
+void pachpachRaport();
 void batMux();
 
 void t2Callback();
 void t3Callback();
 
+
+
 //Tasks
-Task t4();
-Task t_dummy(200, 3, &dummyRaport);
-Task t_serial(188, TASK_FOREVER, &serialAction);
-Task t_nice(10000, TASK_FOREVER, &niceRaport);
-Task t_dht(10000, TASK_FOREVER, &dhtIter);
-Task t_batMux(1000, TASK_FOREVER, &batMux);
+//Task t4();
+//Task t_dummy(200, 3, &dummyRaport);
+//Task t_serial(101, TASK_FOREVER, &serialAction);
+//Task t_nice(10000, TASK_FOREVER, &niceRaport);
+//Task t_dht(10000, TASK_FOREVER, &dhtIter);
+//Task t_batMux(997, TASK_FOREVER, &batMux);
+//Task t_ppR(6473, TASK_FOREVER, &pachpachRaport);
 //Task t2(3000, TASK_FOREVER, &t2Callback);
 //Task t3(5000, TASK_FOREVER, &t3Callback);
 
-Scheduler runner;
+//Scheduler runner;
 
 
-
+void pachpachRaport(){
+	niceRaport();
+	dhtIter();
+}
 
 
 
@@ -132,23 +139,25 @@ void setup() {
 
   dht.begin();
 
-  SSerial.begin(9600);
+  SSerial.begin(4800);
   SSerial.println("arduino01 on softSerial 9600");
   
   
-  runner.init();
+  //runner.init();
   //runner.addTask(t_dummy);
-  runner.addTask(t_serial);
-  runner.addTask(t_nice);
-  runner.addTask(t_dht);
-  runner.addTask(t_batMux);
+  //runner.addTask(t_serial);
+  //runner.addTask(t_nice);
+  //runner.addTask(t_dht);
+  //runner.addTask(t_batMux);
+  //runner.addTask(t_ppR);
+    
   delay(500);
   //t_dummy.enable();
-  t_serial.enable();
-  t_nice.enable();
-  t_dht.enable();
-  t_batMux.enable();
-  
+  //t_serial.enable();
+  //t_nice.enable();
+  //t_dht.enable();
+  //t_batMux.enable();
+  //t_ppR.enable();
   
 
   
@@ -271,15 +280,20 @@ void bmRaportBat12(){
 		"}}");
 }
 
-int bmRaportSkip = 2;
+int bmRaportSkip = 4;
 int bmRaportIter = 0;
 void batMux(){
 	if( (bmRaportIter%bmRaportSkip) == 0 )
 		bmRaportSta();
+		//niceRaport();
+		//dhtIter();
 	
 	if( bmStatus == 0 ){
 		p("0 - start sequence");
 		batMuxswOutOff();
+		bmOnHHl = bmOnHH;
+		bmOnMMl = bmOnMM;
+		bmOnSSl = bmOnSS;
 	}else if( bmStatus == 1 ){
 		p("1 - sw to battery 1");
 		batMuxswTo1();
@@ -341,7 +355,7 @@ void batMux(){
 		}else
 			bmStatus = 6;
 		
-		bmOnSSl-=1;
+		bmOnSSl-= 5;
 		
 		if( bmOnSSl<0 ){
 			bmOnMMl-=1;
@@ -383,7 +397,7 @@ void batMux(){
 
 // -------------  MULTIPLEXER END
 
-
+/*
 void swTest(){
   p("swTest ----------------");
   digitalWrite( swb0, swOn);
@@ -399,7 +413,6 @@ void swTest(){
   digitalWrite( swNaN, swOff);
 }
 
-
 int adcReadAvg( int apin ){
   return (
     analogRead( apin) +
@@ -407,6 +420,7 @@ int adcReadAvg( int apin ){
     analogRead( apin) \
     )/3;
 }
+*/
 
 String adcToH( int ap ){
   int a = analogRead( ap );
@@ -571,7 +585,7 @@ void serialAction(){
 		buf[charN] = nc;
 		if( nc == '\n' || charN > 32 ){
 			buf[charN] = 0;
-			Serial.println("got Line");
+			//Serial.println("got Line");
 			serialGot();
 			charN=0;
 		}else
@@ -582,10 +596,49 @@ void serialAction(){
 
 
 // the loop function runs over and over again forever
-void loop() {
-  //delay(500); 
 
-  runner.execute();
+long dLs = 0;
+long dLloopEvery = 2000;
+long dLloopNext = 0;
+long dLbatMuxEvery = 5000;
+long dLbatMuxNext = 0;
+long dLpachREvery = 20000;
+long dLpachRNext = 0;
+long dLserEvery = 10;
+long dLserNext = 0;
+
+long dLiters = 0;
+void loop() {
+	dLs = millis();
+	dLiters++;
+	
+	if( dLs > dLloopNext || ((dLs-dLloopNext) > 0) ){
+		p("l"+String(dLiters)+" ms:"+String(dLs));
+		dLiters = 0;
+		
+		dLloopNext = millis()+dLloopEvery;
+	}
+	
+
+	if( dLs > dLserNext || ((dLs-dLserNext) > 0) ){
+		serialAction();
+		
+		dLserNext = millis()+dLserEvery;
+	}
+	
+	
+	if( dLs > dLbatMuxNext || ((dLs-dLbatMuxNext) > 0) ){
+		batMux();
+		dLbatMuxNext = millis()+dLbatMuxEvery;
+	}
+	
+	if( dLs > dLpachRNext || ((dLs-dLpachRNext) > 0) ){
+		pachpachRaport();
+		dLpachRNext = millis()+dLpachREvery;
+	}
+	
+	
+  //runner.execute();
   //adcRaw();
   //adcNice();
 
@@ -597,4 +650,5 @@ void loop() {
   //swTest();
   
   //delay(100); // wait for a second
+   
 }
