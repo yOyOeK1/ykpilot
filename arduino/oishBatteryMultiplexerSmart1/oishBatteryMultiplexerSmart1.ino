@@ -189,7 +189,7 @@ void dhtIter(){
 
 void p(String n){
 	if(SSerial.overflow()) 
-		//Serial.println("EE - SSerial overflow!");
+		Serial.println("EE - SSerial overflow!");
 	SSerial.println(n);
 	//Serial.println(n);
 }
