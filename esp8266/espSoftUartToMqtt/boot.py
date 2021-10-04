@@ -18,9 +18,7 @@ time.sleep(1)
 print("gogogo")
 
 print("SoftUart")
-s1 = SoftUART(Pin(2), Pin(4), baudrate=9600, timeout=0)  # tx=2 rx=4
-
-
+s1 = SoftUART(Pin(2), Pin(4), baudrate=4800, timeout=0)  # tx=2 rx=4
 
 nic = None
 c = None
@@ -58,6 +56,7 @@ def gotIp():
 
 
 mqStack = []
+mqEr = 0
 mqIsConnected = False
 def mqConnect(client_id,ip, port, callback):
     global c,mqIsConnected
@@ -74,6 +73,7 @@ def mqConnect(client_id,ip, port, callback):
             
         print("setting callbacks")
         c.set_callback(callback)
+        c.subscribe("esp01/cmd")
         c.subscribe("esp01/in")
         c.subscribe("esp01/led/in")
         print("DONE mq connect results:",res)
@@ -81,9 +81,31 @@ def mqConnect(client_id,ip, port, callback):
         print("EE - mqConnect error :(")
         
  
+doMqtt = True
+doSUartToMqtt = True
+doSoftUart = True
     
 def mqCon():
     mqConnect("esp01","192.168.49.220",12883,mqCB)
+
+def doCommands( a2 ):
+    global doSoftUart,doSUartToMqtt,doMqtt
+    a2 = a2.decode('ascii')
+    print("gotCmdFromMqtt [{}]".format(a2))
+    if a2 == 'doSoftUartOff':
+        doSoftUart = False
+    elif a2 == 'doSoftUartOn':
+        doSoftUart = True 
+        
+    elif a2 == 'doSUartToMqttOff':
+        doSUartToMqtt = False
+    elif a2 == 'doSUartToMqttOn':
+        doSUartToMqtt = True 
+    
+    elif a2 == 'doMqttOff':
+        doMqtt = False
+    elif a2 == 'doMqttOn':
+        doMqtt = True 
 
 def mqCB(a1=0,a2=0,a3=0,a4=0):
     global c
@@ -93,6 +115,9 @@ def mqCB(a1=0,a2=0,a3=0,a4=0):
             mqPub("esp01/led","0", True)
         elif a2 == b"0":
             mqPub("esp01/led","1",True)
+    elif a1 == b'esp01/cmd' :
+        doCommands(a2)
+
 
 mqSsmax = 0
 def mqChkStack():
@@ -116,7 +141,7 @@ def mqChkStack():
                 if mqSsmax < ss:
                     mqSsmax = ss 
                 if ss > 15:
-                    print("mqStack(",ss,")")
+                    print("mqStack len(",ss,")")
                 break
             
             
@@ -130,7 +155,11 @@ def mqChk():
         return False
 
 def mqPub(topic,msg,r=False):
+    global mqEr
     global c,mqpc
+    
+    if doMqtt == False or mqEr > 2: return True
+    
     mqpc+=1
     try:
         topic_ = topic
@@ -143,6 +172,7 @@ def mqPub(topic,msg,r=False):
         return respu
         
     except:
+        mqEr+=1
         return False
     
 def mqPing():
@@ -166,7 +196,6 @@ def mqAts(topic, msg, r=False):
 
 def mqBroadJson(j, pref = ""):
     #print("broadcast",j," --> ",type(j))
-    
     if isinstance(j, dict):
         for k in j.keys():
             #print("pref:",pref,"key:",k," -> ",str(j[k])[:10])
@@ -178,37 +207,41 @@ def mqBroadJson(j, pref = ""):
         mqAts("uart{}".format(pref), j, False)
         
 def uParse( buf ):
-    global mqStack
+    if len( buf ) > 5:        
+        global mqStack
+        if buf[-1] == "\r" or buf[-1] == "\n":
+            buf = buf[:-1]
+        if buf[-1] == "\r" or buf[-1] == "\n":
+            buf = buf[:-1]
+        
+        if isinstance(buf, (bytes)):
+            print("EE - xxx",buf)
+            return False
+        for l in buf.split("\r\n"):
+            uParseLine( l )
     
-    if buf[-1] == "\r" or buf[-1] == "\n":
-        buf = buf[:-1]
-    if buf[-1] == "\r" or buf[-1] == "\n":
-        buf = buf[:-1]
-    
-    #print("uParse: len({}) [0]){}) newList{} [-2]({}) [-1]({})".format(
-    #    len(buf),buf[0],buf.count("\n"),buf[-2],buf[-1]        
-    #    ))
-    #print("buf t",type(buf))
-    if isinstance(buf, (bytes)):
-        print("EE - xxx",buf)
-        return 0
-    for l in buf.split("\r\n"):
-        uParseLine( l )
+    return True
         
 def uParseLine( line ):
-        if len(line)>1:
-            if line[0] == '{' and line[-1] == '}':
-                try:
-                    j = json.loads(line.replace("'",'"'))
-                    #print("jOK")
+    global doSUartToMqtt
+    if len(line)>1:
+        if line[0] == '{' and line[-1] == '}':
+            try:
+                j = json.loads(line.replace("'",'"'))
+                #print("jOK")
+                if doSUartToMqtt:
                     mqBroadJson(j)
-                    #print("json YES stackSize:",len(mqStack))
-                    
+                #print("json YES stackSize:",len(mqStack))
+                
+            except:
+                print("json NO :(",line)
+                try:
+                    mqAts("esp01/uart/parseE","err41:{}".format(uart))
                 except:
-                    print("json NO :(",line)
-            else:
-                #print("uartNaN:",l)
-                abbbe = 0
+                    pass
+        else:
+            #print("uartNaN:",l)
+            abbbe = 0
 
 wifiConectToAp('DIRECT-v7-SecureTether-PPA-LX3','zLzoqbNU')
 
@@ -223,9 +256,7 @@ print( "my ifconfig ",getIp() )
 
 time.sleep(1)
 
-doMqtt = False
-doSUartToMqtt = False
-doSoftUart = False
+
 
 
 #mqConnect("esp01","192.168.49.220",12883,mqCB)
@@ -237,44 +268,75 @@ buf = ""
 
 
 
-
+uIn = 0
+uEr = 0
 while True:
+    if (mIter%10000) == 0:
+        gc.collect()
+        print("uIn:{} uEr:{} mqSS:{} mem:{} er:{}".format(
+            uIn,uEr,len(mqStack), gc.mem_alloc(), mqEr
+            ))
+    
     if (mIter%100) == 0:
-        uart = s1.readline()
-        if uart != None:
-            buf = None
-            try:
-                buf = uart.decode('ascii')
-            except:
-                buf = uart
-            
-            if buf != None : 
-                uParse(buf)
-            else:
-                mqAts("esp01/uart/parseE","err41:{}".format(uart))
+        if doSoftUart:
+            uart = s1.readline()
+            if uart != None:
+                buf = None
+                try:
+                    buf = uart.decode('ascii')
+                    uIn+=1
+                except:
+                    buf = uart
+                    uEr+=1
+                    print("ee",buf)
                 
-   
-    if mqIsConnected:
-        if (mIter%100) == 0:
-            if mqChk() == False:
-                print("EE - mqChk error :(")
+                if buf != None and uParse(buf) == True: 
+                    #print("good")
+                    abbbb = 0
+                else:
+                    mqAts("esp01/uart/parseE","err41:{}".format(uart))
+                
+                
+    if doMqtt:
+        if mqIsConnected:
+            if (mIter%100) == 0:
+                if mqChk() == False:
+                    print("EE - mqChk error :(")
+                
             
-        
-        if (mIter%10) == 0:
-            mqChkStack()
+            if (mIter%100) == 0:
+                mqChkStack()
     
     
     
-    if (mIter%50000) == 0:
-        print( "wifi ok:",nic.isconnected())
-        print( "ip: ",getIp() )
+    if (mIter%100000) == 0:
+        mqAts("esp01/wifi/status","{}".format(nic.isconnected()))
+        mqAts("esp01/wifi/ip","{}".format(getIp()))
+        mqAts("esp01/services/Mqtt","{}".format(("1" if doMqtt else "0")))
+        mqAts("esp01/services/SoftUart","{}".format(("1" if doSoftUart else "0")))
+        mqAts("esp01/services/SUartToMqtt","{}".format(("1" if doSUartToMqtt else "0")))
     
     if (mIter%10000) == 0:
         if mqPing() == False:
-            print("EE - ping error reconnect ?")
-            mqConnect("esp01","192.168.49.220",12883,mqCB)
+            if doMqtt:
+                print("EE - ping error reconnect ?")
+                mqConnect("esp01","192.168.49.220",12883,mqCB)
+            else:
+                if mqIsConnected:
+                    try:
+                        print("try to stop mqtt client..")
+                        c.disconnect()
+                        mqIsConnected = False
+                    except:
+                        print("EE - can't stop client")
+                else:
+                    pass
+                        
+                    
+                
         else:
-            print("mqtt.pong")
+            mqEr = 0
+            #print("mqtt.pong")
             if mqPub("esp01/load/mqStack",len(mqStack)) == False:
                 print("EE - pub iter ")
             if mqPub("esp01/stats/uartLines",uartc) == False:
@@ -288,6 +350,13 @@ while True:
                 print("EE - pub iter ")
             if mqPub("esp01/iter",mIter) == False:
                 print("EE - pub iter ")
+    
+    if doMqtt == False and doSoftUart == False and doSUartToMqtt == False:
+        print("nothing to do !")
+        r = input()
+        print("got[{}]".format(r))
+        doCommands(r)
+        print(doMqtt,doSUartToMqtt,doSoftUart)
     
     
     mIter+=1
