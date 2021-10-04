@@ -136,7 +136,7 @@ mqc = mqcc("esp01","192.168.49.220",12883, callback=mqHandler,
 time.sleep(.5)
 
 print("MyJsonToMqtt ...")
-mjtm = mjtmc()
+mjtm = mjtmc( mqttPubCallback = mqc )
 print("------- init big objects DONE")
 
 
@@ -186,9 +186,12 @@ while True:
         mqc.pub( "/esp01/suart/nEr", suart.nEr )
         mqc.pub( "/esp01/mqc/nConnects", mqc.nConnects )
         mqc.pub( "/esp01/mqc/nPub", mqc.nPub )
+        mqc.pub( "/esp01/mjtm/nEr" ,mjtm.nParseEr)
+        mqc.pub( "/esp01/mjtm/nNaN" ,mjtm.nParseNaN)
+        mqc.pub( "/esp01/mjtm/nPub" ,mjtm.nPub)
         
         
-        suart.buf = []
+        
         
         
         if mWifi.isOk:
@@ -211,6 +214,7 @@ while True:
         uc = suart.readToBuf(sMi)
         if uc > 0:
             mjtm.parse(suart.buf)
+            suart.buf = []
         #sMsuartNext = getMs()+sMsuartE
     
 print("it's It! DONE")
