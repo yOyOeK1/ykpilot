@@ -1,12 +1,10 @@
-from machine import SoftUART, Pin
+
 import time
-from simple2 import *
-import network
+
+
 import json
-import select
 
 
-poll = select.poll()
 
 time.sleep(2)
 print("3")
@@ -17,96 +15,15 @@ print("1")
 time.sleep(1)
 print("gogogo")
 
-print("SoftUart")
-s1 = SoftUART(Pin(2), Pin(4), baudrate=4800, timeout=0)  # tx=2 rx=4
+print("loading libs...")
+from MyWifi import MyWifi
+from MySUart import MySUart
+from MyMqttClient import MyMqttClient as mqcc
+mqc = None
+from MyJsonToMqtt import MyJsonToMqtt as mjtmc
+print("DOne")
 
-nic = None
-c = None
-mqpc = 0 # mq pub count
-mqAddToStacDumpCount = 0
-uartc = 0 # uart count lines
-
-def wifiConectToAp( essid='', passwd='' ):
-    global nic
-    nic = network.WLAN( network.STA_IF)
-    nic.active(True)
-    nic.connect(essid,passwd) 
-    
-def getIp():
-    return nic.ifconfig()
-
-def mqConnect(client_id,ip, port, callback):
-    global c
-    print("mqConnect1")
-    try:
-        c = MQTTClient(client_id, ip, port)
-        print("mqConnect2")
-        res = c.connect()
-        print("mqConnect3")
-        c.set_callback(callback)
-        c.subscribe("esp01/in")
-        c.subscribe("esp01/led/in")
-        print("mq connect results:",res)
-    except:
-        print("EE - mqConnect error :(")
-    
-    
-def gotIp():
-    return nic.isconnected()
-
-
-mqStack = []
-mqEr = 0
-mqIsConnected = False
-def mqConnect(client_id,ip, port, callback):
-    global c,mqIsConnected
-    print("mqConnect1")
-    try:
-        print("making instance...")
-        c = MQTTClient(client_id, ip, port)
-        print("connecting ...")
-        try:
-            res = c.connect()
-            mqIsConnected = True
-        except:
-            mqIsConnected = False
-            
-        print("setting callbacks")
-        c.set_callback(callback)
-        c.subscribe("esp01/cmd")
-        c.subscribe("esp01/in")
-        c.subscribe("esp01/led/in")
-        print("DONE mq connect results:",res)
-    except:
-        print("EE - mqConnect error :(")
-        
- 
-doMqtt = True
-doSUartToMqtt = True
-doSoftUart = True
-    
-def mqCon():
-    mqConnect("esp01","192.168.49.220",12883,mqCB)
-
-def doCommands( a2 ):
-    global doSoftUart,doSUartToMqtt,doMqtt
-    a2 = a2.decode('ascii')
-    print("gotCmdFromMqtt [{}]".format(a2))
-    if a2 == 'doSoftUartOff':
-        doSoftUart = False
-    elif a2 == 'doSoftUartOn':
-        doSoftUart = True 
-        
-    elif a2 == 'doSUartToMqttOff':
-        doSUartToMqtt = False
-    elif a2 == 'doSUartToMqttOn':
-        doSUartToMqtt = True 
-    
-    elif a2 == 'doMqttOff':
-        doMqtt = False
-    elif a2 == 'doMqttOn':
-        doMqtt = True 
-
+'''
 def mqCB(a1=0,a2=0,a3=0,a4=0):
     global c
     print("a:{}\nb:{}\nc:{}\nd:{}\n-----------".format(a1,a2,a3,a4))
@@ -119,93 +36,7 @@ def mqCB(a1=0,a2=0,a3=0,a4=0):
         doCommands(a2)
 
 
-mqSsmax = 0
-def mqChkStack():
-    global mqStack,mqSsmax
-    if len(mqStack) > 0:
-        popC = 0
-        while True:
-            ss = len(mqStack)
-            m = mqStack[0]
-            
-            #print("mqStack t:{} msg:{}".format(m[0],m[1]))
-            if mqPub(m[0], m[1], False) == None:
-                mqStack.pop(0)
-                ss-=1
-                popC+=1
-            else:
-                print("EE - mqchkstack:/ t:({}) m:({})".format(m[0],m[1]))
-            
-            if ss == 0 or popC > 25:
-                #print("pusht",popC," stack size",len(mqStack))
-                if mqSsmax < ss:
-                    mqSsmax = ss 
-                if ss > 15:
-                    print("mqStack len(",ss,")")
-                break
-            
-            
-def mqChk():
-    global c,mqStack
-    
-    try:
-        c.check_msg()    
-        return True
-    except:
-        return False
-
-def mqPub(topic,msg,r=False):
-    global mqEr
-    global c,mqpc
-    
-    if doMqtt == False or mqEr > 2: return True
-    
-    mqpc+=1
-    try:
-        topic_ = topic
-        msg_ = "{}".format(msg)
-    except:
-        print("EE - in msg")
-    
-    try:
-        respu = c.publish(topic_,msg_,retain=r)
-        return respu
-        
-    except:
-        mqEr+=1
-        return False
-    
-def mqPing():
-    global c
-    try:
-        c.ping()
-        return True
-    except:
-        return False
-'''
- add to stack
- '''
-def mqAts(topic, msg, r=False):
-    global mqStack,mqAddToStacDumpCount
-    if len(mqStack) < 50:
-        mqStack.append([topic,msg,r])
-    else:
-        mqAddToStacDumpCount+=1
-    
-    
-
-def mqBroadJson(j, pref = ""):
-    #print("broadcast",j," --> ",type(j))
-    if isinstance(j, dict):
-        for k in j.keys():
-            #print("pref:",pref,"key:",k," -> ",str(j[k])[:10])
-            mqBroadJson(j[k], "{}/{}".format(pref,k))
-            
-    else:
-        #print("is it a leaf ? :))")
-        #print("mq:",pref," (",j,")")
-        mqAts("uart{}".format(pref), j, False)
-        
+      
 def uParse( buf ):
     if len( buf ) > 5:        
         global mqStack
@@ -243,36 +74,156 @@ def uParseLine( line ):
             #print("uartNaN:",l)
             abbbe = 0
 
-wifiConectToAp('DIRECT-v7-SecureTether-PPA-LX3','zLzoqbNU')
 
+'''
+
+
+
+
+
+
+
+
+  
+            
+   
+
+def getMs():
+    return time.ticks_ms()%15000
+             
+
+def ticchk(sMs, target,every):
+    if sMs > target:
+        return True
+    elif sMs < target and ( target-every ) > sMs :
+        return True
+    
+    return False
+    
+    
+def d():
+    return True
+
+def mqHandler(a1=0,a2=0,a3=0,a4=0):
+    if d():print("mqHandler a:{}\nb:{}\nc:{}\nd:{}".format(a1,a2,a3,a4))
+    
+    msg = a2.decode()
+    if d():print("    msg:",msg)
+    if a1 == b'esp01/cmd':
+        global mqc
+        if d():print("    got command:")
+        if msg == "ping":
+            mqc.pub("esp01/res","pong")
+        if len(msg)>4 and msg[:4] == "echo":
+            mqc.pub("esp01/res",msg[5:])
+    
+    
+print("------- init big objects")
+print("MyWifi ...")
+mWifi = MyWifi('DIRECT-v7-SecureTether-PPA-LX3','zLzoqbNU')
+time.sleep(.5)
+
+print("MySUart ...")
+suart = MySUart()
+time.sleep(.5)
+
+print("MyMqttClient ...")
+mqc = mqcc("esp01","192.168.49.220",12883, callback=mqHandler,
+    subList = [
+        "esp01/ap",
+        "esp01/others"
+        ])
+time.sleep(.5)
+
+print("MyJsonToMqtt ...")
+mjtm = mjtmc()
+print("------- init big objects DONE")
+
+
+sMs = 0
+sMi = 0
+sMloopE = 5000
+sMloopNext = 0
+
+sMsuartE = 1
+sMsuartNext = 0
+
+sMmqcE = 1500
+sMmqcNext = 0
+
+uc = 0
+
+print("Main loop ...")
 while True:
-    if nic.isconnected():
-        break
-    else:
-        print("connecting ....")
-    time.sleep(.5)
-
-print( "my ifconfig ",getIp() )
-
-time.sleep(1)
-
-
-
-
-#mqConnect("esp01","192.168.49.220",12883,mqCB)
-
-
-uart = None
-mIter = -1
-buf = ""
-
-
-
-uIn = 0
-uEr = 0
-while True:
+    sMs = getMs()
+    sMi+=1
+    
+    
+    if ticchk(sMs,sMmqcNext,sMmqcE):
+        mqc.chk_msg()
+        sMmqcNext = getMs()+sMmqcE
+    
+    if ticchk(sMs,sMloopNext,sMloopE):
+        mWifi.chkStatus()
+        print("wifi is ok:[{}]    online:[{}]    ip:[{}]".format(
+            mWifi.isOk,
+            mWifi.isConnected,
+            mWifi.myIp,
+            ))
+        #print("suart buf:[{}]".format(uc))
+        
+        
+        
+        print("looper i/s:[",(sMi/int(sMloopE/1000)),"/1s.",
+              "]    msTick:[",sMs, 
+              "]    mem:[",gc.mem_alloc(),
+              "]    su.buf:[",len(suart.buf),
+              "]")
+        mqc.pub( "/esp01/looper/lps", (sMi/int(sMloopE/1000)) )
+        mqc.pub( "/esp01/cpu/mem/", gc.mem_alloc() )
+        mqc.pub( "/esp01/wifi/ip", mWifi.myIp )
+        mqc.pub( "/esp01/suart/bufSize", len(suart.buf) )
+        mqc.pub( "/esp01/suart/nEr", suart.nEr )
+        mqc.pub( "/esp01/mqc/nConnects", mqc.nConnects )
+        mqc.pub( "/esp01/mqc/nPub", mqc.nPub )
+        
+        
+        suart.buf = []
+        
+        
+        if mWifi.isOk:
+            if mqc.isConnect == False:
+                mqc.connect()
+                
+            if mqc.isConnect == True and mqc.isOk == False:
+                mqc.ping()
+        
+        print("mqc is ok:[{}] online:[{}]".format(
+            mqc.isOk, mqc.isConnect
+            ))
+        
+        
+        sMi = 0       
+        sMloopNext = getMs()+sMloopE
+    
+    
+    if 1:#ticchk(sMs, sMsuartNext,sMsuartE):
+        uc = suart.readToBuf(sMi)
+        if uc > 0:
+            mjtm.parse(suart.buf)
+        #sMsuartNext = getMs()+sMsuartE
+    
+print("it's It! DONE")
+    
+'''    
+if 0:
     if (mIter%10000) == 0:
         gc.collect()
+        #try:
+        #    s1.deinit()
+        #except:
+        #    print("E - no deint")
+        #s1 = msUartInit()
         print("uIn:{} uEr:{} mqSS:{} mem:{} er:{}".format(
             uIn,uEr,len(mqStack), gc.mem_alloc(), mqEr
             ))
@@ -300,27 +251,27 @@ while True:
     if doMqtt:
         if mqIsConnected:
             if (mIter%100) == 0:
-                if mqChk() == False:
+                if mqChk( mqClient ) == False:
                     print("EE - mqChk error :(")
                 
             
             if (mIter%100) == 0:
-                mqChkStack()
+                mqStack,mqSsmax = mqChkStack( mqStack, mqSsmax )
     
     
     
     if (mIter%100000) == 0:
         mqAts("esp01/wifi/status","{}".format(nic.isconnected()))
-        mqAts("esp01/wifi/ip","{}".format(getIp()))
+        mqAts("esp01/wifi/ip","{}".format(getIp( nic )))
         mqAts("esp01/services/Mqtt","{}".format(("1" if doMqtt else "0")))
         mqAts("esp01/services/SoftUart","{}".format(("1" if doSoftUart else "0")))
         mqAts("esp01/services/SUartToMqtt","{}".format(("1" if doSUartToMqtt else "0")))
     
     if (mIter%10000) == 0:
-        if mqPing() == False:
+        if mqPing( mqClient ) == False:
             if doMqtt:
                 print("EE - ping error reconnect ?")
-                mqConnect("esp01","192.168.49.220",12883,mqCB)
+                mqClient = mqCon( mqCB )
             else:
                 if mqIsConnected:
                     try:
@@ -362,3 +313,4 @@ while True:
     mIter+=1
     #time.sleep(.5)
     
+'''
