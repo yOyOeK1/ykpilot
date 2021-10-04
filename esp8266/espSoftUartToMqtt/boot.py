@@ -114,7 +114,20 @@ def mqHandler(a1=0,a2=0,a3=0,a4=0):
         if d():print("    got command:")
         if msg == "ping":
             mqc.pub("esp01/res","pong")
-        if len(msg)>4 and msg[:4] == "echo":
+        elif msg == "looperPrint:Off":
+            global looperPrint
+            looperPrint = False
+        elif msg == "looperPrint:On":
+            global looperPrint
+            looperPrint = True
+        elif len(msg)>8 and msg[:8] == "looperE:":
+            global sMloopE
+            try:
+                sMloopE = int(msg[8:])
+                print("set looper to ",sMloopE)
+            except:
+                mqc.pub("esp01/res","EE - need to be ms in int()")
+        elif len(msg)>4 and msg[:4] == "echo":
             mqc.pub("esp01/res",msg[5:])
     
     
@@ -153,6 +166,8 @@ sMmqcNext = 0
 
 uc = 0
 
+looperPrint = True
+
 print("Main loop ...")
 while True:
     sMs = getMs()
@@ -165,30 +180,29 @@ while True:
     
     if ticchk(sMs,sMloopNext,sMloopE):
         mWifi.chkStatus()
-        print("wifi is ok:[{}]    online:[{}]    ip:[{}]".format(
+        if looperPrint:print("wifi is ok:[{}]    online:[{}]    ip:[{}]".format(
             mWifi.isOk,
             mWifi.isConnected,
             mWifi.myIp,
             ))
         #print("suart buf:[{}]".format(uc))
         
-        
-        
-        print("looper i/s:[",(sMi/int(sMloopE/1000)),"/1s.",
+        lps = (sMi/float(float(sMloopE)/1000.0))
+        if looperPrint: print("looper i/s:[",lps,"/1s.",
               "]    msTick:[",sMs, 
               "]    mem:[",gc.mem_alloc(),
               "]    su.buf:[",len(suart.buf),
               "]")
-        mqc.pub( "/esp01/looper/lps", (sMi/int(sMloopE/1000)) )
-        mqc.pub( "/esp01/cpu/mem/", gc.mem_alloc() )
-        mqc.pub( "/esp01/wifi/ip", mWifi.myIp )
-        mqc.pub( "/esp01/suart/bufSize", len(suart.buf) )
-        mqc.pub( "/esp01/suart/nEr", suart.nEr )
-        mqc.pub( "/esp01/mqc/nConnects", mqc.nConnects )
-        mqc.pub( "/esp01/mqc/nPub", mqc.nPub )
-        mqc.pub( "/esp01/mjtm/nEr" ,mjtm.nParseEr)
-        mqc.pub( "/esp01/mjtm/nNaN" ,mjtm.nParseNaN)
-        mqc.pub( "/esp01/mjtm/nPub" ,mjtm.nPub)
+        mqc.pub( "esp01/looper/lps", lps )
+        mqc.pub( "esp01/cpu/mem/", gc.mem_alloc() )
+        mqc.pub( "esp01/wifi/ip", mWifi.myIp )
+        mqc.pub( "esp01/suart/bufSize", len(suart.buf) )
+        mqc.pub( "esp01/suart/nEr", suart.nEr )
+        mqc.pub( "esp01/mqc/nConnects", mqc.nConnects )
+        mqc.pub( "esp01/mqc/nPub", mqc.nPub )
+        mqc.pub( "esp01/mjtm/nEr" ,mjtm.nParseEr)
+        mqc.pub( "esp01/mjtm/nNaN" ,mjtm.nParseNaN)
+        mqc.pub( "esp01/mjtm/nPub" ,mjtm.nPub)
         
         
         
@@ -201,9 +215,11 @@ while True:
             if mqc.isConnect == True and mqc.isOk == False:
                 mqc.ping()
         
-        print("mqc is ok:[{}] online:[{}]".format(
+        if looperPrint:print("mqc is ok:[{}] online:[{}]".format(
             mqc.isOk, mqc.isConnect
             ))
+        else:
+            print(".")
         
         
         sMi = 0       
@@ -218,103 +234,3 @@ while True:
         #sMsuartNext = getMs()+sMsuartE
     
 print("it's It! DONE")
-    
-'''    
-if 0:
-    if (mIter%10000) == 0:
-        gc.collect()
-        #try:
-        #    s1.deinit()
-        #except:
-        #    print("E - no deint")
-        #s1 = msUartInit()
-        print("uIn:{} uEr:{} mqSS:{} mem:{} er:{}".format(
-            uIn,uEr,len(mqStack), gc.mem_alloc(), mqEr
-            ))
-    
-    if (mIter%100) == 0:
-        if doSoftUart:
-            uart = s1.readline()
-            if uart != None:
-                buf = None
-                try:
-                    buf = uart.decode('ascii')
-                    uIn+=1
-                except:
-                    buf = uart
-                    uEr+=1
-                    print("ee",buf)
-                
-                if buf != None and uParse(buf) == True: 
-                    #print("good")
-                    abbbb = 0
-                else:
-                    mqAts("esp01/uart/parseE","err41:{}".format(uart))
-                
-                
-    if doMqtt:
-        if mqIsConnected:
-            if (mIter%100) == 0:
-                if mqChk( mqClient ) == False:
-                    print("EE - mqChk error :(")
-                
-            
-            if (mIter%100) == 0:
-                mqStack,mqSsmax = mqChkStack( mqStack, mqSsmax )
-    
-    
-    
-    if (mIter%100000) == 0:
-        mqAts("esp01/wifi/status","{}".format(nic.isconnected()))
-        mqAts("esp01/wifi/ip","{}".format(getIp( nic )))
-        mqAts("esp01/services/Mqtt","{}".format(("1" if doMqtt else "0")))
-        mqAts("esp01/services/SoftUart","{}".format(("1" if doSoftUart else "0")))
-        mqAts("esp01/services/SUartToMqtt","{}".format(("1" if doSUartToMqtt else "0")))
-    
-    if (mIter%10000) == 0:
-        if mqPing( mqClient ) == False:
-            if doMqtt:
-                print("EE - ping error reconnect ?")
-                mqClient = mqCon( mqCB )
-            else:
-                if mqIsConnected:
-                    try:
-                        print("try to stop mqtt client..")
-                        c.disconnect()
-                        mqIsConnected = False
-                    except:
-                        print("EE - can't stop client")
-                else:
-                    pass
-                        
-                    
-                
-        else:
-            mqEr = 0
-            #print("mqtt.pong")
-            if mqPub("esp01/load/mqStack",len(mqStack)) == False:
-                print("EE - pub iter ")
-            if mqPub("esp01/stats/uartLines",uartc) == False:
-                print("EE - pub iter ")
-            if mqPub("esp01/stats/mqStackSizeMax",mqSsmax) == False:
-                print("EE - pub iter ")
-            if mqPub("esp01/stats/dumptPubs",mqAddToStacDumpCount) == False:
-                print("EE - pub iter ")
-            
-            if mqPub("esp01/stats/mqpub",mqpc) == False:
-                print("EE - pub iter ")
-            if mqPub("esp01/iter",mIter) == False:
-                print("EE - pub iter ")
-    
-    if doMqtt == False and doSoftUart == False and doSUartToMqtt == False:
-        print("nothing to do !")
-        r = input()
-        print("got[{}]".format(r))
-        doCommands(r)
-        print(doMqtt,doSUartToMqtt,doSoftUart)
-    
-    
-    mIter+=1
-    #time.sleep(.5)
-    
-'''

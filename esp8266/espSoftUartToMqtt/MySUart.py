@@ -28,7 +28,7 @@ class MySUart:
                         self.buf.append( self.mStart.decode('ascii') )
                         #print(str(iterForLog),"@uart:",self.buf[-1][:5])
                     except:
-                        print("E - to ascii 532[",self.mStart,"]")
+                        #print("E - to ascii 532[",self.mStart,"]")
                         self.nEr+= 1
                     self.mStart = bytearray()
                     
