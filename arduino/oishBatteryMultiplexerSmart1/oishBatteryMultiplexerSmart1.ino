@@ -186,14 +186,14 @@ void dhtIter(){
   float f = dht.readTemperature(true);
   
   if (isnan(h) || isnan(t) || isnan(f)) {
-    p(F("{'dht': 'error'}"));
+	//p(F("{'dht': 'error'}"));
     return;
   }
   
-  p("{'dht':{'humidity':"+String(h)+","\
+  p("{'hum':"+String(h)+","\
 		  "'C':"+String(t)+","\
 		  "'F':"+String(f)+\
-		  "}}");
+		  "}");
   
 }
 void wForSS(){
@@ -291,34 +291,34 @@ void batMuxAdcRaw(){
  */
 
 void bmRaportSta(){
-	p( "{'batMux':{"\
+	p( "{"\
 			"'status':"+String(bmStatus)+","\
 			"'every':{"
 				"'hh':"+String(bmOnHH)+","
 				"'mm':"+String(bmOnMM)+","
 				"'ss':"+String(bmOnSS)+\
-			"}}}");
-	p("{'batMux':{"\
+			"}}");
+	p("{"\
 			"'left':{"
 				"'hh':"+String(bmOnHHl)+","
 				"'mm':"+String(bmOnMMl)+","
 				"'ss':"+String(bmOnSSl)+\
-			"}}}");
-	p( "{'batMux':{"\	
+			"}}");
+	p( "{"\	
 			"'batSel':"+String(bmBatSel)+","
 			"'outStage1':"+String(bmOutStage1)+","
 			"'arb0g':"+String(arb0g)+","
 			"'arb01':"+String(arb01)+","
 			"'arb1p':"+String(arb1p)+","
 			"'arouts1':"+String(arouts1)+\	
-		"}}");
+		"}");
 }
 
 void bmRaportBat12(){
-	p("{'batMux':{"\
+	p("{"\
 		"'arbat1':"+String(arbat1)+","
 		"'arbat2':"+String(arbat2)+\
-		"}}");
+		"}");
 }
 
 int bmRaportSkip = 1;
@@ -330,17 +330,17 @@ void batMux(){
 		//dhtIter();
 	
 	if( bmStatus == 0 ){
-		p(F("0 - start sequence"));
+		//p(F("0 - start sequence"));
 		batMuxswOutOff();
 		bmOnHHl = bmOnHH;
 		bmOnMMl = bmOnMM;
 		bmOnSSl = bmOnSS;
 	}else if( bmStatus == 1 ){
-		p(F("1 - sw to battery 1"));
+		//p(F("1 - sw to battery 1"));
 		batMuxswTo1();
 		bmBatSel = 1;
 	}else if( bmStatus == 2 ){
-		p(F("2 - sensing battery 1, make notes"));
+		//p(F("2 - sensing battery 1, make notes"));
 		batMuxAdcRaw();
 		arb0g1 = arb0g;
 		arb011 = arb01;
@@ -348,11 +348,11 @@ void batMux(){
 		arouts11 = arouts1;
 		arbat1 = arouts1;
 	}else if( bmStatus == 3 ){
-		p(F("3 - sw to battery 2"));
+		//p(F("3 - sw to battery 2"));
 		batMuxswTo2();
 		bmBatSel = 2;
 	}else if( bmStatus == 4 ){
-		p(F("4 - sensing battery 2, make notes"));
+		//p(F("4 - sensing battery 2, make notes"));
 		batMuxAdcRaw();
 		arb0g2 = arb0g;
 		arb012 = arb01;
@@ -361,33 +361,32 @@ void batMux(){
 		arbat2 = arouts1;
 		bmRaportBat12();
 		
-		p("  - adc for bat 1:"+String(arouts11)+" bat 2:"+String(arouts12));
+		//p("  - adc for bat 1:"+String(arouts11)+" bat 2:"+String(arouts12));
 		if( arouts11 > arouts12 ){
-			p(F("... use battery 1 for output"));
+			//p(F("... use battery 1 for output"));
 			batMuxswTo1();
 		}else{
-			p(F("... use battery 2 for output"));
+			//p(F("... use battery 2 for output"));
 			batMuxswTo2();
 		}
 		
 	}else if( bmStatus == 5 ){
-		p(F("5 - sw output On"));
+		//p(F("5 - sw output On"));
 		//batMuxswOutOn();
 		bmOutStage1 = 1;
 	}else if( bmStatus == 6 ){
-		p(F("6 - start counter"));
+		//p(F("6 - start counter"));
 		
 		bmOnHHl = bmOnHH;
 		bmOnMMl = bmOnMM;
 		bmOnSSl = bmOnSS;
 	}else if( bmStatus == 7 ){
-		p("7 - waiting for end of cycle..."\
+		//p("7 - waiting for end of cycle..."\
 			"("+String(bmOnHH)+":"+String(bmOnMM)+":"+String(bmOnSS)+") "+\
 			"left: "+\
-			"("+String(bmOnHHl)+":"+String(bmOnMMl)+":"+String(bmOnSSl)+")"
+			"("+String(bmOnHHl)+":"+String(bmOnMMl)+":"+String(bmOnSSl)+")"\
 			);
 		if( (bmRaportIter%bmRaportSkip) == 0 )
-			
 			batMuxAdcRaw();
 
 		
@@ -409,11 +408,11 @@ void batMux(){
 		
 		
 	}else if( bmStatus == 8 ){
-		p(F("8 - sw off output stage 1"));
+		//p(F("8 - sw off output stage 1"));
 		batMuxswOutOff();
 		bmOutStage1 = 0;
 	}else if( bmStatus == 9 ){
-		p(F("9 - end work :)"));
+		//p(F("9 - end work :)"));
 		
 		bmOnHHl = 0;
 		bmOnMMl = 0;
@@ -425,7 +424,8 @@ void batMux(){
 			bmStatus = 8;
 		
 	}else{
-		p("battery Multiplexer status("+String(bmStatus)+")");	
+		//p("battery Multiplexer status("+String(bmStatus)+")");	
+		;
 	}
 
 	if( bmWork ) 
@@ -627,7 +627,8 @@ void loop() {
 	if( ticchk(dLs, dLloopNext, dLloopEvery) ){
 		ledOn();
 		//p("l"+String(dLiters)+" ms:"+String(dLs));
-		p("{'batMux':{'iter':"+String(loIter++)+"}}");
+		p("{'batMux':{'iter':"+String(loIter)+"}}");
+		loIter++;
 		dLiters = 0;
 		
 		dLloopNext = millis()+dLloopEvery;

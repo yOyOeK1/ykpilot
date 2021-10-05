@@ -1,7 +1,5 @@
 
 import time
-
-
 import json
 
 
@@ -15,6 +13,10 @@ print("1")
 time.sleep(1)
 print("gogogo")
 
+
+
+
+
 print("loading libs...")
 from MyWifi import MyWifi
 from MySUart import MySUart
@@ -22,67 +24,6 @@ from MyMqttClient import MyMqttClient as mqcc
 mqc = None
 from MyJsonToMqtt import MyJsonToMqtt as mjtmc
 print("DOne")
-
-'''
-def mqCB(a1=0,a2=0,a3=0,a4=0):
-    global c
-    print("a:{}\nb:{}\nc:{}\nd:{}\n-----------".format(a1,a2,a3,a4))
-    if( a1 == b"esp01/led/in" ):
-        if a2 == b"1":
-            mqPub("esp01/led","0", True)
-        elif a2 == b"0":
-            mqPub("esp01/led","1",True)
-    elif a1 == b'esp01/cmd' :
-        doCommands(a2)
-
-
-      
-def uParse( buf ):
-    if len( buf ) > 5:        
-        global mqStack
-        if buf[-1] == "\r" or buf[-1] == "\n":
-            buf = buf[:-1]
-        if buf[-1] == "\r" or buf[-1] == "\n":
-            buf = buf[:-1]
-        
-        if isinstance(buf, (bytes)):
-            print("EE - xxx",buf)
-            return False
-        for l in buf.split("\r\n"):
-            uParseLine( l )
-    
-    return True
-        
-def uParseLine( line ):
-    global doSUartToMqtt
-    if len(line)>1:
-        if line[0] == '{' and line[-1] == '}':
-            try:
-                j = json.loads(line.replace("'",'"'))
-                #print("jOK")
-                if doSUartToMqtt:
-                    mqBroadJson(j)
-                #print("json YES stackSize:",len(mqStack))
-                
-            except:
-                print("json NO :(",line)
-                try:
-                    mqAts("esp01/uart/parseE","err41:{}".format(uart))
-                except:
-                    pass
-        else:
-            #print("uartNaN:",l)
-            abbbe = 0
-
-
-'''
-
-
-
-
-
-
-
 
   
             
@@ -134,6 +75,7 @@ def mqHandler(a1=0,a2=0,a3=0,a4=0):
 print("------- init big objects")
 print("MyWifi ...")
 mWifi = MyWifi('DIRECT-v7-SecureTether-PPA-LX3','zLzoqbNU')
+#mWifi = MyWifi('AlcatelPOP3','srytyfrytybangbang')
 time.sleep(.5)
 
 print("MySUart ...")
@@ -142,6 +84,7 @@ time.sleep(.5)
 
 print("MyMqttClient ...")
 mqc = mqcc("esp01","192.168.49.220",12883, callback=mqHandler,
+#mqc = mqcc("esp01","192.168.43.99",12883, callback=mqHandler,
     subList = [
         "esp01/ap",
         "esp01/others"
@@ -167,6 +110,7 @@ sMmqcNext = 0
 uc = 0
 
 looperPrint = True
+gIter = 0
 
 print("Main loop ...")
 while True:
@@ -193,19 +137,22 @@ while True:
               "]    mem:[",gc.mem_alloc(),
               "]    su.buf:[",len(suart.buf),
               "]")
-        mqc.pub( "esp01/looper/lps", lps )
-        mqc.pub( "esp01/cpu/mem/", gc.mem_alloc() )
-        mqc.pub( "esp01/wifi/ip", mWifi.myIp )
-        mqc.pub( "esp01/suart/bufSize", len(suart.buf) )
-        mqc.pub( "esp01/suart/nEr", suart.nEr )
-        mqc.pub( "esp01/mqc/nConnects", mqc.nConnects )
-        mqc.pub( "esp01/mqc/nPub", mqc.nPub )
-        mqc.pub( "esp01/mjtm/nEr" ,mjtm.nParseEr)
-        mqc.pub( "esp01/mjtm/nNaN" ,mjtm.nParseNaN)
-        mqc.pub( "esp01/mjtm/nPub" ,mjtm.nPub)
+        if mqc.isOk:
+            mqc.pub( "esp01/looper/lps", lps )
+            mqc.pub( "esp01/cpu/mem/", gc.mem_alloc() )
+            mqc.pub( "esp01/wifi/ip", mWifi.myIp )
+            mqc.pub( "esp01/suart/bufSize", len(suart.buf) )
+            mqc.pub( "esp01/suart/nEr", suart.nEr )
+            mqc.pub( "esp01/mqc/nConnects", mqc.nConnects )
+            mqc.pub( "esp01/mqc/nPub", mqc.nPub )
+            mqc.pub( "esp01/mjtm/nEr" ,mjtm.nParseEr)
+            mqc.pub( "esp01/mjtm/nNaN" ,mjtm.nParseNaN)
+            mqc.pub( "esp01/mjtm/nPub" ,mjtm.nPub)
+            mqc.pub( "esp01/iter" ,gIter)
+        gIter+= 1
         
         
-        
+        suart.writePing()
         
         
         if mWifi.isOk:
@@ -227,10 +174,5 @@ while True:
     
     
     if 1:#ticchk(sMs, sMsuartNext,sMsuartE):
-        uc = suart.readToBuf(sMi)
-        if uc > 0:
-            mjtm.parse(suart.buf)
-            suart.buf = []
-        #sMsuartNext = getMs()+sMsuartE
-    
+        mjtm.parseLine( suart.readToBuf(sMi) )
 print("it's It! DONE")
