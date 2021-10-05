@@ -1,6 +1,5 @@
 
 
-
 #include <DHT.h>
 
 
@@ -114,7 +113,18 @@ void pachpachRaport(){
 
 
 
+void ledOn(){
+	digitalWrite(LED_BUILTIN, HIGH);
+}
+void ledOff(){
+	digitalWrite(LED_BUILTIN, LOW);
+}
+
+
+
+
 void setup() {
+	delay(200);
   // initialize digital pin LED_BUILTIN as an output.
   offsets[0] = 0;
   offsets[1] = -4;
@@ -124,7 +134,8 @@ void setup() {
   offsets[5] = -2;
   
   pinMode(LED_BUILTIN, OUTPUT);
-
+  ledOn();
+  
   pinMode( swb0, OUTPUT );
   digitalWrite( swb0, swOff);
   pinMode( swb1, OUTPUT );
@@ -135,12 +146,12 @@ void setup() {
   digitalWrite( swNaN, swOff);
 
 
-  Serial.begin(9600);
+  //Serial.begin(57600);
 
   dht.begin();
 
-  SSerial.begin(4800);
-  SSerial.println(F("arduino01 on softSerial 9600"));
+  SSerial.begin(115200);
+  //SSerial.println(F("arduino01 on softSerial 9600"));
   
   
   //runner.init();
@@ -151,7 +162,7 @@ void setup() {
   //runner.addTask(t_batMux);
   //runner.addTask(t_ppR);
     
-  delay(2500);
+  delay(1500);
   //t_dummy.enable();
   //t_serial.enable();
   //t_nice.enable();
@@ -160,7 +171,7 @@ void setup() {
   //t_ppR.enable();
   
 
-  
+  ledOff();
 }
 void dummyRaport(){
 	Serial.println(F("dummyRaport"));
@@ -185,17 +196,20 @@ void dhtIter(){
 		  "}}");
   
 }
+void wForSS(){
+	delay(1);
+	while( SSerial.available() > 0)
+		delay(1);
+	
+}
 void p(String n){
+	
 	//Serial.println(">"+String(n.length()));
 	/*
 	if(SSerial.overflow()) 
 		Serial.println(F("EE - SSerial overflow!"));
 	*/
-	
-	
 		
-	while( SSerial.available() > 0)
-		delay(2);
 	
 	/*
 	if( pWait > 0 )
@@ -208,7 +222,7 @@ void p(String n){
 		//Serial.print("L");
 		while( n.length() > 30 ){
 			SSerial.print(n.substring(0,30));
-			delay(50);
+			wForSS();
 			//Serial.println(n.substring(0,30));
 			n = n.substring(30);		
 		}
@@ -217,8 +231,7 @@ void p(String n){
 	}else{
 		
 		SSerial.println(n);
-		//Serial.println(n);
-		delay(20);
+		wForSS();
 		
 	}
 	/*
@@ -308,7 +321,7 @@ void bmRaportBat12(){
 		"}}");
 }
 
-int bmRaportSkip = 11;
+int bmRaportSkip = 1;
 int bmRaportIter = 0;
 void batMux(){
 	if( bmStatus != 7 or (bmRaportIter%bmRaportSkip) == 0 )
@@ -576,6 +589,23 @@ void serialAction(){
 
 
 
+long getMs(){
+	long ms = millis();
+	if( ms > 15000 )
+		ms = 0;
+	
+	return ms;
+}
+
+bool ticchk(long sMs, long target, long every ){
+    if( sMs > target)
+        return true;
+    else if( sMs < target and ( target-every ) > sMs )
+        return true;
+    
+    return false;
+}
+
 // the loop function runs over and over again forever
 
 long dLs = 0;
@@ -591,31 +621,33 @@ long dLserNext = 0;
 long dLiters = 0;
 int loIter = 0;
 void loop() {
-	dLs = millis();
+	dLs = getMs;
 	dLiters++;
 	
-	if( dLs > dLloopNext || ((dLs-dLloopNext) > 0) ){
+	if( ticchk(dLs, dLloopNext, dLloopEvery) ){
+		ledOn();
 		//p("l"+String(dLiters)+" ms:"+String(dLs));
 		p("{'batMux':{'iter':"+String(loIter++)+"}}");
 		dLiters = 0;
 		
 		dLloopNext = millis()+dLloopEvery;
+		ledOff();
 	}
 	
 
-	if( dLs > dLserNext || ((dLs-dLserNext) > 0) ){
+	if( ticchk(dLs, dLserNext, dLserEvery) ){
 		serialAction();
 		
 		dLserNext = millis()+dLserEvery;
 	}
 	
 	
-	if( dLs > dLbatMuxNext || ((dLs-dLbatMuxNext) > 0) ){
+	if( ticchk(dLs, dLbatMuxNext, dLbatMuxEvery) ){
 		batMux();
 		dLbatMuxNext = millis()+dLbatMuxEvery;
 	}
 	
-	if( dLs > dLpachRNext || ((dLs-dLpachRNext) > 0) ){
+	if( ticchk(dLs, dLpachRNext, dLpachREvery ) ) {
 		pachpachRaport();
 		dLpachRNext = millis()+dLpachREvery;
 	}
@@ -635,3 +667,4 @@ void loop() {
   //delay(100); // wait for a second
    
 }
+
