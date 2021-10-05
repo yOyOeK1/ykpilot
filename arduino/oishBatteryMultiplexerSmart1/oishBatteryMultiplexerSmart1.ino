@@ -37,7 +37,7 @@ int b1p_=0;
 
 int bmOnHH = 0;
 int bmOnMM = 1;
-int bmOnSS = 10;
+int bmOnSS = 8;
 
 
 int bmOnHHl = 0;
@@ -140,7 +140,7 @@ void setup() {
   dht.begin();
 
   SSerial.begin(4800);
-  SSerial.println("arduino01 on softSerial 9600");
+  SSerial.println(F("arduino01 on softSerial 9600"));
   
   
   //runner.init();
@@ -151,7 +151,7 @@ void setup() {
   //runner.addTask(t_batMux);
   //runner.addTask(t_ppR);
     
-  delay(500);
+  delay(2500);
   //t_dummy.enable();
   //t_serial.enable();
   //t_nice.enable();
@@ -163,7 +163,7 @@ void setup() {
   
 }
 void dummyRaport(){
-	Serial.println("dummyRaport");
+	Serial.println(F("dummyRaport"));
 	
 }
 
@@ -175,7 +175,7 @@ void dhtIter(){
   float f = dht.readTemperature(true);
   
   if (isnan(h) || isnan(t) || isnan(f)) {
-    p("{'dht': 'error'}");
+    p(F("{'dht': 'error'}"));
     return;
   }
   
@@ -185,13 +185,54 @@ void dhtIter(){
 		  "}}");
   
 }
-
-
 void p(String n){
+	//Serial.println(">"+String(n.length()));
+	/*
 	if(SSerial.overflow()) 
-		Serial.println("EE - SSerial overflow!");
-	SSerial.println(n);
-	//Serial.println(n);
+		Serial.println(F("EE - SSerial overflow!"));
+	*/
+	
+	
+		
+	while( SSerial.available() > 0)
+		delay(2);
+	
+	/*
+	if( pWait > 0 )
+		Serial.print(F("pW"));
+		Serial.println(pWait);
+	*/
+	
+	
+	if(n.length()>64){
+		//Serial.print("L");
+		while( n.length() > 30 ){
+			SSerial.print(n.substring(0,30));
+			delay(50);
+			//Serial.println(n.substring(0,30));
+			n = n.substring(30);		
+		}
+		//Serial.println(n);
+		p(n);
+	}else{
+		
+		SSerial.println(n);
+		//Serial.println(n);
+		delay(20);
+		
+	}
+	/*
+		
+	
+	
+	
+		return 0;
+		p( n.substring(60) );
+		return 0;
+	*/
+		
+
+	
 }
 
 // -------------  MULTIPLEXER START
@@ -237,20 +278,20 @@ void batMuxAdcRaw(){
  */
 
 void bmRaportSta(){
-	p( "{'batMuxSta':{"\
+	p( "{'batMux':{"\
 			"'status':"+String(bmStatus)+","\
-			"'on':{"
+			"'every':{"
 				"'hh':"+String(bmOnHH)+","
 				"'mm':"+String(bmOnMM)+","
 				"'ss':"+String(bmOnSS)+\
 			"}}}");
-	p("{'batMuxSta':{"\
+	p("{'batMux':{"\
 			"'left':{"
 				"'hh':"+String(bmOnHHl)+","
 				"'mm':"+String(bmOnMMl)+","
 				"'ss':"+String(bmOnSSl)+\
 			"}}}");
-	p( "{'batMuxSta':{"\	
+	p( "{'batMux':{"\	
 			"'batSel':"+String(bmBatSel)+","
 			"'outStage1':"+String(bmOutStage1)+","
 			"'arb0g':"+String(arb0g)+","
@@ -260,48 +301,33 @@ void bmRaportSta(){
 		"}}");
 }
 
-void bmRaportWait(){
-	p( "{'batMuxWait':{"\
-			"'on':{"
-				"'hh':"+String(bmOnHH)+","
-				"'mm':"+String(bmOnMM)+","
-				"'ss':"+String(bmOnSS)+\
-			"},"
-			"'left':{"
-							"'hh':"+String(bmOnHHl)+","
-							"'mm':"+String(bmOnMMl)+","
-							"'ss':"+String(bmOnSSl)+\
-						"}"
-			
-		"}}");
-}
 void bmRaportBat12(){
-	p("{'batMuxBat12':{"\
+	p("{'batMux':{"\
 		"'arbat1':"+String(arbat1)+","
 		"'arbat2':"+String(arbat2)+\
 		"}}");
 }
 
-int bmRaportSkip = 4;
+int bmRaportSkip = 11;
 int bmRaportIter = 0;
 void batMux(){
-	if( (bmRaportIter%bmRaportSkip) == 0 )
+	if( bmStatus != 7 or (bmRaportIter%bmRaportSkip) == 0 )
 		bmRaportSta();
 		//niceRaport();
 		//dhtIter();
 	
 	if( bmStatus == 0 ){
-		p("0 - start sequence");
+		p(F("0 - start sequence"));
 		batMuxswOutOff();
 		bmOnHHl = bmOnHH;
 		bmOnMMl = bmOnMM;
 		bmOnSSl = bmOnSS;
 	}else if( bmStatus == 1 ){
-		p("1 - sw to battery 1");
+		p(F("1 - sw to battery 1"));
 		batMuxswTo1();
 		bmBatSel = 1;
 	}else if( bmStatus == 2 ){
-		p("2 - sensing battery 1, make notes");
+		p(F("2 - sensing battery 1, make notes"));
 		batMuxAdcRaw();
 		arb0g1 = arb0g;
 		arb011 = arb01;
@@ -309,11 +335,11 @@ void batMux(){
 		arouts11 = arouts1;
 		arbat1 = arouts1;
 	}else if( bmStatus == 3 ){
-		p("3 - sw to battery 2");
+		p(F("3 - sw to battery 2"));
 		batMuxswTo2();
 		bmBatSel = 2;
 	}else if( bmStatus == 4 ){
-		p("4 - sensing battery 2, make notes");
+		p(F("4 - sensing battery 2, make notes"));
 		batMuxAdcRaw();
 		arb0g2 = arb0g;
 		arb012 = arb01;
@@ -324,19 +350,19 @@ void batMux(){
 		
 		p("  - adc for bat 1:"+String(arouts11)+" bat 2:"+String(arouts12));
 		if( arouts11 > arouts12 ){
-			p("... use battery 1 for output");
+			p(F("... use battery 1 for output"));
 			batMuxswTo1();
 		}else{
-			p("... use battery 2 for output");
+			p(F("... use battery 2 for output"));
 			batMuxswTo2();
 		}
 		
 	}else if( bmStatus == 5 ){
-		p("5 - sw output On");
+		p(F("5 - sw output On"));
 		//batMuxswOutOn();
 		bmOutStage1 = 1;
 	}else if( bmStatus == 6 ){
-		p("6 - start counter");
+		p(F("6 - start counter"));
 		
 		bmOnHHl = bmOnHH;
 		bmOnMMl = bmOnMM;
@@ -348,16 +374,16 @@ void batMux(){
 			"("+String(bmOnHHl)+":"+String(bmOnMMl)+":"+String(bmOnSSl)+")"
 			);
 		if( (bmRaportIter%bmRaportSkip) == 0 )
-			bmRaportWait();
+			
 			batMuxAdcRaw();
 
 		
-		if( bmOnSSl == 0 && bmOnMMl == 0 && bmOnHHl == 0 ){
-			p("end of waiting !");
+		if( bmOnSSl <= 0 && bmOnMMl <= 0 && bmOnHHl <= 0 ){
+			p(F("end of waiting !"));
 		}else
 			bmStatus = 6;
 		
-		bmOnSSl-= 5;
+		bmOnSSl-= 1;
 		
 		if( bmOnSSl<0 ){
 			bmOnMMl-=1;
@@ -370,11 +396,11 @@ void batMux(){
 		
 		
 	}else if( bmStatus == 8 ){
-		p("8 - sw off output stage 1");
+		p(F("8 - sw off output stage 1"));
 		batMuxswOutOff();
 		bmOutStage1 = 0;
 	}else if( bmStatus == 9 ){
-		p("9 - end work :)");
+		p(F("9 - end work :)"));
 		
 		bmOnHHl = 0;
 		bmOnMMl = 0;
@@ -449,12 +475,12 @@ String adcToH( int ap ){
 }
 
 void adcRaw(){
-  p("{'adcRaw':{'a0':"+adcToH( A0 )+"}}");
-  p("{'adcRaw':{'a1':"+adcToH( A1 )+"}}");
-  p("{'adcRaw':{'a2':"+adcToH( A2 )+"}}");
-  p("{'adcRaw':{'a3':"+adcToH( A3 )+"}}");
-  p("{'adcRaw':{'a4':"+adcToH( A4 )+"}}");
-  p("{'adcRaw':{'a5':"+adcToH( A5 )+"}}");
+  p("{'ard01':{'a0':"+adcToH( A0 )+"}}");
+  p("{'ard01':{'a1':"+adcToH( A1 )+"}}");
+  p("{'ard01':{'a2':"+adcToH( A2 )+"}}");
+  p("{'ard01':{'a3':"+adcToH( A3 )+"}}");
+  p("{'ard01':{'a4':"+adcToH( A4 )+"}}");
+  p("{'ard01':{'a5':"+adcToH( A5 )+"}}");
     
   
 }
@@ -479,53 +505,6 @@ void adcNice(){
 
 
 
-int clickTimesIn( int clicks, int hz = 2 ){
-  return 0;
-  for(int c=clicks; c>0; c-- ){
-    if( swNaNstatus ){
-      digitalWrite( swNaN, swOff);
-      swNaNstatus = false;
-    }else{
-      digitalWrite( swNaN, swOn );
-      swNaNstatus = true; 
-    }
-    delay(1000/hz);
-  }
-}
-
-void waitMinutes(int minutes){
-  for(; minutes>0;minutes--){
-    delay(60000);
-  }
-}
-
-void b0b1Test(){
-  digitalWrite( swb0, swOff);
-  digitalWrite( swb1, swOff);
-  batteryNow = 0;
-  delay(1000);
-  digitalWrite( swdcdc, swOn);
-  swOutNow = 1;
-  waitMinutes(10);
-  digitalWrite( swdcdc, swOff);
-  swOutNow = 0;
-  delay(1000);
-  
-  digitalWrite( swb0, swOn);
-  digitalWrite( swb1, swOn);
-  batteryNow = 1;
-  delay(1000);
-  digitalWrite( swdcdc, swOn);
-  swOutNow = 1;
-  waitMinutes(5);
-  digitalWrite( swdcdc, swOff);
-  swOutNow = 0;
-  delay(1000);
-  
-  
-}
-
-
 void niceRaport(){
   adcRaw();
   //adcNice();
@@ -545,11 +524,11 @@ bool cmdLed(String cmd){
 			return true;
 		}
 	}else if(cmd.substring(0,4) == "ping"){
-		p("#ping");
-		p("pong");
+		p(F("#ping"));
+		p(F("pong"));
 	
 	}else if(cmd.substring(0,4) == "echo"){
-		p("#echo");
+		p(F("#echo"));
 		p(String(cmd.substring(5)));
 				
 	}
@@ -567,7 +546,7 @@ int serialGot(){
 	p("serialGot:"+String(buf)+"<<");
 
 	if( buf[0] == '$' ){
-		p("got command, processing ...");
+		p(F("got command, processing ..."));
 		cmd = String(buf).substring(1);
 		p("command:"+String(cmd));
 		
@@ -602,7 +581,7 @@ void serialAction(){
 long dLs = 0;
 long dLloopEvery = 2000;
 long dLloopNext = 0;
-long dLbatMuxEvery = 5000;
+long dLbatMuxEvery = 1000;
 long dLbatMuxNext = 0;
 long dLpachREvery = 20000;
 long dLpachRNext = 0;
@@ -610,12 +589,14 @@ long dLserEvery = 10;
 long dLserNext = 0;
 
 long dLiters = 0;
+int loIter = 0;
 void loop() {
 	dLs = millis();
 	dLiters++;
 	
 	if( dLs > dLloopNext || ((dLs-dLloopNext) > 0) ){
-		p("l"+String(dLiters)+" ms:"+String(dLs));
+		//p("l"+String(dLiters)+" ms:"+String(dLs));
+		p("{'batMux':{'iter':"+String(loIter++)+"}}");
 		dLiters = 0;
 		
 		dLloopNext = millis()+dLloopEvery;
