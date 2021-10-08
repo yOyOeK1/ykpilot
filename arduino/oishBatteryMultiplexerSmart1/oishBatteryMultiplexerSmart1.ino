@@ -3,8 +3,8 @@
 #include <DHT.h>
 
 
-#include <SoftwareSerial.h>
-SoftwareSerial SSerial(10, 11); // RX, TX
+//#include <SoftwareSerial.h>
+//SoftwareSerial SSerial(10, 11); // RX, TX
 
 
 int swb0 = 7;
@@ -146,11 +146,11 @@ void setup() {
   digitalWrite( swNaN, swOff);
 
 
-  //Serial.begin(57600);
+  Serial.begin(115200);
 
   dht.begin();
 
-  SSerial.begin(115200);
+  //SSerial.begin(115200);
   //SSerial.println(F("arduino01 on softSerial 9600"));
   
   
@@ -190,20 +190,31 @@ void dhtIter(){
     return;
   }
   
-  p("{'hum':"+String(h)+","\
+  pcs("{'hum':"+String(h)+","\
 		  "'C':"+String(t)+","\
 		  "'F':"+String(f)+\
 		  "}");
   
 }
+/*
 void wForSS(){
 	delay(1);
 	while( SSerial.available() > 0)
 		delay(1);
 	
 }
+*/
+
+void pcs(String n){
+	p(n+"*"+String(getChkSum(n), HEX));
+}
+
 void p(String n){
+	Serial.println(n);
+}
+void pOld(String n){
 	
+	///SSerial.stopListening();
 	//Serial.println(">"+String(n.length()));
 	/*
 	if(SSerial.overflow()) 
@@ -221,8 +232,8 @@ void p(String n){
 	if(n.length()>64){
 		//Serial.print("L");
 		while( n.length() > 30 ){
-			SSerial.print(n.substring(0,30));
-			wForSS();
+			////SSerial.print(n.substring(0,30));
+			/////wForSS();
 			//Serial.println(n.substring(0,30));
 			n = n.substring(30);		
 		}
@@ -230,8 +241,8 @@ void p(String n){
 		p(n);
 	}else{
 		
-		SSerial.println(n);
-		wForSS();
+		/////SSerial.println(n);
+		///wForSS();
 		
 	}
 	/*
@@ -245,7 +256,7 @@ void p(String n){
 	*/
 		
 
-	
+	/////SSerial.listen();
 }
 
 // -------------  MULTIPLEXER START
@@ -291,20 +302,20 @@ void batMuxAdcRaw(){
  */
 
 void bmRaportSta(){
-	p( "{"\
+	pcs( "{"\
 			"'status':"+String(bmStatus)+","\
 			"'every':{"
 				"'hh':"+String(bmOnHH)+","
 				"'mm':"+String(bmOnMM)+","
 				"'ss':"+String(bmOnSS)+\
 			"}}");
-	p("{"\
+	pcs("{"\
 			"'left':{"
 				"'hh':"+String(bmOnHHl)+","
 				"'mm':"+String(bmOnMMl)+","
 				"'ss':"+String(bmOnSSl)+\
 			"}}");
-	p( "{"\	
+	pcs( "{"\	
 			"'batSel':"+String(bmBatSel)+","
 			"'outStage1':"+String(bmOutStage1)+","
 			"'arb0g':"+String(arb0g)+","
@@ -315,7 +326,7 @@ void bmRaportSta(){
 }
 
 void bmRaportBat12(){
-	p("{"\
+	pcs("{"\
 		"'arbat1':"+String(arbat1)+","
 		"'arbat2':"+String(arbat2)+\
 		"}");
@@ -488,12 +499,12 @@ String adcToH( int ap ){
 }
 
 void adcRaw(){
-  p("{'ard01':{'a0':"+adcToH( A0 )+"}}");
-  p("{'ard01':{'a1':"+adcToH( A1 )+"}}");
-  p("{'ard01':{'a2':"+adcToH( A2 )+"}}");
-  p("{'ard01':{'a3':"+adcToH( A3 )+"}}");
-  p("{'ard01':{'a4':"+adcToH( A4 )+"}}");
-  p("{'ard01':{'a5':"+adcToH( A5 )+"}}");
+  pcs("{'ard01':{'a0':"+adcToH( A0 )+"}}");
+  pcs("{'ard01':{'a1':"+adcToH( A1 )+"}}");
+  pcs("{'ard01':{'a2':"+adcToH( A2 )+"}}");
+  pcs("{'ard01':{'a3':"+adcToH( A3 )+"}}");
+  pcs("{'ard01':{'a4':"+adcToH( A4 )+"}}");
+  pcs("{'ard01':{'a5':"+adcToH( A5 )+"}}");
     
   
 }
@@ -538,11 +549,11 @@ bool cmdLed(String cmd){
 		}
 	}else if(cmd.substring(0,4) == "ping"){
 		p(F("#ping"));
-		p(F("pong"));
+		pcs(F("pong"));
 	
 	}else if(cmd.substring(0,4) == "echo"){
 		p(F("#echo"));
-		p(String(cmd.substring(5)));
+		pcs(String(cmd.substring(5)));
 				
 	}
 	
@@ -554,13 +565,42 @@ String cmd = "";
 char nc;
 char buf[33];
 int charN = 0;
+void pS(String m){
+	Serial.println(m);
+}
+
+
+char getChkSum(String msg){
+	int crc = 0;
+	int i;
+		for (i = 0; i < msg.length(); i ++) {
+		crc ^= msg[i];
+	}
+
+	return crc;
+}
 
 int serialGot(){
-	p("serialGot:"+String(buf)+"<<");
+	String bs = "";
+	bs = String(buf);
+	pS("serialGot:"+bs+"<<");
 
+	int bl = bs.length();
+	//pS("msg:"+String(bs.substring(0,bl-3)));
+	//pS("*:"+String(bs.substring(bl-3,bl-2)));
+	//pS("chks:"+String(bs.substring(bl-2,bl)));
+	
+	if( bl> 2 and bs.substring(bl-3,bl-2)== "*"){ // a*93
+		String m = bs.substring(0,bl-3);
+		String ch = bs.substring(bl-2,bl);
+		pS("chk:"+ch);
+		pS("chkLocal:"+getChkSum(m));
+	}
+	
+	//return 0;
 	if( buf[0] == '$' ){
 		p(F("got command, processing ..."));
-		cmd = String(buf).substring(1);
+		cmd = bs.substring(1);
 		p("command:"+String(cmd));
 		
 		if( cmdLed(cmd) )
@@ -574,34 +614,51 @@ int serialGot(){
 
 
 void serialAction(){
-	while(Serial.available()){
-		nc = char(Serial.read());
-		buf[charN] = nc;
-		if( nc == '\n' || charN > 32 ){
-			buf[charN] = 0;
-			//Serial.println("got Line");
-			serialGot();
-			charN=0;
-		}else
-			charN++;
+	/*
+	if( 1 ){
+		while(SSerial.available()){
+			nc = char(SSerial.read());
+			buf[charN] = nc;
+			if( nc == '\n' || charN > 32 ){
+				buf[charN] = 0;
+				//Serial.println("got Line");
+				serialGot();
+				charN=0;
+			}else
+				charN++;
+		}
 	}
+	*/
+	
+	if( 1 ){
+		while(Serial.available()){
+			nc = char(Serial.read());
+			buf[charN] = nc;
+			if( nc == '\n' || charN > 32 ){
+				buf[charN] = 0;
+				//Serial.println("got Line");
+				serialGot();
+				charN=0;
+			}else
+				charN++;
+		}
+	}
+	
 }
 
 
-
+long getMsMore(long every){
+	return ((getMs()+every));//%5000);
+}
 long getMs(){
-	long ms = millis();
-	if( ms > 15000 )
-		ms = 0;
-	
-	return ms;
+	return millis();//(millis()%5000);
 }
 
 bool ticchk(long sMs, long target, long every ){
-    if( sMs > target)
+    if( sMs > target and (target+every)<sMs )
         return true;
-    else if( sMs < target and ( target-every ) > sMs )
-        return true;
+    //else if( sMs < target and ( target-every ) > sMs )
+    //    return true;
     
     return false;
 }
@@ -609,38 +666,46 @@ bool ticchk(long sMs, long target, long every ){
 // the loop function runs over and over again forever
 
 long dLs = 0;
-long dLloopEvery = 2000;
+long dLloopEvery = 5000;
 long dLloopNext = 0;
 long dLbatMuxEvery = 1000;
 long dLbatMuxNext = 0;
-long dLpachREvery = 20000;
+long dLpachREvery = 5000;
 long dLpachRNext = 0;
-long dLserEvery = 10;
+long dLserEvery = 1;
 long dLserNext = 0;
 
 long dLiters = 0;
 int loIter = 0;
 void loop() {
-	dLs = getMs;
+	
+	
+	
+	while( 0 ){
+		//if( (loIter++%100) == 0 )
+		//	Serial.println(String(loIter));
+		serialAction();
+		
+				
+	}
+	
+	dLs = getMs();
 	dLiters++;
 	
 	if( ticchk(dLs, dLloopNext, dLloopEvery) ){
 		ledOn();
 		//p("l"+String(dLiters)+" ms:"+String(dLs));
-		p("{'batMux':{'iter':"+String(loIter)+"}}");
+		pcs("{'batMux':{'iter':"+String(loIter)+"}}");
+		//p("dLs"+String(dLs)+"	next"+String(dLloopNext)+"	every"+String(dLloopEvery));
 		loIter++;
 		dLiters = 0;
 		
-		dLloopNext = millis()+dLloopEvery;
+		dLloopNext = getMsMore(dLloopEvery);
 		ledOff();
 	}
 	
 
-	if( ticchk(dLs, dLserNext, dLserEvery) ){
-		serialAction();
-		
-		dLserNext = millis()+dLserEvery;
-	}
+	serialAction();
 	
 	
 	if( ticchk(dLs, dLbatMuxNext, dLbatMuxEvery) ){
@@ -648,11 +713,11 @@ void loop() {
 		dLbatMuxNext = millis()+dLbatMuxEvery;
 	}
 	
+	
 	if( ticchk(dLs, dLpachRNext, dLpachREvery ) ) {
 		pachpachRaport();
 		dLpachRNext = millis()+dLpachREvery;
 	}
-	
 	
   //runner.execute();
   //adcRaw();
