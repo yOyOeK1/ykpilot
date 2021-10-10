@@ -1,6 +1,5 @@
-
 import time
-import json
+
 
 
 
@@ -16,18 +15,33 @@ print("gogogo")
 
 
 
-
 print("loading libs...")
-from MyWifi import MyWifi
-from MySUart import MySUart
-from MyMqttClient import MyMqttClient as mqcc
 mqc = None
+from MySUart import MySUart
+if 0:
+    if 1:
+        print("    testing...")
+        def cb( m ):
+            print("cb(",len(m),"):",m)
+        print("MySUart ...")
+        suart = MySUart()
+        suart.testRead()
+       
+from MyMqttClient import MyMqttClient as mqcc
+from MyWifi import MyWifi
 from MyJsonToMqtt import MyJsonToMqtt as mjtmc
+import json
 print("DOne")
 
-  
-            
-   
+# pLed = Pin(2,Pin.OUT); pin 2
+        
+        
+pNo = 0
+def p(msg):
+    global mqc,pNo
+    mqc.pub("esp01/pOut","{}:{}".format(pNo,msg))
+    pNo+=1
+    #print("P()",msg)
 
 def getMs():
     return time.ticks_ms()%15000
@@ -79,6 +93,7 @@ mWifi = MyWifi('DIRECT-v7-SecureTether-PPA-LX3','zLzoqbNU')
 time.sleep(.5)
 
 print("MySUart ...")
+#suart = MySUart2()
 suart = MySUart()
 time.sleep(.5)
 
@@ -95,28 +110,56 @@ print("MyJsonToMqtt ...")
 mjtm = mjtmc( mqttPubCallback = mqc )
 print("------- init big objects DONE")
 
+def dbmq(msg):
+    debugPrintOnUartToMqttPubTopic(msg)
+    
+def debugPrintOnUartToMqttPubTopic(msg):
+    mqc.pub("esp01/debug","{}".format(msg))
+    
+suart.difWritePipe = debugPrintOnUartToMqttPubTopic
+
+uartMsgAvg = 0.00
+mjtmAvg = 0.00
+rppAvg = 0.00
+
 
 sMs = 0
-sMi = 0
+sMi = 1
 sMloopE = 5000
 sMloopNext = 0
 
-sMsuartE = 1
+sMsuartE = 100
 sMsuartNext = 0
 
-sMmqcE = 1500
+sMmqcE = 500
 sMmqcNext = 0
-
+uartDumpToMq = 0
 uc = 0
 
 looperPrint = True
 gIter = 0
+lowestNext = -1
+
+time.sleep(.1)
+print("import uasyncio ...")
+import uasyncio
+async def suardLooper(a=0,b=0):
+    while True:
+        suart.readToBuf()
+
+print("starting uart  ...")
 
 print("Main loop ...")
-while True:
+
+#while True:
+#    r = suart.readToBuf(sMi)
+    
+
+async main():
+while True:    
     sMs = getMs()
     sMi+=1
-    
+    lowestNext = sMs
     
     if ticchk(sMs,sMmqcNext,sMmqcE):
         mqc.chk_msg()
@@ -130,30 +173,42 @@ while True:
             mWifi.myIp,
             ))
         #print("suart buf:[{}]".format(uc))
-        
+        #gc.collect()
+        mem = gc.mem_alloc()
+        #suart.readToBuf()
         lps = (sMi/float(float(sMloopE)/1000.0))
         if looperPrint: print("looper i/s:[",lps,"/1s.",
               "]    msTick:[",sMs, 
-              "]    mem:[",gc.mem_alloc(),
-              "]    su.buf:[",len(suart.buf),
+              "]    mem:[",mem,
               "]")
+        #p("looper i/s:[{}/1s.]    msTick:[{}]    mem:[{}]".format(
+        #        lps, sMs,gc.mem_alloc())
+        #      )
+        if uartDumpToMq:
+            print("    uartToMq ",uartDumpToMq)
+            uartDumpToMq = 0
         if mqc.isOk:
+            #suart.readToBuf()
             mqc.pub( "esp01/looper/lps", lps )
-            mqc.pub( "esp01/cpu/mem/", gc.mem_alloc() )
+            mqc.pub( "esp01/cpu/mem/", mem )
             mqc.pub( "esp01/wifi/ip", mWifi.myIp )
-            mqc.pub( "esp01/suart/bufSize", len(suart.buf) )
+            mqc.pub( "esp01/suart/nOk", suart.nOk )
             mqc.pub( "esp01/suart/nEr", suart.nEr )
+            mqc.pub( "esp01/suart/nChkOk", suart.nChkOk )
+            mqc.pub( "esp01/suart/nChkEr", suart.nChkEr )
+            #suart.readToBuf()
             mqc.pub( "esp01/mqc/nConnects", mqc.nConnects )
             mqc.pub( "esp01/mqc/nPub", mqc.nPub )
             mqc.pub( "esp01/mjtm/nEr" ,mjtm.nParseEr)
             mqc.pub( "esp01/mjtm/nNaN" ,mjtm.nParseNaN)
             mqc.pub( "esp01/mjtm/nPub" ,mjtm.nPub)
             mqc.pub( "esp01/iter" ,gIter)
+            mqc.pub( "esp01/uartRead/msAvg", uartMsgAvg )
+            mqc.pub( "esp01/mjtm/msAvg", mjtmAvg )
+            mqc.pub( "esp01/rpp/msAvg", rppAvg )
+            
         gIter+= 1
-        
-        
-        suart.writePing()
-        
+        #suart.readToBuf()
         
         if mWifi.isOk:
             if mqc.isConnect == False:
@@ -171,8 +226,50 @@ while True:
         
         sMi = 0       
         sMloopNext = getMs()+sMloopE
+
     
     
-    if 1:#ticchk(sMs, sMsuartNext,sMsuartE):
-        mjtm.parseLine( suart.readToBuf(sMi) )
+    if ticchk(sMs, sMsuartNext,sMsuartE):
+        #suart.writePing()
+        
+        
+        #suart.uart.write("$led:1\r\n");
+        while suart.linesIn :
+            chktMsg = suart.chkSumChk(suart.linesIn[0])
+            #suart.readToBuf()
+            if mqc.isOk:
+                mjtm.parseLine(
+                    chktMsg
+                    )
+                #suart.readToBuf()
+            suart.linesIn.pop(0)
+            uartDumpToMq+=1
+        sMsuartNext = getMs()+sMsuartE
+
+    
+    
+    if 0: 
+        if 0:       
+            suart.readToBuf()
+        elif 0:
+            mjtm.parseLine( suart.readToBuf(sMi) )
+        else:  
+            tS = getMs()          
+            ures = None
+            ures = suart.readToBuf(sMi)
+            tUg = getMs()
+            if ures != None:
+                #mjtm.parseLine( ures )
+                tMq = getMs()
+                #p(">uart({}):{}".format(len(ures),ures))
+                #p(">uart({}) out in ({})ms uart time ({})ms pub time ({})ms".format(len(ures),
+                #   (tMq-tS), (tUg-tS), (tMq-tUg) ))
+                uartMsgAvg = ((uartMsgAvg*10.00)+ (tUg-tS) )/11.0
+                mjtmAvg = ((mjtmAvg*10.00)+ (tMq-tUg) )/11.0
+                rppAvg = ((rppAvg*10.00)+ (tMq-tS) )/11.0
+                #mqc.pub( "esp01/uart/readTimes/msAvr", uartMsgAvg )
+                #mqc.pub( "esp01/mjtm/msAvr", mjtmAvg )
+                #mqc.pub( "esp01/rpp/msAvr", rppAvg )
+                
+                
 print("it's It! DONE")
