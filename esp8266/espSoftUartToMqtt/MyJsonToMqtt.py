@@ -1,4 +1,5 @@
 import json
+import uasyncio as uaio
 
 class MyJsonToMqtt:
     
@@ -33,7 +34,9 @@ class MyJsonToMqtt:
             self.nPub+= 1
             #print("p ",pref," m",j)
         
-    def parseLine(self, l):
+    def parseLineAsync(self, l):
+        #pTime = 12
+        #print("pla:",l)
         if l == None:
             return 0
         d = False
@@ -41,20 +44,29 @@ class MyJsonToMqtt:
         if ll>1 and l[0] == "{" and l[-1] == "}":
                 if d:print("    got json?")
                 js = None
+                #await uaio.sleep_ms(pTime)
                 try:
-                    js = json.loads( l.replace("'",'"') )
+                    #js = json.loads( l.replace("'",'"') )
+                    js = eval(l.replace("'",'"'))
+                    if not isinstance(js, dict):
+                        js = None
                 except:
                     #print("E j43:",l)
                     #self.mqc.pub("esp01/mjtm/nNaNExa", l, False)
                     self.nParseEr+= 1
+                #await uaio.sleep_ms(pTime) 
+                if d:print("    js",js)  
                 if js != None:
                     self.mqBroadJson(js)
+                    return 1
+                    #await uaio.sleep_ms(pTime)
                     
         else:
             if d:print("    NaN",l)
             #self.mqc.pub("esp01/mjtm/nNaNExa", l, False)
             self.nParseNaN+=1
             
+        return 0
         
     def parse(self, buf):
         d = False

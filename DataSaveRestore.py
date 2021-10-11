@@ -6,6 +6,8 @@ import sys
 def DataSR_save(data,file, zip=False):
 	print("DataSR_save",file)
 	
+	## TODO - check first for directory?
+	
 	try:
 		d = json.dumps(data)
 	except:

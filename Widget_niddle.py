@@ -308,12 +308,13 @@ class Widget_niddle(WidgetHelper):
             
             vAsInt = True
             try:
-                vi = int(v)
+                vi = float(v)
                 
             except:
                 vAsInt = False
             
             if vAsInt:
+                v = vi
                 self.valueToDisplay =  round( v, self.mround ) if self.mround > 0 else int( v )
                 
                 if self.valueToDisplay > self.smSettings['max']:

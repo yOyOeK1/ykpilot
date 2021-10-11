@@ -1,14 +1,22 @@
 from machine import SoftUART, Pin
+import time
+import uasyncio as uaio
 
 class MySUart:
     
-    uart = None
-    buf = []
+    #uart = None
     mStart = None
     nEr = 0
+    nOk = 0
     rxActive = False
+    nChkOk = 0
+    nChkEr = 0
+    buf = []
+    noAction = 0
+    linesIn = []
+    bust = 14
     
-    def __init__(self, PinTx=2, PinRx=4, baudrate_=115200, timeout_=0):
+    def __init__(self, PinTx=12, PinRx=14, baudrate_=57600, timeout_=10):
         
         self.uart = SoftUART(
             Pin(PinTx), Pin(PinRx), 
@@ -18,54 +26,78 @@ class MySUart:
         self.mStart = bytearray()
         self.nEr = 0
         self.rxActive = False
+        
+        self.lGotNo = False
+        self.lGotChkSum = False
+        self.lChkSumOk = False
+        
+        self.nChkOk = 0
+        self.nChkEr = 0
+        self.buf = []
+        
     
     def writeOk(self):
-        self.uart.write("Ok")
+        self.writeLine("Ok")
     def writeRe(self):
-        self.uart.write("Re")
+        self.writeLine("Re")
     def writePing(self):
-        self.uart.write("$ping")
+        self.writeLine("$ping")
+        
+    def writeLine(self,msg):
+        self.uart.write("{}*{}\n".format(
+            msg, self.getChkSum(msg)
+            ))
+    
         
     
-    def readToBuf(self, iterForLog = 0):
-        self.rxActive = True
-        c = self.uart.read(1)
-        while c:
-            #print("C",c)
-            if c in [ b'\r', b'\n']:
-                self.rxActive = False
-                if 1:
-                    a = None
+    
+    
+    
+    
+    
+    def testRead(self, cb = None):
+        print("testRead reaToBuff....")
+        while True:
+            self.readToBuf( cb, chkSum = False )
+      
+    
+    async def readLineAsync(self):
+        ct = self.bust
+        c = 0
+        while True:
+            #if self.readToBuf():
+            #    await uaio.sleep_ms(1)
+            ct = self.bust
+            while ct > 0:
+                c = self.uart.readline()
+                if c != None:
                     try:
-                        a = self.mStart.decode('ascii')
+                        #if len(c)>128:
+                        #    print("long:",c)
+                        self.linesIn.append(c[:-2])
+                        self.nOk+=1
+                        break
+                        
                     except:
-                        self.nEr+= 1
-                    
-                    self.mStart = bytearray()
-                        
-                    if a != None:
-                        return a 
-                        self.buf.append( a )
-                        if len(self.buf)>10:
-                            self.buf.pop(0)
-                            #print("MySUart.buf.pop")
-                        #print(str(iterForLog),"@uart:",self.buf[-1][:5])
-                        
-                    
-            else:
-                self.mStart.append(c[0]) 
-                
-            if len(self.mStart)>512:
-                self.mStart = bytearray()
-                while self.uart.read(1):
-                    aaabc = 0
+                        print("E31x - ",c)
+                        self.nEr+=1
+                        break
+                ct-=1
+            
+            
+            await uaio.sleep_ms(50)
+            
+    
+    def readToBuf(self):
+        ct = 100
+        c = 0
+        while ct > 0:
+            c = self.uart.readline()
+            if c != None:
+                self.linesIn.append(c[:-2])
+                self.nOk+=1
                 break
-                
-            c = self.uart.read(1)
-
-        
-        #print("buf",self.buf)
-        self.rxActive = False
-        return None
-
+            ct-=1
+            
+            
           

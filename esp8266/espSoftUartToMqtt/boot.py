@@ -16,6 +16,8 @@ print("gogogo")
 
 
 print("loading libs...")
+import uasyncio as uaio
+
 mqc = None
 from MySUart import MySUart
 if 0:
@@ -31,9 +33,17 @@ from MyMqttClient import MyMqttClient as mqcc
 from MyWifi import MyWifi
 from MyJsonToMqtt import MyJsonToMqtt as mjtmc
 import json
+from machine import Pin
 print("DOne")
 
-# pLed = Pin(2,Pin.OUT); pin 2
+pLed = Pin(2,Pin.OUT)
+def ledOn():
+    global pLed
+    pLed.on()
+def ledOff():
+    global pLed
+    pLed.off()
+    
         
         
 pNo = 0
@@ -43,17 +53,61 @@ def p(msg):
     pNo+=1
     #print("P()",msg)
 
-def getMs():
-    return time.ticks_ms()%15000
-             
 
-def ticchk(sMs, target,every):
-    if sMs > target:
-        return True
-    elif sMs < target and ( target-every ) > sMs :
-        return True
+
+
+
+
+
+def getChkSum(msg):
+    value = 0
+    for c in msg:
+        value ^= ord(c)
+    return str(hex( value & 255 ))[2:]
+
+def chkSumChk(msg):
+    di = msg.find(':')
+    mi = msg.rfind('*')
+    lGotNo = False
+    lGotChkSum = False
+    lChkSumOk = False
+    chkSum = None
+    if di != -1 and mi != -1:
+        try:
+            abcc = int(msg[:di])
+            lGotNo = True                
+        except:
+            pass
+        
+        if lGotNo:
+            try:
+                chkSumStr = msg[mi+1:]
+                if len(chkSumStr)>0:
+                    lGotChkSum = True
+                msgOnly = msg[di+1:mi]
+                #await uaio.sleep_ms(20)
+                chkSum =  getChkSum(msgOnly)
+                #await uaio.sleep_ms(20)
+                if chkSumStr == chkSum:
+                    #print("chkTest",chkSumStr," <=> ",chkSum," OK")
+                    lChkSumOk = True
+                else:
+                    print("chkSumEr ",chkSumStr,"!=",chkSum)#msg)
+                    return [False,msg]
+            except:
+                pass
+            
+            if lChkSumOk:
+                return [True,msg[di+1:mi]]
+            #elif lGotNo and self.lGotChkSum:
+            #    self.nChkEr+=1
+                
     
-    return False
+    return [False,msg]
+
+
+
+
     
     
 def d():
@@ -69,12 +123,24 @@ def mqHandler(a1=0,a2=0,a3=0,a4=0):
         if d():print("    got command:")
         if msg == "ping":
             mqc.pub("esp01/res","pong")
+        elif msg == "led:Off":
+            ledOn()
+        elif msg == "led:On":
+            ledOff()
+        
+        
         elif msg == "looperPrint:Off":
             global looperPrint
             looperPrint = False
         elif msg == "looperPrint:On":
             global looperPrint
             looperPrint = True
+        elif len(msg)>4 and msg[:4] == "echo":
+            mqc.pub("esp01/res",msg[5:])
+        elif len(msg)>5 and msg[:5] == "uart:":
+            global suart
+            suart.uart.write("{}\r\n".format(msg[5:]))
+            print("uart.write({})".format(msg[5:]))
         elif len(msg)>8 and msg[:8] == "looperE:":
             global sMloopE
             try:
@@ -82,8 +148,13 @@ def mqHandler(a1=0,a2=0,a3=0,a4=0):
                 print("set looper to ",sMloopE)
             except:
                 mqc.pub("esp01/res","EE - need to be ms in int()")
-        elif len(msg)>4 and msg[:4] == "echo":
-            mqc.pub("esp01/res",msg[5:])
+        elif len(msg)>10 and msg[:10] == "suartBust:":
+            global suart
+            try:
+                suart.bust = int(msg[10:])
+                print("set suart.bust to ",suart.bust)
+            except:
+                mqc.pub("esp01/res","EE - need to be int()")
     
     
 print("------- init big objects")
@@ -126,86 +197,89 @@ rppAvg = 0.00
 sMs = 0
 sMi = 1
 sMloopE = 5000
-sMloopNext = 0
 
 sMsuartE = 100
-sMsuartNext = 0
 
 sMmqcE = 500
-sMmqcNext = 0
+
 uartDumpToMq = 0
 uc = 0
 
-looperPrint = True
+looperPrint = False
 gIter = 0
 lowestNext = -1
 
 time.sleep(.1)
-print("import uasyncio ...")
-import uasyncio
-async def suardLooper(a=0,b=0):
+
+
+
+
+looperIter = 0
+async def looperAsync():
+    global looperIter,mqc,mWifi,suart,mjtm,uartDumpToMq,sMloopE,gIter,uartInDecNEr
+    
+    await uaio.sleep_ms(100)
+    mem = 0
+    pTime = 100
+    
     while True:
-        suart.readToBuf()
+        print("/-- Looper")
+        looperIter+=1
 
-print("starting uart  ...")
-
-print("Main loop ...")
-
-#while True:
-#    r = suart.readToBuf(sMi)
-    
-
-async main():
-while True:    
-    sMs = getMs()
-    sMi+=1
-    lowestNext = sMs
-    
-    if ticchk(sMs,sMmqcNext,sMmqcE):
-        mqc.chk_msg()
-        sMmqcNext = getMs()+sMmqcE
-    
-    if ticchk(sMs,sMloopNext,sMloopE):
+        mem = gc.mem_alloc()
+        await uaio.sleep_ms(pTime)
+        
+        if looperPrint: 
+            print("looper i:[",looperIter,
+              "]    msTick:[",sMs, 
+              "]    mem:[",mem,
+              "]")
+            await uaio.sleep_ms(pTime)
+        
         mWifi.chkStatus()
-        if looperPrint:print("wifi is ok:[{}]    online:[{}]    ip:[{}]".format(
+        await uaio.sleep_ms(pTime)
+        if looperPrint:
+            print("wifi is ok:[{}]    online:[{}]    ip:[{}]".format(
             mWifi.isOk,
             mWifi.isConnected,
             mWifi.myIp,
             ))
-        #print("suart buf:[{}]".format(uc))
-        #gc.collect()
-        mem = gc.mem_alloc()
-        #suart.readToBuf()
-        lps = (sMi/float(float(sMloopE)/1000.0))
-        if looperPrint: print("looper i/s:[",lps,"/1s.",
-              "]    msTick:[",sMs, 
-              "]    mem:[",mem,
-              "]")
-        #p("looper i/s:[{}/1s.]    msTick:[{}]    mem:[{}]".format(
-        #        lps, sMs,gc.mem_alloc())
-        #      )
+            await uaio.sleep_ms(pTime)
+        
         if uartDumpToMq:
-            print("    uartToMq ",uartDumpToMq)
-            uartDumpToMq = 0
+            #print("uartToMq c:[",uartDumpToMq,"]")
+            mqc.pub( "esp01/uartToMqtt/n", uartDumpToMq )
+            await uaio.sleep_ms(pTime)
+         
         if mqc.isOk:
-            #suart.readToBuf()
-            mqc.pub( "esp01/looper/lps", lps )
+            mqc.pub( "esp01/looper/iter", looperIter )
             mqc.pub( "esp01/cpu/mem/", mem )
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/wifi/ip", mWifi.myIp )
+            await uaio.sleep_ms(pTime)
+            mqc.pub( "esp01/suart/linesIn",len(suart.linesIn))
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/suart/nOk", suart.nOk )
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/suart/nEr", suart.nEr )
             mqc.pub( "esp01/suart/nChkOk", suart.nChkOk )
+            await uaio.sleep_ms(pTime)
+            mqc.pub( "esp01/suart/uartToDecEr", uartInDecNEr )
+            mqc.pub( "esp01/suart/bust", suart.bust )
             mqc.pub( "esp01/suart/nChkEr", suart.nChkEr )
-            #suart.readToBuf()
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/mqc/nConnects", mqc.nConnects )
             mqc.pub( "esp01/mqc/nPub", mqc.nPub )
             mqc.pub( "esp01/mjtm/nEr" ,mjtm.nParseEr)
             mqc.pub( "esp01/mjtm/nNaN" ,mjtm.nParseNaN)
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/mjtm/nPub" ,mjtm.nPub)
             mqc.pub( "esp01/iter" ,gIter)
+            await uaio.sleep_ms(pTime)
             mqc.pub( "esp01/uartRead/msAvg", uartMsgAvg )
             mqc.pub( "esp01/mjtm/msAvg", mjtmAvg )
             mqc.pub( "esp01/rpp/msAvg", rppAvg )
+            await uaio.sleep_ms(pTime)
             
         gIter+= 1
         #suart.readToBuf()
@@ -213,37 +287,127 @@ while True:
         if mWifi.isOk:
             if mqc.isConnect == False:
                 mqc.connect()
-                
+            await uaio.sleep_ms(pTime)
             if mqc.isConnect == True and mqc.isOk == False:
                 mqc.ping()
+            await uaio.sleep_ms(pTime)
         
-        if looperPrint:print("mqc is ok:[{}] online:[{}]".format(
-            mqc.isOk, mqc.isConnect
-            ))
+        if looperPrint:
+            print("mqc is ok:[{}] online:[{}]".format(
+                mqc.isOk, mqc.isConnect
+                ))
         else:
             print(".")
         
         
-        sMi = 0       
-        sMloopNext = getMs()+sMloopE
+        print("\-- LOPE")
+        await uaio.sleep_ms(sMloopE)
+    
 
+
+chkSumStat = False
+chktMsg = ""
+uartInDecNEr = 0
+async def uartLinesInToMqttAsync():
+    global suart,mqc,uartDumpToMq,chkSumStat,chktMsg,uartInDecNEr
+    pTime = 2
+    msg = None
+    while True:
+        while suart.linesIn :
+            if len(suart.linesIn)>20:
+                suart.linesIn.pop(0)
+            
+            await uaio.sleep_ms(pTime)
+            msg = None
+            try:
+                msg = suart.linesIn[0].decode('ascii')
+            except:
+                await uaio.sleep_ms(pTime)
+                uartInDecNEr+=1
+                print("Edec55")
+                
+                
+            await uaio.sleep_ms(pTime)
+            
+            if msg != None:
+                chkSumStat,chktMsg = chkSumChk(msg)
+                await uaio.sleep_ms(pTime)
+                
+                if mqc.isOk:
+                    await uaio.sleep_ms(pTime)
+                    res = mjtm.parseLineAsync(
+                        chktMsg
+                        )
+                    if res == 0:
+                        uartInDecNEr+=1
+                    uartDumpToMq+=1
+                    await uaio.sleep_ms(pTime)
+            suart.linesIn.pop(0)
+            
+        await uaio.sleep_ms(2)
+
+async def TaskBalancer():
+    global uartInDecNEr,suart
+    print("TaskBalancer")
+    while True:
+        
+        if uartInDecNEr > 3 and suart.bust < 2000 :
+            suart.bust = int(float(suart.bust)*1.1)
+            await uaio.sleep_ms(1)
+            print("TasBal uDecEr",uartInDecNEr," + suart.bust:",suart.bust)
+            await uaio.sleep_ms(1)
+            
+        elif uartInDecNEr == 0 and suart.bust > 12:
+            suart.bust = int(float(suart.bust)*0.95)
+            await uaio.sleep_ms(1)
+            print("TasBal uDecEr",uartInDecNEr," - suart.bust:",suart.bust)
+            await uaio.sleep_ms(1)
+            
+        uartInDecNEr = 0
+                            
+        
+        await uaio.sleep_ms(20_002)
+
+print("Main loop ...")
+
+#while True:
+#    r = suart.readToBuf(sMi)
+    
+
+async def main():
+    tLooper = uaio.create_task( looperAsync() )
+    tMqcChkMsg = uaio.create_task( mqc.runChkLoopAsync() )
+    tSUartRead = uaio.create_task( suart.readLineAsync() )
+    tUartLinesInToMqtt = uaio.create_task( uartLinesInToMqttAsync() )
+    #tTaskBalancer = uaio.create_task( TaskBalancer() )
+    
+    
+    while True:
+        
+        while len(suart.linesIn)>30:
+            suart.linesIn.pop(0)
+            
+        while len(suart.linesIn)>30:
+            suart.linesIn.pop(0) 
+            
+        
+        await uaio.sleep_ms(5_000)
+
+
+uaio.run(main())
+
+'''
+while True:    
+    sMs = getMs()
+    lowestNext = sMs
+    
+    
     
     
     if ticchk(sMs, sMsuartNext,sMsuartE):
         #suart.writePing()
-        
-        
         #suart.uart.write("$led:1\r\n");
-        while suart.linesIn :
-            chktMsg = suart.chkSumChk(suart.linesIn[0])
-            #suart.readToBuf()
-            if mqc.isOk:
-                mjtm.parseLine(
-                    chktMsg
-                    )
-                #suart.readToBuf()
-            suart.linesIn.pop(0)
-            uartDumpToMq+=1
+        
         sMsuartNext = getMs()+sMsuartE
 
     
@@ -271,5 +435,5 @@ while True:
                 #mqc.pub( "esp01/mjtm/msAvr", mjtmAvg )
                 #mqc.pub( "esp01/rpp/msAvr", rppAvg )
                 
-                
+'''
 print("it's It! DONE")

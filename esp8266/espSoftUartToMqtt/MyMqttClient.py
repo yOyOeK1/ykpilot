@@ -1,5 +1,8 @@
 
-from simple2 import *
+print("MyMqttClient loading ...")
+from umqttSimple2 import *
+import uasyncio as uaio
+print("    DONE")
 
 class MyMqttClient:
     
@@ -9,6 +12,7 @@ class MyMqttClient:
     deb = False
     nConnects = 0
     nPub = 0
+    pubBuf = []
     
     def __init__(self, client_id_,ip_,port_,callback=None,
                  subList = []
@@ -24,6 +28,7 @@ class MyMqttClient:
         self.subList = subList        
         self.nConnects = 0
         self.nPub = 0
+        self.pubBuf = []
             
         print("MyMqttClient.__init__ DONE")
         
@@ -45,7 +50,7 @@ class MyMqttClient:
                 self.client.subscribe(t)
             print("    ")
         except:
-            print("    crash")
+            print("    crash 52")
         print("    res:",res)
         if res == 0:    
             self.isConnect = True
@@ -55,21 +60,76 @@ class MyMqttClient:
         print("    end",self.isConnect)
         
         
-    def chk_msg(self):
+    async def chk_msg(self):
         if self.deb:print("mqc.chk_msg")
+        pTime = 12
         if self.isOk:
             res = -999
             try:
                 res = self.client.check_msg()
             except:
-                print(" crash")
+                print(" crash 51")
                 
             if self.deb:print("    res:",res)
             if res == -999:
                 self.isConnect = False
                 self.isOk = False
             
-    def pub(self,topic,msg,retain_=False):
+            lb = len(self.pubBuf)-1
+            while lb>=0:
+                b = self.pubBuf[lb]
+                await uaio.sleep_ms(pTime)
+                self.client.publish(
+                    b[0],
+                    "{}".format(b[1]),
+                    b[2]
+                    )
+                await uaio.sleep_ms(pTime)
+                self.nPub+=1
+                self.pubBuf.pop(lb)
+                lb-=1
+    
+    async def runChkLoopAsync(self):
+        res = 0
+        lb = 0
+        b = 0
+        while True:     
+            await uaio.sleep_ms(2)       
+            if self.isOk:
+                res = -999
+                try:
+                    res = self.client.check_msg()
+                except:
+                    print(" crash 51")
+                    
+                if self.deb:print("    res:",res)
+                if res == -999:
+                    self.isConnect = False
+                    self.isOk = False
+                
+                lb = len(self.pubBuf)-1
+                while lb>=0:
+                    b = self.pubBuf[0]
+                    await uaio.sleep_ms(2)
+                    self.client.publish(
+                        b[0],
+                        "{}".format(b[1]),
+                        b[2]
+                        )
+                    await uaio.sleep_ms(2)
+                    self.nPub+=1
+                    self.pubBuf.pop(0)
+                    lb-=1
+                
+                
+            await uaio.sleep_ms(100)
+    
+            
+    def pub(self, topic, msg, retain_ = False):
+        self.pubBuf.append([topic,msg,retain_])
+            
+    def pubReal(self,topic,msg,retain_=False):
+        return 0
         if self.deb:print("mqc.pub")
         if self.isOk:
             res = -111
@@ -77,7 +137,7 @@ class MyMqttClient:
                 res = self.client.publish(topic,str(msg),retain=retain_)
                 self.nPub+=1
             except:
-                print("    crash")
+                print("    crash 53")
             if self.deb:print("    res:",res)
             if res != None:
                 self.isOk = False
@@ -89,7 +149,7 @@ class MyMqttClient:
             try:
                 res = self.client.ping()
             except:
-                print(" crash")
+                print(" crash 54")
                 
             if self.deb:print("    res:",res)
             if res == None:

@@ -3,8 +3,8 @@
 #include <DHT.h>
 
 
-//#include <SoftwareSerial.h>
-//SoftwareSerial SSerial(10, 11); // RX, TX
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
 
 
 int swb0 = 7;
@@ -146,11 +146,11 @@ void setup() {
   digitalWrite( swNaN, swOff);
 
 
-  Serial.begin(115200);
+  Serial.begin(57600);
 
   dht.begin();
 
-  //SSerial.begin(115200);
+  SSerial.begin(57600);
   //SSerial.println(F("arduino01 on softSerial 9600"));
   
   
@@ -205,12 +205,43 @@ void wForSS(){
 }
 */
 
+int pNo = 0;
 void pcs(String n){
 	p(n+"*"+String(getChkSum(n), HEX));
 }
 
+void mdelay(){
+	int x = 0;
+	for(long i=0;i<10000;i++){
+		for(long b=0; b<10000; b++){
+			x-=11;
+			x*=10;
+			x/=11;
+			x-=11;
+						x*=10;
+						x/=11;
+						x-=11;
+									x*=10;
+									x/=11;
+		}
+	}
+}
+
 void p(String n){
-	Serial.println(n);
+	//mdelay();
+	ledOn();
+	//Serial.println(SSerial.availableForWrite());
+	while( SSerial.availableForWrite() != 0)
+		pNo = pNo*1;
+	SSerial.println(String(pNo++)+":"+n);
+	while( SSerial.availableForWrite() != 0); 
+		pNo = pNo*1;
+	//mdelay();
+	delay(150);
+	
+	if( pNo > 99)
+		pNo = 0;
+	ledOff();
 }
 void pOld(String n){
 	
@@ -542,9 +573,11 @@ bool cmdLed(String cmd){
 	if(cmd.substring(0,4) == "led:"){
 		if(cmd.substring(4,5)=="1"){
 			digitalWrite(LED_BUILTIN, HIGH);
+			//delay(5000);
 			return true;
 		}else if(cmd.substring(4,5)=="0"){
 			digitalWrite(LED_BUILTIN, LOW);
+			//delay(5000);
 			return true;
 		}
 	}else if(cmd.substring(0,4) == "ping"){
@@ -565,9 +598,7 @@ String cmd = "";
 char nc;
 char buf[33];
 int charN = 0;
-void pS(String m){
-	Serial.println(m);
-}
+
 
 
 char getChkSum(String msg){
@@ -583,7 +614,7 @@ char getChkSum(String msg){
 int serialGot(){
 	String bs = "";
 	bs = String(buf);
-	pS("serialGot:"+bs+"<<");
+	p("serialGot:"+bs+"<<");
 
 	int bl = bs.length();
 	//pS("msg:"+String(bs.substring(0,bl-3)));
@@ -593,8 +624,8 @@ int serialGot(){
 	if( bl> 2 and bs.substring(bl-3,bl-2)== "*"){ // a*93
 		String m = bs.substring(0,bl-3);
 		String ch = bs.substring(bl-2,bl);
-		pS("chk:"+ch);
-		pS("chkLocal:"+getChkSum(m));
+		p("chk:"+ch);
+		p("chkLocal:"+getChkSum(m));
 	}
 	
 	//return 0;
@@ -614,7 +645,7 @@ int serialGot(){
 
 
 void serialAction(){
-	/*
+	
 	if( 1 ){
 		while(SSerial.available()){
 			nc = char(SSerial.read());
@@ -628,9 +659,9 @@ void serialAction(){
 				charN++;
 		}
 	}
-	*/
 	
-	if( 1 ){
+	
+	if( 0 ){
 		while(Serial.available()){
 			nc = char(Serial.read());
 			buf[charN] = nc;

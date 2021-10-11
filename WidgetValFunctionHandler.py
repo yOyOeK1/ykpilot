@@ -344,13 +344,13 @@ class WidgetValFunctionHandler(WidgetHelper):
                 #print("precess")
                 
                 if self.fun == 'diff':
-                    v = self.val0 - self.val1
+                    v = float(self.val0) - float(self.val1)
                 if self.fun == 'sum':
-                    v = self.val0 + self.val1
+                    v = float(self.val0) + float(self.val1)
                 if self.fun == 'multiply':
-                    v = self.val0 * self.val1
+                    v = float(self.val0) * float(self.val1)
                 if self.fun == 'divade':
-                    v = self.val0 / self.val1
+                    v = float(self.val0) / float(self.val1)
                 
                 #print("    got v",v)
                 

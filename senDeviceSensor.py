@@ -154,7 +154,7 @@ class deviceSensors(senProto):
                 v = tcb[k]
                 self.broadcastByMqtt(
                     self.gui, 
-                    "/ykpilot/device/{}".format(k.replace(" ","_")), 
+                    "ykpilot/device/{}".format(k.replace(" ","_")), 
                     str(v)
                     )    
             
