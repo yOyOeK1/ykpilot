@@ -5,15 +5,17 @@ class MyJsonToMqtt:
     
     nParseEr = 0
     nParseNaN = 0
+    nOthersHandler= 0
     nPub = 0
     
-    def __init__(self,mqttPubCallback):
+    def __init__(self,mqttPubCallback, othersCommandParserHandler):
         print("MyJsonToMqtt.init")
         
         self.nParseEr = 0
         self.nParseNaN = 0
         self.nPub = 0
         self.mqc = mqttPubCallback
+        self.otherHandler = othersCommandParserHandler
         
         print("MyJsonToMqtt.init DONE")
       
@@ -61,6 +63,8 @@ class MyJsonToMqtt:
                     return 1
                     #await uaio.sleep_ms(pTime)
                     
+        elif l[0] == "$" and self.otherHandler(l[1:]):
+            self.nOthersHandler+=1
         else:
             if d:print("    NaN",l)
             #self.mqc.pub("esp01/mjtm/nNaNExa", l, False)

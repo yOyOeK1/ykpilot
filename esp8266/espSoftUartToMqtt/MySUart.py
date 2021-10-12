@@ -16,8 +16,8 @@ class MySUart:
     linesIn = []
     bust = 14
     
-    def __init__(self, PinTx=12, PinRx=14, baudrate_=57600, timeout_=10):
-        
+    def __init__(self, PinTx=2, PinRx=0, baudrate_=9600, timeout_=10):
+        print("MySUart.init")
         self.uart = SoftUART(
             Pin(PinTx), Pin(PinRx), 
             baudrate=baudrate_, 
@@ -58,30 +58,30 @@ class MySUart:
     def testRead(self, cb = None):
         print("testRead reaToBuff....")
         while True:
-            self.readToBuf( cb, chkSum = False )
+            self.readToBuf(  )
       
     
     async def readLineAsync(self):
         ct = self.bust
-        c = 0
         while True:
             #if self.readToBuf():
             #    await uaio.sleep_ms(1)
             ct = self.bust
+            c = None
             while ct > 0:
                 c = self.uart.readline()
                 if c != None:
-                    try:
+                    #try:
                         #if len(c)>128:
-                        #    print("long:",c)
-                        self.linesIn.append(c[:-2])
-                        self.nOk+=1
-                        break
+                    #print("long:",c)
+                    self.linesIn.append(c[:-2])
+                    self.nOk+=1
+                    break
                         
-                    except:
-                        print("E31x - ",c)
-                        self.nEr+=1
-                        break
+                    #except:
+                    #    print("E31x - ",c)
+                    #    self.nEr+=1
+                    #    break
                 ct-=1
             
             
@@ -90,10 +90,11 @@ class MySUart:
     
     def readToBuf(self):
         ct = 100
-        c = 0
+        c = None
         while ct > 0:
             c = self.uart.readline()
             if c != None:
+                print("c",c)
                 self.linesIn.append(c[:-2])
                 self.nOk+=1
                 break

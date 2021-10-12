@@ -13,6 +13,24 @@ time.sleep(1)
 print("gogogo")
 
 
+from machine import Pin
+'''
+p = Pin(14, Pin.IN)
+pUp = 0
+pDown = 0
+while True:
+    if p.value():
+        if pDown > 0:
+            print("D:",pDown)
+            pDown = 0
+        pUp+=1
+    else:
+        if pUp > 0:
+            print("U:",pUp)
+            pUp = 0
+        pDown+=1
+'''     
+    
 
 
 print("loading libs...")
@@ -33,7 +51,6 @@ from MyMqttClient import MyMqttClient as mqcc
 from MyWifi import MyWifi
 from MyJsonToMqtt import MyJsonToMqtt as mjtmc
 import json
-from machine import Pin
 print("DOne")
 
 pLed = Pin(2,Pin.OUT)
@@ -66,42 +83,31 @@ def getChkSum(msg):
     return str(hex( value & 255 ))[2:]
 
 def chkSumChk(msg):
-    di = msg.find(':')
     mi = msg.rfind('*')
-    lGotNo = False
-    lGotChkSum = False
     lChkSumOk = False
+    lGotChkSum = False
     chkSum = None
-    if di != -1 and mi != -1:
+    if mi != -1:
         try:
-            abcc = int(msg[:di])
-            lGotNo = True                
+            chkSumStr = msg[mi+1:]
+            if len(chkSumStr)>0:
+                lGotChkSum = True
+            
+            chkSum =  getChkSum(msg[:mi])
+            if lGotChkSum and chkSumStr == chkSum:
+                #print("chkTest",chkSumStr," <=> ",chkSum," OK")
+                lChkSumOk = True
+            else:
+                print("chkSumEr ",chkSumStr,"!=",chkSum)#msg)
+                return [False,msg]
         except:
             pass
         
-        if lGotNo:
-            try:
-                chkSumStr = msg[mi+1:]
-                if len(chkSumStr)>0:
-                    lGotChkSum = True
-                msgOnly = msg[di+1:mi]
-                #await uaio.sleep_ms(20)
-                chkSum =  getChkSum(msgOnly)
-                #await uaio.sleep_ms(20)
-                if chkSumStr == chkSum:
-                    #print("chkTest",chkSumStr," <=> ",chkSum," OK")
-                    lChkSumOk = True
-                else:
-                    print("chkSumEr ",chkSumStr,"!=",chkSum)#msg)
-                    return [False,msg]
-            except:
-                pass
+        if lChkSumOk:
+            return [True,msg[:mi]]
+        #elif lGotNo and self.lGotChkSum:
+        #    self.nChkEr+=1
             
-            if lChkSumOk:
-                return [True,msg[di+1:mi]]
-            #elif lGotNo and self.lGotChkSum:
-            #    self.nChkEr+=1
-                
     
     return [False,msg]
 
@@ -113,49 +119,74 @@ def chkSumChk(msg):
 def d():
     return True
 
+def simpleHandler(msg):
+    return mqHandler(a1 = b'esp01/cmd', a2=msg)
+
 def mqHandler(a1=0,a2=0,a3=0,a4=0):
-    if d():print("mqHandler a:{}\nb:{}\nc:{}\nd:{}".format(a1,a2,a3,a4))
+    if d():print("mqHandler...")# a:{}\nb:{}\nc:{}\nd:{}".format(a1,a2,a3,a4))
     
-    msg = a2.decode()
-    if d():print("    msg:",msg)
+    #print("ty",type(a2))
+    if isinstance(a2,bytes):
+        msg = a2.decode()
+    else:
+        msg = a2#.decode()
+    
+    #if d():print("    msg:[",msg,"]")
     if a1 == b'esp01/cmd':
-        global mqc
-        if d():print("    got command:")
+        if d():print("    esp01 got command:[",msg,"]")
         if msg == "ping":
+            global mqc
             mqc.pub("esp01/res","pong")
+            return True
+        
         elif msg == "led:Off":
             ledOn()
+            return True
+        
         elif msg == "led:On":
             ledOff()
-        
+            return True
         
         elif msg == "looperPrint:Off":
             global looperPrint
             looperPrint = False
+            return True
+        
         elif msg == "looperPrint:On":
             global looperPrint
             looperPrint = True
+            return True
+        
         elif len(msg)>4 and msg[:4] == "echo":
             mqc.pub("esp01/res",msg[5:])
+            return True
+        
         elif len(msg)>5 and msg[:5] == "uart:":
             global suart
             suart.uart.write("{}\r\n".format(msg[5:]))
             print("uart.write({})".format(msg[5:]))
+            return True
+        
         elif len(msg)>8 and msg[:8] == "looperE:":
-            global sMloopE
+            global sMloopE,mqc
             try:
                 sMloopE = int(msg[8:])
                 print("set looper to ",sMloopE)
             except:
                 mqc.pub("esp01/res","EE - need to be ms in int()")
+            return True
+        
         elif len(msg)>10 and msg[:10] == "suartBust:":
-            global suart
+            global suart,mqc
             try:
                 suart.bust = int(msg[10:])
                 print("set suart.bust to ",suart.bust)
             except:
                 mqc.pub("esp01/res","EE - need to be int()")
-    
+                
+            return True
+        
+    return False
     
 print("------- init big objects")
 print("MyWifi ...")
@@ -178,7 +209,10 @@ mqc = mqcc("esp01","192.168.49.220",12883, callback=mqHandler,
 time.sleep(.5)
 
 print("MyJsonToMqtt ...")
-mjtm = mjtmc( mqttPubCallback = mqc )
+mjtm = mjtmc( 
+    mqttPubCallback = mqc, 
+    othersCommandParserHandler = simpleHandler
+    )
 print("------- init big objects DONE")
 
 def dbmq(msg):
@@ -325,6 +359,8 @@ async def uartLinesInToMqttAsync():
                 await uaio.sleep_ms(pTime)
                 uartInDecNEr+=1
                 print("Edec55")
+                
+            #mqc.pub("esp01/ulutma", msg, False)
                 
                 
             await uaio.sleep_ms(pTime)
