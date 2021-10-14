@@ -16,11 +16,11 @@ class senSeatalkParser(senProto):
         b = self.toTwo(b)
         return float.fromhex("%s%s"%(a,b))
     
-    def seatalkParse(self,j):
+    def seatalkParse(self,j,aa=1,ba=1):
         #print("seatalkParse[",j,"]")
         
         st = j.split(',')[:-1]
-        
+        #print("st[{}]".format(st))
         
         if len(st) == 5 and st[0] == '4':
             print("autohelm st40 depth sounder msg...")
@@ -34,7 +34,7 @@ class senSeatalkParser(senProto):
                 ))
             #self.gui.sf.sendToAll(msg)
             self.broadcastByTCPNmea(self.gui, msg)
-            
+            self.gui.sen.mqc.pub("v/seatalk/depth")
             return True
         
         elif len(st) == 5 and st[0] == '0' and st[1] == '2':
@@ -49,6 +49,8 @@ class senSeatalkParser(senProto):
                 ))
             #self.gui.sf.sendToAll(msg)
             self.broadcastByTCPNmea(self.gui, msg)
+            self.gui.sen.mqc.pub("v/seatalk/depth")
+            
             
             return True
         

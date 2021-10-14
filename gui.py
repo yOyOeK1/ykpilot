@@ -10,6 +10,13 @@ Exception ignored in thread started by: <bound method ScreenAutopilot.sinWatchDo
 10-03 12:22:05.971 17602 18020 I python  :  AttributeError: 'ScreenAutopilot' object has no attribute 'apCommunicationMode'
 10-03 12:22:05.987 17602 17848 I python  : l
 
+
+import timeit
+>>> def d():
+...     time.sleep(5)
+>>> timeit.timeit(d,number=1)
+5.00508871799957
+
 '''
 
 import _thread

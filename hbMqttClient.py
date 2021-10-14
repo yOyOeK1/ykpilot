@@ -82,10 +82,9 @@ class hbMqttClient:
             
             #print("    OUT from clock")
             while len(self.outBuf)>0:
-                m = self.outBuf[0]
+                self.cli.publish( self.outBuf[0][0], self.outBuf[0][1] )
                 self.outBuf.pop(0)
                 #print("mqc.pub to broker m:",m)
-                self.cli.publish(m[0],m[1])
             
             self.stackWorkerOut = 0
             #print("    OUT DONE")
@@ -106,6 +105,7 @@ class hbMqttClient:
                 self.inBuf.pop(0)
                 topic = m[0]
                 sTopic = topic.replace("/","o").replace(".","o").replace(" ","o").replace("_","o")
+                sTopic = topic
                 try:
                     msg = m[1].decode("ascii")
                 except:
@@ -127,7 +127,7 @@ class hbMqttClient:
                     gui.sen.sensorsListStr.append(sTopic)
                     
                     print("new topic DONE topic:{}\n\t\tmsg:{}".format(topic,msg))
-                
+                    
                 if item != None:
                     #print("update topic")
                     hbmq.values[sTopic]['msg'] = msg
@@ -135,6 +135,15 @@ class hbMqttClient:
                     hbmq.values[sTopic]['obj'].update(msg)
                     
                     #print("update topic DONE")
+                
+                
+                if sTopic[-4:] == "/stk":
+                    #print("seatalk ????",msg)
+                    senSeaTalPar = gui.sen.nodeMcu
+                    #print("------ START")
+                    senSeaTalPar.seatalkParse(msg)
+                    #print("------ END")
+                
                 
             self.stackWorkerIn = 0
             #print("    IN DONE")

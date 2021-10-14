@@ -131,11 +131,6 @@ class sensors:
         self.sensorsList.append( self.device )
         self.sensorsListStr.append('device')        
         
-        self.hbmq = senMqttClient(gui)
-        self.sensorsList.append( self.hbmq )
-        self.sensorsListStr.append('hbmq')
-        self.hbmq.restoreFromFile(gui)
-        
         
         self.gpsD = gpsData(gui, icon='ico_sensors_64_64.png')
         self.sensorsList.append( self.gpsD )
@@ -205,10 +200,15 @@ class sensors:
         self.sensorsList.append(self.seatalk)
         self.sensorsListStr.append('seatalk')
         
-        self.senDTH = senDTH(gui, 'senDTH')
-        self.sensorsList.append(self.senDTH)
-        self.sensorsListStr.append('senDTH')
+        #self.senDTH = senDTH(gui, 'senDTH')
+        #self.sensorsList.append(self.senDTH)
+        #self.sensorsListStr.append('senDTH')
     
+        self.hbmq = senMqttClient(gui)
+        self.sensorsList.append( self.hbmq )
+        self.sensorsListStr.append('hbmq')
+        self.hbmq.restoreFromFile(gui)
+        
     
     def askForPermissions(self):
         if kivy.platform == 'android':

@@ -150,7 +150,14 @@ float parsDepth () {
   return ((makeWord(st[4] , st[3])) * 0.03048);// - stDepthOffset;
 }
 
+
+bool stkActionRunning = false;
 void readSeatalk(){
+  if( stkActionRunning )
+    return 0;
+  
+  stkActionRunning = true;
+
 	if (SerialI.available ()) {
 		inbyte = (SerialI.read());
 		if (inbyte & 0x100) {
@@ -162,8 +169,8 @@ void readSeatalk(){
 
         String tr = "";
         for(int l=0; l<ind; l++)
-          tr+= String((0xff&st[l]),HEX)+',';
-        pcs("{'st':'"+tr+"'}");
+          tr.concat( String((0xff&st[l]),HEX)+',' );
+        pcs("{'stk':'"+tr+"'}");
         //pcs(st);
       }
 			//Serial.println(inbyte,HEX);
@@ -177,6 +184,8 @@ void readSeatalk(){
 			ind = 0;
 		
 	}
+
+  stkActionRunning = false;
 
 }
 
@@ -225,11 +234,11 @@ void setup() {
   delay(1500);
   
   
-  tasker.setInterval( serialAction ,200);
+  tasker.setInterval( serialAction ,208);
   //tasker.setInterval( ledRevers, 5000 );
-  tasker.setInterval( dhtIter, 1501);
+  tasker.setInterval( dhtIter, 3531);
   tasker.setInterval( batMux, 1000 );
-  tasker.setInterval( readSeatalk, 200 );
+  tasker.setInterval( readSeatalk, 212 );
   
   ledOff();
 }
@@ -259,46 +268,20 @@ void dhtIter(){
 		  "}");
   
 }
-/*
-void wForSS(){
-	delay(1);
-	while( SSerial.available() > 0)
-		delay(1);
-	
-}
-*/
+
 void pcs(String msgg){	
 	p(String(msgg+"*"+String(getChkSum(msgg), HEX)));
 }
 
-void mdelay(){
-	int x = 0;
-	for(long i=0;i<10000;i++){
-		for(long b=0; b<10000; b++){
-			x-=11;
-			x*=10;
-			x/=11;
-			x-=11;
-						x*=10;
-						x/=11;
-						x-=11;
-									x*=10;
-									x/=11;
-		}
-	}
-}
-
 void p(String n){
 	
-	//mdelay();
 	ledOn();
 	//Serial.println(SSerial.availableForWrite());
 	while( SSerial.availableForWrite() != 0);
 	SSerial.println(n);
 	while( SSerial.availableForWrite() != 0); 
 	
-	//mdelay();
-	delay(150);
+	delay(210);
 	
 	if( SerialHardwareEnable )
 		Serial.println(n);
