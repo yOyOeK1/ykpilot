@@ -175,7 +175,7 @@ class hbMqttClient:
             
         #Clock.schedule_once(self.intRunIt,1)
         _thread.start_new(self.intRunIt,())
-        print(12)
+        #print(12)
         #print("so mq client running")
         #sys.exit(9)
         #self.intRunIt()

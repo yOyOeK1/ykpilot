@@ -50,6 +50,7 @@ if 0:
 from MyMqttClient import MyMqttClient as mqcc
 from MyWifi import MyWifi
 from MyJsonToMqtt import MyJsonToMqtt as mjtmc
+from MyAp import MyAp
 import json
 print("DOne")
 
@@ -117,7 +118,7 @@ def chkSumChk(msg):
     
     
 def d():
-    return True
+    return False
 
 def simpleHandler(msg):
     return mqHandler(a1 = b'esp01/cmd', a2=msg)
@@ -132,6 +133,13 @@ def mqHandler(a1=0,a2=0,a3=0,a4=0):
         msg = a2#.decode()
     
     #if d():print("    msg:[",msg,"]")
+    
+    if a1 == b'esp01/ap':
+        #if d():print("    esp01 ap:[",msg,"]")
+        global ap
+        ap.setNewDirection( int(msg) )
+            
+    
     if a1 == b'esp01/cmd':
         if d():print("    esp01 got command:[",msg,"]")
         if msg == "ping":
@@ -213,7 +221,17 @@ mjtm = mjtmc(
     mqttPubCallback = mqc, 
     othersCommandParserHandler = simpleHandler
     )
+time.sleep(.5)
+
+print("MyAp - autopilot module .....")
+ap = MyAp( )
+time.sleep(.5)
+
 print("------- init big objects DONE")
+
+
+
+
 
 def dbmq(msg):
     debugPrintOnUartToMqttPubTopic(msg)
@@ -415,6 +433,7 @@ async def main():
     tMqcChkMsg = uaio.create_task( mqc.runChkLoopAsync() )
     tSUartRead = uaio.create_task( suart.readLineAsync() )
     tUartLinesInToMqtt = uaio.create_task( uartLinesInToMqttAsync() )
+    tAp = uaio.create_task( ap.runItAsync() )
     #tTaskBalancer = uaio.create_task( TaskBalancer() )
     
     

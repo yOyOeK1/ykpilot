@@ -63,7 +63,7 @@ class MyJsonToMqtt:
                     return 1
                     #await uaio.sleep_ms(pTime)
                     
-        elif l[0] == "$" and self.otherHandler(l[1:]):
+        elif len(l)>1 and l[0] == "$" and self.otherHandler(l[1:]):
             self.nOthersHandler+=1
         else:
             if d:print("    NaN",l)

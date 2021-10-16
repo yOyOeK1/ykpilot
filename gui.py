@@ -553,6 +553,9 @@ class gui(App):
 			bS = self.th.benStart()
 			from ScreenAutopilot import ScreenAutopilot
 			self.ap = ScreenAutopilot(self)
+			#time.sleep(10)
+			#sys.exit(10)
+			
 			self.bE = self.th.benDone(bS, "")
 			Clock.schedule_once( self.loaderNextStep, 0.1 )
 			

@@ -3,15 +3,15 @@
 #include <DHT.h>
 
 #include <SoftwareSerial.h>
-SoftwareSerial SSerial(10,11); // RX, TX
+SoftwareSerial SSerial(8,9); // RX, TX
 
 #include "Tasker.h"
 Tasker tasker;
 
 #include <Alt9SoftSerial.h>
 //#include <SoftwareSerial9.h>
-#define SEATALK_RX 8
-#define SEATALK_TX 9
+#define SEATALK_RX 11
+#define SEATALK_TX 12
 Alt9SoftSerial SerialI(SEATALK_RX, NULL);
 //SoftwareSerial9 SerialO(NULL, SEATALK_TX);
 
@@ -44,8 +44,8 @@ int b1p_=0;
 
 
 int bmOnHH = 0;
-int bmOnMM = 0;
-int bmOnSS = 8;
+int bmOnMM = 45;
+int bmOnSS = 10;
 
 
 int bmOnHHl = 0;
@@ -83,7 +83,7 @@ int arouts12 = 0;
 
 
 
-#define DHTPIN 12
+#define DHTPIN 10
 #define DHTTYPE DHT11
 DHT dht( DHTPIN, DHTTYPE );
 
@@ -139,7 +139,7 @@ void ledRevers(){
 
 
 
-bool SerialHardwareEnable = false;
+bool SerialHardwareEnable = true;
 
 bool stMesKnown = false;
 int ind = 0;
@@ -202,6 +202,13 @@ void setup() {
   
   pinMode(LED_BUILTIN, OUTPUT);
   ledOn();
+
+  pinMode( A0, INPUT );
+  pinMode( A1, INPUT );
+  pinMode( A2, INPUT );
+  pinMode( A3, INPUT );
+  pinMode( A4, INPUT );
+  pinMode( A5, INPUT );
   
   pinMode( swb0, OUTPUT );
   digitalWrite( swb0, swOff);
@@ -236,7 +243,7 @@ void setup() {
   
   tasker.setInterval( serialAction ,208);
   //tasker.setInterval( ledRevers, 5000 );
-  tasker.setInterval( dhtIter, 3531);
+  tasker.setInterval( dhtIter, 5531);
   tasker.setInterval( batMux, 1000 );
   tasker.setInterval( readSeatalk, 212 );
   
@@ -372,7 +379,7 @@ void batMux(){
 		//niceRaport();
 		//dhtIter();
 	pcs( "{'status':"+String(bmStatus)+"}");
-	
+	//adcRaportCompact();
 	
 	
 	if( bmStatus == 0 ){
@@ -419,7 +426,7 @@ void batMux(){
 	}else if( bmStatus == 5 ){
 		//p(F("5 - sw output On"));
 		// ---- after test uncomment
-		//batMuxswOutOn();
+		batMuxswOutOn();
 		bmOutStage1 = 1;
 	}else if( bmStatus == 6 ){
 		//p(F("6 - start counter"));

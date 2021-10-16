@@ -16,7 +16,7 @@ class MySUart:
     linesIn = []
     bust = 14
     
-    def __init__(self, PinTx=2, PinRx=0, baudrate_=9600, timeout_=10):
+    def __init__(self, PinTx=14, PinRx=12, baudrate_=9600, timeout_=10):
         print("MySUart.init")
         self.uart = SoftUART(
             Pin(PinTx), Pin(PinRx), 

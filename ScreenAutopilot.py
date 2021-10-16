@@ -29,7 +29,7 @@ class ScreenAutopilot:
 		self.targetHdg = 0
 		self.tilerPos = 0.0
 		self.burstRunning = False
-		#self.on_updateSettings()
+		self.on_updateSettings()
 		
 		self.driverQRL = None
 		
@@ -57,6 +57,7 @@ class ScreenAutopilot:
 		self.gui.rl.ids.blAutDri.add_widget(self.sDriTyp)
 		self.sDriTyp.bind(text=self.on_driverChange)
 		
+		#self.apCommunicationMode = self.gui.config['apCommunicationMode']
 		_thread.start_new(self.sinWatchDog,())
 		
 	def on_driverChange(self, obj, text):
@@ -119,7 +120,7 @@ class ScreenAutopilot:
 						action = 1 
 				
 				self.pidLast = c
-				print("PID action ",action," c",c)
+				#print("PID action ",action," c",c)
 					
 			elif self.driverType == 'PID2':
 				c = int(self.pid2( boat['cogError'] )*500)/500.00
@@ -159,7 +160,7 @@ class ScreenAutopilot:
 		
 	def sinWatchDog(self):
 		sinRunning = 0
-		sleepTime = 0.05
+		sleepTime = 0.45
 		actionSumtract = sleepTime*2.0
 		is_alive = False
 		
@@ -169,7 +170,7 @@ class ScreenAutopilot:
 			self.initSine()
 			
 		while True:
-			
+			#print("ap iter ?")
 			
 			
 			if 0:
@@ -210,6 +211,8 @@ class ScreenAutopilot:
 					self.udp.send(self.apWifiCmdL)
 				elif self.apCommunicationMode == 'wifi tcp':
 					self.tcp.send(self.apWifiCmdL)
+				elif self.apCommunicationMode == 'mqtt ap switch':
+					self.gui.hbc.pub('esp01/ap',self.mqCmdL)
 					
 				self.cMin-= actionSumtract
 				
@@ -221,6 +224,9 @@ class ScreenAutopilot:
 					self.udp.send(self.apWifiCmdR)
 				elif self.apCommunicationMode == 'wifi tcp':
 					self.tcp.send(self.apWifiCmdR)
+				elif self.apCommunicationMode == 'mqtt ap switch':
+					self.gui.hbc.pub('esp01/ap',self.mqCmdR)
+					
 				self.cPlus-= actionSumtract
 				
 			if self.cMin <= 0.0 and self.cPlus <= 0.0 and self.status == 'on':
@@ -229,7 +235,8 @@ class ScreenAutopilot:
 						self.sin.frequency = self.freq[1]
 					elif self.apCommunicationMode == 'wifi tcp':
 						self.tcp.send(self.apWifiCmdPing)
-				
+					elif self.apCommunicationMode == 'mqtt ap switch':
+						self.hbc.mqc.pub('esp01/ap',self.mqCmdPing)
 				
 				
 			time.sleep(sleepTime)
@@ -273,17 +280,24 @@ class ScreenAutopilot:
 		i.pbAutRud.value = self.tilerPos+45.0
 				
 	def on_updateSettings(self):
+		self.mqCmdPing = 0
 		if self.gui.config['apDirectionReverse'] == 0:
 			self.freq[0] = float(self.freqOrg[0])
 			self.freq[2] = float(self.freqOrg[2])
 			self.apWifiCmdL = 'L'
 			self.apWifiCmdR = 'R'
+			self.mqCmdR = 2
+			self.mqCmdL = 1
+			
 			
 		else:
 			self.freq[0] = float(self.freqOrg[2])
 			self.freq[2] = float(self.freqOrg[0])
 			self.apWifiCmdL = 'R'
 			self.apWifiCmdR = 'L'
+			self.mqCmdR = 1
+			self.mqCmdL = 2
+
 		
 		self.apWifiCmdPing = "P"
 			
