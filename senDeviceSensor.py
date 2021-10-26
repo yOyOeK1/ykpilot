@@ -4,10 +4,16 @@ from plyer import battery
 from plyer import brightness
 import traceback
 from senProto import senProto
-#import psutil
 
+try:
+    import psutil
+except:
+    print("EE - in senDeviceSensor import error no psutil module !")
 
 class deviceSensors(senProto):
+    
+    psutilOk = False
+    
     def __init__(self,gui):
         super(deviceSensors, self).__init__()
         self.gui = gui
@@ -37,26 +43,37 @@ class deviceSensors(senProto):
         self.iterCount = 0
         self.updateEvery = 5
         
+        try:
+            psutil.cpu_percent()
+            self.psutilOk = True
+        except:
+            self.psutilOk = False
+        
+        
+        
     def updateUptime(self):
         ts = self.th.getTimestamp()
         self.uptime = ts - self.upTimeStart
         self.uptimeNice = self.th.getNiceHowMuchTimeItsTaking(self.uptime)
         
     def getValuesOptions(self):
-        return {'dict':[
+        tr = {'dict':[
             'lightLumens', 
             'batteryCharging', 
             'batteryPercentage', 
             'bgLight',
             'app uptime sec.',
-            'app uptime nice',
-            'cpu percent',
-            'mem total',
-            'mem percent use',
-            'cpu avg 1',
-            'cpu avg 2',
-            'cpu avg 3'
-            ]}
+            'app uptime nice']}
+        
+        if self.psutilOk:
+            tr['dict'].append('cpu percent')
+            tr['dict'].append('mem total')
+            tr['dict'].append('mem percent use')
+            tr['dict'].append('cpu avg 1')
+            tr['dict'].append('cpu avg 2')
+            tr['dict'].append('cpu avg 3')
+            
+        return tr
         
     def getTitle(self):
         return self.title
@@ -114,15 +131,17 @@ class deviceSensors(senProto):
             'app uptime nice': self.uptimeNice
             }
         
-        #tcb['cpu percent'] = int(psutil.cpu_percent())
-        #memS = psutil.virtual_memory()
-        #memSplit = str(memS).replace("(", " ").replace(")", " ").replace(",", "").split(" ")
-        #tcb['mem total'] = int(memSplit[1][6:])
-        #tcb['mem percent use'] = float(memSplit[3][8:])
-        #loadA = list(psutil.getloadavg())
-        #tcb['cpu avg 1'] = loadA[0]
-        #tcb['cpu avg 2'] = loadA[1]
-        #tcb['cpu avg 3'] = loadA[2]
+        if self.psutilOk:
+            tcb['cpu percent'] = int(psutil.cpu_percent())
+            memS = psutil.virtual_memory()
+            memSplit = str(memS).replace("(", " ").replace(")", " ").replace(",", "").split(" ")
+            tcb['mem total'] = int(memSplit[1][6:])
+            tcb['mem percent use'] = float(memSplit[3][8:])
+            loadA = list(psutil.getloadavg())
+            tcb['cpu avg 1'] = loadA[0]
+            tcb['cpu avg 2'] = loadA[1]
+            tcb['cpu avg 3'] = loadA[2]
+        
         try:
             aoe =1
         except:

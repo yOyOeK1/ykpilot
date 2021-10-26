@@ -14,7 +14,7 @@ class MyJsonToMqtt:
         self.nParseEr = 0
         self.nParseNaN = 0
         self.nPub = 0
-        self.mqc = mqttPubCallback
+        self.mqPub = mqttPubCallback
         self.otherHandler = othersCommandParserHandler
         
         print("MyJsonToMqtt.init DONE")
@@ -32,7 +32,7 @@ class MyJsonToMqtt:
         else:
             #print("is it a leaf ? :))")
             #print("mq:",pref," (",j,")")
-            self.mqc.pub("uart/batMux{}".format(pref), j, False)
+            self.mqPub("uart/batMux{}".format(pref), j, False)
             self.nPub+= 1
             #print("p ",pref," m",j)
         
@@ -54,7 +54,7 @@ class MyJsonToMqtt:
                         js = None
                 except:
                     #print("E j43:",l)
-                    #self.mqc.pub("esp01/mjtm/nNaNExa", l, False)
+                    #self.mqPub("esp01/mjtm/nNaNExa", l, False)
                     self.nParseEr+= 1
                 #await uaio.sleep_ms(pTime) 
                 if d:print("    js",js)  

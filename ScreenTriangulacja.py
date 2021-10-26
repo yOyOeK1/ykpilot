@@ -35,6 +35,8 @@ class trianPiont:
     def __init__(self, lat, lon, bearing, entryDate):
         self.LatLon = LatLon(lat,lon)
         self.bearing = float(bearing)
+        #self.pitch = pitch
+        #self.elevation = elevation
         self.entryDate = entryDate
         
     def getDict(self):
@@ -43,6 +45,8 @@ class trianPiont:
             'lat':self.LatLon.lat,
             'lon':self.LatLon.lon,
             'bearing':self.bearing,
+            #'pitch': self.pitch,
+            #'elevation': self.elevation,
             'entryDate':self.entryDate
             }
 
@@ -231,8 +235,8 @@ class TrianRunAddDialog:
         print("OSDUpdate")
         self.camOSD.text = 'hdg: {}    lat:{} lon:{}'.format(
             round(self.trian.hdg,1),
-            round(self.trian.lat,7),
-            round(self.trian.lon,7)
+            round(self.trian.lat,6),
+            round(self.trian.lon,6)
             )
 
         
@@ -344,7 +348,7 @@ class Triangulacja:
             if i.status == 'DONE':
                 st = "lat: {} lon: {}".format(i.trianPoint.lat, i.trianPoint.lon)
             ii = ThreeLineListItem(
-                text = "name:{} points:{} status:{}".format(i.name, len(i.points),i.status),
+                text = "{} points:{} status:{}".format(i.name, len(i.points),i.status),
                 secondary_text = st
                 )
             self.wItems.append(ii)
@@ -534,8 +538,8 @@ if __name__ == "__main__":
     tri = Triangulacja(None)
     
     print("run as single module :P")
-    p0 = trianPiont("09° 36.6029' N","079° 35.6117' W",77.0,0)
-    p1 = trianPiont("09° 36.3585' N","079° 35.3761' W",21.0, 0)
+    p0 = trianPiont("09° 36.6029' N","079° 35.6117' W",77.0, 0,0, 0)
+    p1 = trianPiont("09° 36.3585' N","079° 35.3761' W",21.0, 0,0, 0)
     x = trianItem(1, [p0,p1])
     
     tri.triaItems.append( x )

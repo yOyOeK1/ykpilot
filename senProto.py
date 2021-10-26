@@ -40,7 +40,7 @@ class senProto:
                 
     
     def broadcastByMqtt(self, gui, topic, msg):
-        if gui.config['nmeBMqtt'] == True:
+        if gui.config['nmeBMqtt']:
             gui.hbc.pub(topic,msg)
         
     def broadcastByTCPNmea(self, gui, msg):
@@ -76,4 +76,7 @@ class senProto:
                 else:
                     pass
                     #print("skip (not correct screen)",self.type," to ",self.callBackForUpdate[ii])
+                
+                
+                
                 

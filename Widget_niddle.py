@@ -8,7 +8,7 @@ from kivy.lang import Builder
 from kivy.uix.scatter import Scatter
 from kivy.graphics.opengl import *
 from kivy.graphics import *
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty,StringProperty
 import sys
 import math
 from kivy.uix.boxlayout import BoxLayout
@@ -19,6 +19,7 @@ from kivy.uix.spinner import Spinner
 from WidgetHelper import WidgetHelper
 from MyLabel import MyLabel
 from kivy.animation import Animation
+
           
           
           
@@ -74,6 +75,8 @@ class Widget_niddle(WidgetHelper):
         self.sm.size_hint = [None,None]
         self.sm.size = self.size
         self.sm.pos = self.pos
+        #self.sm.needle_image = "needle4.png"
+        #self.sm.on_needle_image()
         
         self.defSettings = [
             { 
@@ -221,13 +224,17 @@ class Widget_niddle(WidgetHelper):
         bl,self.ti_max = self.addDialogRow(bl, "Max value", 
             175 if inWConf == None else str(inWConf['atr']['max']) )
         bl,self.ti_tick = self.addDialogRow(bl, "Tick", 
-            25  if inWConf == None else str(inWConf['atr']['tick']) )
+            25  if inWConf == None else str(inWConf['atr']['tick']),
+            "how often is the number on the dial" )
         bl,self.ti_subtick = self.addDialogRow(bl, "Sub ticks", 
-            6  if inWConf == None else str(inWConf['atr']['subtick']) )
+            6  if inWConf == None else str(inWConf['atr']['subtick']),
+            "how many divisions of section on dial beatwean numbers" )
         bl,self.ti_start_angle = self.addDialogRow(bl, "Start angle", 
-            -170 if inWConf == None else str(inWConf['atr']['start_angle']))
+            -170 if inWConf == None else str(inWConf['atr']['start_angle']),
+            "angle where is start of diall")
         bl,self.ti_end_angle = self.addDialogRow(bl, "End angle", 
-            170 if inWConf == None else str(inWConf['atr']['end_angle']) )
+            170 if inWConf == None else str(inWConf['atr']['end_angle']),
+            "angle where is end of diall" )
         bl,self.ti_value_font_size = self.addDialogRow(bl, "Value size", 
             23 if inWConf == None else str(inWConf['atr']['value_font_size']) )
         bl,self.ti_label_font_size = self.addDialogRow(bl, "Labels size", 

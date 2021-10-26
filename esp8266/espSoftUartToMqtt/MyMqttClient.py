@@ -1,7 +1,7 @@
-
 print("MyMqttClient loading ...")
 from umqttSimple2 import *
 import uasyncio as uaio
+import gc
 print("    DONE")
 
 class MyMqttClient:
@@ -9,26 +9,50 @@ class MyMqttClient:
     client = None
     isOk = False
     isConnect = False
-    deb = False
+    deb = False 
     nConnects = 0
     nPub = 0
     pubBuf = []
+    what = {}
     
-    def __init__(self, client_id_,ip_,port_,callback=None,
+    def __init__(self, 
+                 client_id_,ip_,port_,
+                 callback=None,
                  subList = []
                  ):
-        print("MyMqttClient.__init__")
+        print("MyMqttClient.__init__ client:{} ip: {}:{}".format(
+            client_id_, ip_, port_)
+            )
+        self.subList = subList
         
-        self.client =  MQTTClient(client_id_, ip_, port_)
-        if callback == None:
+        self.setWhatToDo(client_id_, ip_, port_, callback)
+        
+    def setWhatToDo(self, client, ip, port, callback):
+        self.what = {
+            'client': client,
+            'ip': ip,
+            'port': port,
+            'cb': callback
+            }
+        
+    def initClient(self):
+        if self.client != None:
+            self.client = None
+            gc.collect()
+        
+        self.client =  MQTTClient(
+            self.what['client'],self.what['ip'], self.what['port']
+            )
+        if self.what['cb'] == None:
             self.client.set_callback( self.callbackDumm )
         else:
-            self.client.set_callback( callback )
+            self.client.set_callback( self.what['cb'] )
         
-        self.subList = subList        
+        self.isOk = False
+        self.isConnect = False
+        
         self.nConnects = 0
         self.nPub = 0
-        self.pubBuf = []
             
         print("MyMqttClient.__init__ DONE")
         
@@ -37,7 +61,9 @@ class MyMqttClient:
         print("callBacDum a:{}\nb:{}\nc:{}\nd:{}".format(a1,a2,a3,a4))
         
     def connect(self):
-        print("mqc.connect ...")
+        print("mqc.connect ... ip{}:{}".format(
+            self.what['ip'],self.what['port']
+            ))
         res = None
         try:
             print("    connect ...")
@@ -88,13 +114,15 @@ class MyMqttClient:
                 self.nPub+=1
                 self.pubBuf.pop(lb)
                 lb-=1
+        
     
     async def runChkLoopAsync(self):
         res = 0
         lb = 0
         b = 0
         while True:     
-            await uaio.sleep_ms(2)       
+            await uaio.sleep_ms(2) 
+            if self.deb:print("mqc.loop ",len(self.pubBuf)," ok",self.isOk)      
             if self.isOk:
                 res = -999
                 try:
@@ -121,12 +149,14 @@ class MyMqttClient:
                     self.pubBuf.pop(0)
                     lb-=1
                 
-                
+            #else:
+            #    self.pubBuf = []   
             await uaio.sleep_ms(100)
     
             
     def pub(self, topic, msg, retain_ = False):
         self.pubBuf.append([topic,msg,retain_])
+        if self.deb:print("mqc.put ({})".format(len(self.pubBuf)))
             
     def pubReal(self,topic,msg,retain_=False):
         return 0

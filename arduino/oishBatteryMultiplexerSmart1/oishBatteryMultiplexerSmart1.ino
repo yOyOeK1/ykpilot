@@ -223,7 +223,7 @@ void setup() {
   digitalWrite( swNaN, swOff);
 
   if( SerialHardwareEnable )
-	  Serial.begin(115200);
+	  Serial.begin(115700);
 
   dht.begin();
 

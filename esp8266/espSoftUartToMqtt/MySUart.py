@@ -1,7 +1,20 @@
 from machine import SoftUART, Pin
 import time
 import uasyncio as uaio
+'''
 
+from machine import SoftUART, Pin
+u = SoftUART(Pin(14),Pin(12),baudrate=19200)
+
+def crc(s):
+    crc = 0
+    for c in stream:
+        for i in range(0, 8):
+            b = (crc & 1) ^ ((( int(c) & (1 << i))) >> i)
+            crc = (crc ^ (b * 0x118)) >> 1
+    print(hex(crc))
+    return crc
+'''
 class MySUart:
     
     #uart = None

@@ -827,7 +827,6 @@ class gui(App):
 			self.rl.ids.cb_nmeBAutopilot.active = True if self.config['nmeBAutopilot'] else False
 			self.rl.ids.cb_nmeBNmea.active = True if self.config['nmeBNmea'] else False
 			self.rl.ids.cb_nmeBMqtt.active = True if self.config['nmeBMqtt'] else False
-			self.rl.ids.cb_nmeBmqHDG.active = True if self.config['nmeBmqHDG'] else False
 			
 			
 			self.triangulacja.isReady()	

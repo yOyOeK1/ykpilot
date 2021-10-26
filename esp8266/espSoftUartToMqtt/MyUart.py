@@ -1,21 +1,38 @@
-from machine import UART
+from machine import UART,Pin
 import time
+import uos
+#import esp
+import uasyncio as uaio
+import gc
 
 class MyUart:
     
     uart = None
     nEr = 0
+    nOk = 0
     nChkOk = 0
     nChkEr = 0
     buf = []
     rxActive = False
+    linesIn = []
+    mode = ""
     
-    def __init__(self, baudrate_=57600):
+    def __init__(self, baudrate_=9600, mode = ''):
         print("MyUart.__init__")
         print("    do uart 0")
-        self.uart = UART(0,baudrate_)
+        
+        if mode == 'dummy':
+            self.mode = mode
+        else:
+            #esp.osdebug(None)
+            uos.dupterm(None,1)
+            gc.collect()
+            led = Pin(2, Pin.OUT)
+            
+            self.uart = UART(0)
+            self.uart.init(baudrate_, bits=8, parity=None, stop=1)
+                
         print("    do init...")
-        self.uart.init(baudrate_, bits=8, parity=None, stop=1)
         self.nEr = 0
         
         self.lGotNo = False
@@ -45,65 +62,9 @@ class MyUart:
             else:
                 self.difWritePipe(msg)
         else:
-            print("EE - uart2 551")
-    
-        
-    def getChkSum(self, msg):
-        value = 0
-        for c in msg:
-            value ^= ord(c)
-        return str(hex( value & 255 ))[2:]
+            print("EE - uart 551")
     
     
-    def chkSumChk(self, msg):
-        di = msg.find(':')
-        mi = msg.rfind('*')
-        if di != -1 and mi != -1:
-            self.lGotNo = False
-            self.lGotChkSum = False
-            
-            self.lChkSumOk = True
-            try:
-                abcc = int(msg[:di])
-                self.lGotNo = True                
-            except:
-                pass
-            
-            self.lGotChkSum = False
-            if self.lGotNo:
-                try:
-                    chkSumStr = msg[mi+1:]
-                    if len(chkSumStr)>0:
-                        self.lGotChkSum = True
-                    msgOnly = msg[di+1:mi]
-                    chkSum =  self.getChkSum(msgOnly)
-                    if chkSumStr == chkSum:
-                        #print("chkTest",chkSumStr," <=> ",chkSum," OK")
-                        self.lChkSumOk = True
-                    else:
-                        print("chkEr not same",msg)
-                        return msg
-                except:
-                    pass
-                
-                if self.lChkSumOk:
-                    self.nChkOk+=1
-                    return msg[di+1:mi]
-                elif self.lGotNo and self.lGotChkSum:
-                    self.nChkEr+=1
-                    
-        
-        return msg
-
-    def doCChkSume(self,msg):    
-        try:
-            msg = msg.decode('ascii')
-        except:
-            print("EE decode 6455 ",msg)
-            return msg
-            
-        #print("c msg",msg)
-        return self.chkSumChk(msg)
     
     def testRead(self, cb = None):
         time.sleep(.5)
@@ -111,22 +72,27 @@ class MyUart:
         while True:
             self.readToBuf( cb )
             
-    
-    def readToBuf(self, callBackOnLine = None):
-        while self.uart.any()>0:
-            self.rxActive = True
-            all = self.uart.read()
-            
-            if callBackOnLine == None:
-                print("rtb:",all)
-            else:
-                lines = all.split(b'\r\n')
-                #print("    lines c:",len(lines))
+    async def readLineAsync(self):
+        line = ""
+        
+        if self.mode == 'dummy':
+            while True:
+                await uaio.sleep_ms(50)
+        
+        else:
+        
+            while True:
+                await uaio.sleep_ms(2)
+                while self.uart.any():
+                    try:
+                        line = str(self.uart.readline(), 'ascii')
+                        if line!="":
+                            self.linesIn.append(line)
+                            self.nOk+=1
+                    except:
+                        self.nEr+=1
                 
-                if callBackOnLine != None:
-                    for l in lines:
-                        chk = self.doCChkSume( l ) 
-                        callBackOnLine( chk )
-                        
-        self.rxActive = False
+    #depricated
+    def readToBuf(self, callBackOnLine = None):        
+        pass
                   

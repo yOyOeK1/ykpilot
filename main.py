@@ -84,15 +84,20 @@ if __name__ == "__main__":
 	def allStart():
 		hbTask = asyncio.ensure_future(hbStarter())
 		async def run_wrapper():
-			print('App done')
-			await g.async_run(async_lib='asyncio')
-			print("run_wrapper")
+			try:
+				print('App done')
+				await g.async_run(async_lib='asyncio')
+				print("run_wrapper")
+			except:
+				pass
 			g.on_pause() # force to save configs
 			print("stoping hbTask...")
 			tres = hbTask.cancel()
 			print("	got result:",tres)
-			print("go sleep for 10...")
+			print("go sleep for 1 sec...")
 			time.sleep(1)
+			print("ykpilot - pa pa exiting with (0)")
+			sys.exit(0)
 			return 0
 		
 		return asyncio.gather(run_wrapper(), hbTask)

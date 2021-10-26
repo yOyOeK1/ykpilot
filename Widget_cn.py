@@ -93,12 +93,17 @@ class Widget_cn(WidgetProto,WidgetHelper):
     def addSettingsDialogPart(self,bl, wConf=None):
         bl, self.tiTitle = self.addDialogRow(bl, "Title", 
             "" if wConf == None else wConf['atr']['title'] )
+        
         bl, self.tiRound = self.addDialogRow(bl, "Round to", 
-            "1" if wConf == None else wConf['atr']['round'] )
+            "1" if wConf == None else wConf['atr']['round'],
+            "accuracity after coma 0 - is no fractions" )
+        
         bl, self.tiUnit = self.addDialogRow(bl, "Unit", 
             "kts" if wConf == None else wConf['atr']['unit'] )
+        
         bl, self.tiMaxnum = self.addDialogRow(bl, "Max characters", 
-            "4"  if wConf == None else wConf['atr']['maxnum'] )
+            "4"  if wConf == None else wConf['atr']['maxnum'],
+            "how many chars you are expecting" )
         
         return bl
     

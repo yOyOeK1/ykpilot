@@ -44,23 +44,35 @@ $ECXTE,A,A,0.000,L,N*4F
 '''
 		key = msg[3:6]
 		
-		if key== 'RMB':
-			print("	got RMB")
+		if key== 'XTE':
 			#return 0
 			# navigate to target way point
 			v = msg.split(',')
-			onHeading = None
+			
 			try:
+				xte = float(v[3])
+				if v[4] == 'L':
+					xte*=-1.00
+				self.factory.gui.sen.hbmq.pub("nmea/targetWP/xte",xte)
+			except:
+				print("EE - conversion problem 9842")	
+		
+		elif key== 'RMB':
+			#return 0
+			# navigate to target way point
+			v = msg.split(',')
+			
+			try:
+				xte = float(v[2])
+				rng = float(v[10])
+				self.factory.gui.sen.hbmq.pub("nmea/targetWP/rng",rng)
+				
 				onHeading = float(v[11])
+				self.factory.gui.sen.hbmq.pub("nmea/targetWP/onHeading",onHeading)
+				
+				
 			except:
 				print("EE - conversion problem 9843")
-			try:
-				if onHeading != None:
-					self.factory.gui.sen.hbmq.pub("/nmea/targetWP/onHeading",onHeading)
-					print("	DONE")
-			except:
-				print("EE - sending error 773")
-				pass
 				
 		
 		
