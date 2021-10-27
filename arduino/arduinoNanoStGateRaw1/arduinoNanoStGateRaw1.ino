@@ -7,6 +7,9 @@ Alt9SoftSerial SerialI(SEATALK_RX, NULL);
 SoftwareSerial9 SerialO(NULL, SEATALK_TX, true);
 
 
+#define BUTTON0 2
+#define LED0 3
+bool apStatus = false;
 
 
 String uartMsg;
@@ -16,6 +19,9 @@ bool stSending = false;
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+
+  
+  
 
   SerialO.begin(4800);
   SerialO.stopListening();
@@ -30,6 +36,9 @@ void setup() {
   uartMsg = String("");
   uartOut = String("");
 
+  pinMode(LED0, OUTPUT);
+  pinMode(BUTTON0, INPUT_PULLUP);
+  
 }
 
 void blink(void) {
@@ -210,6 +219,14 @@ void uartMsgParse(String msg) {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(5000);
     digitalWrite(LED_BUILTIN, LOW);
+
+  }else if( msg == "l2"){
+    digitalWrite(LED0, HIGH);
+    delay(500);
+    digitalWrite(LED0, LOW);
+
+  
+     
     
   }else if( msg == "t1"){
     Serial.println("send water temp");
@@ -244,6 +261,9 @@ bool readUART() {
 int iter = 0;
 long currentMillis;
 long lastT = 0;
+int btTrash = 0;
+bool makeSwitch = false;
+int btCount = 0;
 void loop() {
   currentMillis = millis();
 
@@ -254,6 +274,25 @@ void loop() {
     uartMsg = "";
   }
 
+  if( digitalRead(BUTTON0)==1 ){
+    digitalWrite(LED_BUILTIN, HIGH);
+    if( apStatus ){
+      apStatus = false;
+      printSt( 4, 0x186, 0x21, 0x02, 0xfd);
+      digitalWrite(LED0, LOW);
+    }else{
+      apStatus = true;
+      printSt( 4, 0x186, 0x21, 0x01, 0xfe);
+      digitalWrite(LED0, HIGH);
+    }
+    delay(500);
+    digitalWrite(LED_BUILTIN, LOW);
+    printSt( 4, 0x127, 0x01, char( (btCount)&0xff), char( (btCount++>8)&0xff) );
+    
+    
+    
+
+  }
 
   // to be able to ingage autopilot X500 raymarine series it's pretending st6001+
   if( currentMillis > lastT ){
@@ -262,5 +301,5 @@ void loop() {
   }
   
   
- 
+ iter++;
 }
